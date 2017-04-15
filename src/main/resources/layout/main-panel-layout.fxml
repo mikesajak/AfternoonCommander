@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.MainPanelController">
+   <center>
+      <SplitPane fx:id="dirsSplitPane" dividerPositions="0.5" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
+        <items>
+          <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+             <center>
+                <TabPane fx:id="leftTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="ALL_TABS">
+                  <tabs>
+                    <Tab text="Untitled Tab 1">
+                           <content>
+                              <BorderPane prefHeight="200.0" prefWidth="200.0" />
+                           </content></Tab>
+                    <Tab text="Untitled Tab 2" />
+                  </tabs>
+                </TabPane>
+             </center>
+          </BorderPane>
+
+          <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+             <center>
+                <TabPane fx:id="rightTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="ALL_TABS" BorderPane.alignment="CENTER">
+                  <tabs>
+                    <Tab text="Untitled Tab 1">
+                         <content>
+                            <ScrollPane prefHeight="200.0" prefWidth="200.0" />
+                         </content></Tab>
+                    <Tab text="Untitled Tab 2" />
+                  </tabs>
+                </TabPane>
+             </center>
+          </BorderPane>
+        </items>
+      </SplitPane>
+   </center>
+   <top>
+      <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <items>
+            <ComboBox prefWidth="150.0" />
+          <Button mnemonicParsing="false" text="Button" />
+        </items>
+      </ToolBar>
+   </top>
+   <bottom>
+      <ToolBar fx:id="buttonToolbar" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <items>
+          <Button fx:id="view" mnemonicParsing="false" text="F3 View" />
+            <Button fx:id="edit" mnemonicParsing="false" text="F4 Edit" />
+            <Button fx:id="copy" mnemonicParsing="false" text="F5 Copy" />
+            <Button fx:id="move" mnemonicParsing="false" text="F5 Move" />
+            <Button fx:id="mkdir" mnemonicParsing="false" text="F7 MkDir" />
+            <Button fx:id="delete" mnemonicParsing="false" text="F8 Delete" />
+            <Region maxWidth="1.7976931348623157E308" minWidth="-Infinity" prefWidth="10.0" />
+            <Button fx:id="exit" mnemonicParsing="false" text="F10 Exit" />
+        </items>
+      </ToolBar>
+   </bottom>
+</BorderPane>

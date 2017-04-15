@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+<?import javafx.embed.swing.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox maxHeight="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.DirPanelController">
+   <children>
+      <BorderPane prefHeight="26.0" prefWidth="600.0">
+         <left>
+            <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <children>
+                  <ComboBox fx:id="drivesCombo" prefWidth="150.0" promptText="Home" />
+               </children>
+            </HBox>
+         </left>
+         <right>
+            <ToggleButton fx:id="showHiddenToggleButton" mnemonicParsing="false" text="H" BorderPane.alignment="CENTER" />
+         </right>
+         <center>
+            <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <children>
+                  <Label fx:id="freeSizeLabel" layoutX="212.0" layoutY="6.0" text="1234 MB" AnchorPane.rightAnchor="16.0" />
+               </children>
+            </AnchorPane>
+         </center>
+      </BorderPane>
+      <HBox>
+         <children>
+            <TextField fx:id="curDirField" editable="false" prefHeight="25.0" prefWidth="623.0" promptText="Current directory" />
+            <Button fx:id="favoritiesButton" mnemonicParsing="false" textOverrun="CLIP">
+              <graphic>
+                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/ic_bookmark_border_black_24dp_1x.png" />
+                     </image></ImageView>
+              </graphic>
+            </Button>
+            <Button fx:id="backDirButton" graphicTextGap="0.0" mnemonicParsing="false">
+              <graphic>
+                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                   <image>
+                      <Image url="@../images/ic_arrow_back_black_24dp_1x.png" />
+                   </image>
+                </ImageView>
+              </graphic>
+            </Button>
+            <Button fx:id="topDirButton" graphicTextGap="0.0" mnemonicParsing="false">
+              <graphic>
+                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                   <image>
+                      <Image url="@../images/ic_arrow_upward_black_24dp_1x.png" />
+                   </image>
+                </ImageView>
+              </graphic>
+            </Button>
+         </children>
+      </HBox>
+      <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+          <Tab text="Untitled Tab 1" />
+          <Tab text="Untitled Tab 2" />
+        </tabs>
+      </TabPane>
+   </children>
+</VBox>

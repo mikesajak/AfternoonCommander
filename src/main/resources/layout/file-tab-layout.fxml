@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.DirTableController">
+   <bottom>
+      <HBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label fx:id="statusLabel1" text="Test" />
+            <Label fx:id="statusLabel2" text="Label" />
+         </children>
+      </HBox>
+   </bottom>
+   <center>
+      <ScrollPane prefViewportHeight="385.0" prefViewportWidth="600.0">
+         <content>
+            <TableView fx:id="dirTableView" editable="true" prefHeight="402.0" prefWidth="599.0" BorderPane.alignment="CENTER">
+              <columns>
+                <TableColumn fx:id="idTableColumn" editable="false" prefWidth="27.0" sortable="false" />
+                <TableColumn fx:id="nameTableColumn" prefWidth="123.0" text="Name" />
+                  <TableColumn fx:id="extTableColumn" prefWidth="75.0" text="Ext" />
+                  <TableColumn fx:id="sizeTableColumn" prefWidth="75.0" text="Size" />
+                  <TableColumn fx:id="dateTableColumn" prefWidth="75.0" text="Date" />
+                  <TableColumn fx:id="attribsTableColumn" prefWidth="75.0" text="Attribs" />
+              </columns>
+            </TableView>
+         </content>
+      </ScrollPane>
+   </center>
+</BorderPane>
