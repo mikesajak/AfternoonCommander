@@ -3,8 +3,7 @@ package org.mikesajak.commander
 import java.io.IOException
 import javax.swing.filechooser.FileSystemView
 
-import com.google.inject.name.Named
-import com.google.inject.{AbstractModule, Guice}
+import com.google.inject.AbstractModule
 import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.local.LocalFS
@@ -34,12 +33,12 @@ class DirPanelController(tabPane: TabPane,
                          drivesCombo: ComboBox[String],
                          freeSpaceLabel: Label,
                          showHiddenToggleButton: ToggleButton,
-                         @Named("panelId") panelId: String,
+                         params: DirPanelParams,
                          config: Configuration) {
 
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
 
-  println(s"DirPanelController - panelId=$panelId")
+  println(s"DirPanelController - params=$params")
   init()
 
   private def init() {
@@ -51,7 +50,7 @@ class DirPanelController(tabPane: TabPane,
 
     //  tabPane += createTab("Left example tab")
 
-    val numTabs = config.intProperty(s"$panelId.numTabs").getOrElse(0)
+    val numTabs = config.intProperty(s"${params.panelId}.numTabs").getOrElse(0)
 
     val tabPathNames =
       if (numTabs != 0) {
@@ -87,8 +86,7 @@ class DirPanelController(tabPane: TabPane,
 
 
   private def createTab(path: VDirectory) = {
-    implicit val injector = Guice.createInjector(new ApplicationContext,
-                                                 new DirTableContext(DirTableParams(path)))
+    implicit val injector = ApplicationContext.globalInjector.createChildInjector(new DirTableContext(DirTableParams(path)))
 
     val resource = getClass.getResource(dirTableLayout)
     if (resource == null)

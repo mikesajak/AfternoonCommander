@@ -2,11 +2,9 @@ package org.mikesajak.commander
 
 import java.io.IOException
 
-import com.google.inject.Guice
-
 import scalafx.scene.Node
 import scalafx.scene.control.{Tab, TabPane}
-import scalafxml.core.{FXMLLoader, NoDependencyResolver}
+import scalafxml.core.FXMLLoader
 import scalafxml.guice.GuiceDependencyResolver
 
 /**
@@ -15,7 +13,7 @@ import scalafxml.guice.GuiceDependencyResolver
 class PanelsController {
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
   private val dirPanelLayout = "/layout/file-group-panel.fxml"
-  private implicit val injector = Guice.createInjector(new ApplicationContext)
+  private implicit val injector = ApplicationContext.globalInjector.createChildInjector()
 
   def configurePanels(leftTabPane: TabPane, rightTabPane: TabPane): Unit = {
     leftTabPane.tabs.clear()

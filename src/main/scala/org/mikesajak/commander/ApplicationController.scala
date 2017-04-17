@@ -15,7 +15,10 @@ class ApplicationController @Inject()(config: Configuration) {
 
   private var mainStage0: Option[Stage] = None
 
-  def mainStage: Stage = mainStage0.getOrElse(throw new IllegalStateException("UI window/stage is not initialized yet"))
+  def mainStage: Stage = {
+    if (mainStage0.isDefined) mainStage0.get
+    else throw new IllegalStateException("UI window/stage is not initialized yet")
+  }
   // TODO: probably not the best way to do it...
   def mainStage_=(stage: Stage): Unit = {
     if (mainStage0.isDefined)
@@ -23,19 +26,23 @@ class ApplicationController @Inject()(config: Configuration) {
     mainStage0 = Some(stage)
   }
 
-  def exitApplication(): Unit = {
-    val confirm = config.boolProperty("application.exitConfirmation").getOrElse(true)
-
-    val exit = if (confirm) askUserForExit()
-    else true
-
-    if (exit) {
+  def exitApplication(): Boolean = {
+    if (canExit) {
       // TODO: save config, close connections, etc.
       config.intProperty("window.width", mainStage.width.toInt)
       config.intProperty("window.height", mainStage.height.toInt)
+      config.save()
 
       Platform.exit()
     }
+    false
+  }
+
+  private def canExit: Boolean = {
+    val confirm = config.boolProperty("application.exitConfirmation").getOrElse(true)
+
+    if (confirm) askUserForExit()
+    else true
   }
 
   private def askUserForExit(): Boolean = {
@@ -52,4 +59,8 @@ class ApplicationController @Inject()(config: Configuration) {
     }
   }
 
+}
+
+object ApplicationController {
+  val configFile = "afternooncommander.properties"
 }

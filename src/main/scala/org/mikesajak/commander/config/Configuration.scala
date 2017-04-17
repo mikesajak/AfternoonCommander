@@ -10,4 +10,7 @@ trait Configuration {
   def intProperty(name: String, value: Int)
   def stringProperty(name: String): Option[String]
   def stringProperty(name: String, value: String)
+
+  def save()
+  def load()
 }
