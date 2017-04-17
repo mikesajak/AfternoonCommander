@@ -3,12 +3,12 @@ package org.mikesajak.commander
 import java.io.IOException
 import javax.swing.filechooser.FileSystemView
 
-import com.google.inject.{AbstractModule, Guice, Inject}
 import com.google.inject.name.Named
+import com.google.inject.{AbstractModule, Guice}
 import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.{VDirectory, FsMgr}
-import org.mikesajak.commander.fs.local.LocalDirectory
+import org.mikesajak.commander.fs.local.LocalFS
+import org.mikesajak.commander.fs.{FsMgr, VDirectory}
 
 import scalafx.scene.Node
 import scalafx.scene.control._
@@ -51,31 +51,38 @@ class DirPanelController(tabPane: TabPane,
 
     //  tabPane += createTab("Left example tab")
 
-    val numTabs: Integer = config.getIntSetting(s"$panelId.numTabs")
-                              .getOrElse(0)
+    val numTabs = config.intProperty(s"$panelId.numTabs").getOrElse(0)
 
-    val tabPaths =
+    val tabPathNames =
       if (numTabs != 0) {
         for (i <- 0 until numTabs) yield {
-          val tabPath = config.getStringSetting(s"panelId.tab[$i].path").get
+          val tabPath = config.stringProperty(s"panelId.tab[$i].path").get
           tabPath
         }
       } else {
         val fsv = FileSystemView.getFileSystemView
-        val path = fsv.getHomeDirectory.getAbsolutePath
+        val path = LocalFS.mkLocalPathName(fsv.getHomeDirectory.getAbsolutePath)
         List(path)
       }
 
-    tabPaths
+
+    val tabPaths = tabPathNames
       .flatMap(path => FsMgr.resolvePath(path))
-      .map(vpath => vpath.directory)
       // todo log problem with path
+      .map(vpath => vpath.directory)
+
+    println(s"tabPathNames=$tabPathNames, tabPaths=$tabPaths")
+
+
+    tabPaths
       .map(createTab)
       .foreach(t => tabPane += t)
 
-    val selectedTab = tabPaths(0)
+    val selectedPath = tabPaths.head
     // todo - selection
-    curDirField.text = tabPaths(0)
+    curDirField.text = selectedPath.absolutePath
+    tabPane.selectionModel.select(selectedPath.name)
+    tabPane.getSelectionModel().selectFirst()
   }
 
 

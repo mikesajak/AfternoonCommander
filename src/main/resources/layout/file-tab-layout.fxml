@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<?import java.lang.*?>
-<?import javafx.scene.layout.*?>
-
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.DirTableController">
    <bottom>
       <HBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
@@ -18,12 +17,12 @@
          <content>
             <TableView fx:id="dirTableView" editable="true" prefHeight="402.0" prefWidth="599.0" BorderPane.alignment="CENTER">
               <columns>
-                <TableColumn fx:id="idTableColumn" editable="false" prefWidth="27.0" sortable="false" />
-                <TableColumn fx:id="nameTableColumn" prefWidth="123.0" text="Name" />
-                  <TableColumn fx:id="extTableColumn" prefWidth="75.0" text="Ext" />
-                  <TableColumn fx:id="sizeTableColumn" prefWidth="75.0" text="Size" />
-                  <TableColumn fx:id="dateTableColumn" prefWidth="75.0" text="Date" />
-                  <TableColumn fx:id="attribsTableColumn" prefWidth="75.0" text="Attribs" />
+                <TableColumn fx:id="idColumn" editable="false" prefWidth="27.0" sortable="false" />
+                <TableColumn fx:id="nameColumn" prefWidth="123.0" text="Name" />
+                  <TableColumn fx:id="extColumn" prefWidth="75.0" text="Ext" />
+                  <TableColumn fx:id="sizeColumn" prefWidth="75.0" text="Size" />
+                  <TableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
+                  <TableColumn fx:id="attribsColumn" prefWidth="75.0" text="Attribs" />
               </columns>
             </TableView>
          </content>

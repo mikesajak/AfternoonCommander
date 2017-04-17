@@ -4,13 +4,17 @@ import java.io.File
 import java.nio.{file => jfile}
 import java.{io => jio}
 
-import org.mikesajak.commander.fs.{VDirectory, FS, VPath}
+import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
 
 /**
  * Created by mike on 25.10.14.
  */
 object LocalFS {
   val id = "local"
+
+  val PathPattern = "local://(.+)".r
+
+  def mkLocalPathName(path: String) = s"$id://$path"
 }
 
 class LocalFS(rootFile: File) extends FS {
@@ -31,9 +35,12 @@ class LocalFS(rootFile: File) extends FS {
   override def rootDirectory: VDirectory = new LocalDirectory(rootFile, this)
 
 
-  override def resolvePath(path: String): VPath = {
-    val file = new File(path)
-    if (file.isDirectory) new LocalDirectory(file, this)
-    else new LocalFile(file, this)
-  }
+  override def resolvePath(path: String): VPath =
+    path match {
+      case LocalFS.PathPattern(path) =>
+        val file = new File(path)
+        if (file.isDirectory) new LocalDirectory(file, this)
+        else new LocalFile(file, this)
+      case _ => throw new IllegalArgumentException(s"Provided path parameter is invalid (path=$path). LocalFS supports only local paths.")
+    }
 }

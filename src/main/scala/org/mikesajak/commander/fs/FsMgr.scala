@@ -2,9 +2,7 @@ package org.mikesajak.commander.fs
 
 import java.io.File
 
-import org.mikesajak.commander.fs.local.{LocalDirectory, LocalFS}
-
-import scala.collection.JavaConverters._
+import org.mikesajak.commander.fs.local.LocalFS
 
 /**
 *  Created by mike on 25.10.14.
@@ -26,7 +24,7 @@ object FsMgr {
     rootFiles.map(new LocalFS(_))
   }
 
-  private val PathPattern = raw"(\S+):///(.+)".r
+  val PathPattern = raw"(\S+)://(.+)".r
 
   def resolvePath(path: String): Option[VPath] = {
       path match {

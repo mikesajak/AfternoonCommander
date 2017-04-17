@@ -5,8 +5,6 @@ import java.util.Date
 
 import org.mikesajak.commander.fs.{VDirectory, VPath}
 
-import scala.reflect.io.Directory
-
 trait LocalPath extends VPath {
 
   val file: File
@@ -14,7 +12,7 @@ trait LocalPath extends VPath {
 
   override def name: String = file.getName
 
-  override def absolutePath: String = file.getAbsolutePath
+  override def absolutePath: String = s"${LocalFS.id}://${file.getAbsolutePath}"
 
   override def attribs: String = {
     "" +
@@ -36,4 +34,6 @@ trait LocalPath extends VPath {
   override def directory: VDirectory = {
     if (isDirectory) this.asInstanceOf[VDirectory] else parent.get
   }
+
+  override def toString: String = absolutePath
 }

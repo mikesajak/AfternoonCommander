@@ -4,12 +4,13 @@ import java.io.IOException
 import javafx.{scene => jfxs}
 
 import com.google.inject.Guice
+import org.mikesajak.commander.config.Configuration
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
-import scalafx.scene.{Node, Scene}
-import scalafxml.core.{FXMLLoader, FXMLView}
+import scalafx.scene.Scene
+import scalafxml.core.FXMLLoader
 import scalafxml.guice.GuiceDependencyResolver
 
 
@@ -43,6 +44,14 @@ object Main extends JFXApp {
       root
     )
   }
+
+  val config = injector.getInstance(classOf[Configuration])
+  val appController= injector.getInstance(classOf[ApplicationController])
+
+  appController.mainStage = stage
+
+  stage.width = config.intProperty("window.width").getOrElse(1000): Int
+  stage.height = config.intProperty("window.height").getOrElse(600): Int
 
   override def main(args: Array[String]): Unit = {
     super.main(args)
