@@ -81,7 +81,7 @@ class DirPanelController(tabPane: TabPane,
     // todo - selection
     curDirField.text = selectedPath.absolutePath
     tabPane.selectionModel.select(selectedPath.name)
-    tabPane.getSelectionModel().selectFirst()
+    tabPane.getSelectionModel.selectFirst()
   }
 
 

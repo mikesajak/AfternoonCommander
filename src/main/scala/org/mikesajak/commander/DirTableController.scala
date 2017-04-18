@@ -45,7 +45,7 @@ class DirTableController(dirTableView: TableView[Any],
     val (dirs0, files0) = directory.children.partition(p => p.isDirectory)
 
     val dirs =
-      if (directory.parent.isDefined) Seq(new PathToParent(directory)) else Seq() ++
+      (if (directory.parent.isDefined) Seq(new PathToParent(directory)) else Seq()) ++
       dirs0.sortBy(d => d.name)
     val files = files0.sortBy(f => f.name)
 
