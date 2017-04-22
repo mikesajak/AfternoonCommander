@@ -3,11 +3,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<VBox maxHeight="1.7976931348623157E308" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirPanelController">
+<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirPanelController">
    <children>
-      <BorderPane prefHeight="26.0" prefWidth="600.0">
+      <BorderPane>
          <left>
-            <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <HBox BorderPane.alignment="CENTER">
                <children>
                   <ComboBox fx:id="drivesCombo" prefWidth="150.0" promptText="Home" />
                </children>
@@ -17,9 +17,9 @@
             <ToggleButton fx:id="showHiddenToggleButton" mnemonicParsing="false" text="H" BorderPane.alignment="CENTER" />
          </right>
          <center>
-            <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <AnchorPane BorderPane.alignment="CENTER">
                <children>
-                  <Label fx:id="freeSizeLabel" layoutX="212.0" layoutY="6.0" text="1234 MB" AnchorPane.rightAnchor="16.0" />
+                  <Label fx:id="freeSizeLabel" text="1234 MB" AnchorPane.rightAnchor="16.0" />
                </children>
             </AnchorPane>
          </center>
@@ -55,10 +55,18 @@
             </Button>
          </children>
       </HBox>
-      <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+      <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <tabs>
-          <Tab text="Untitled Tab 1" />
-          <Tab text="Untitled Tab 2" />
+          <Tab text="Untitled Tab 1">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+          <Tab text="Untitled Tab 2">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
         </tabs>
       </TabPane>
    </children>

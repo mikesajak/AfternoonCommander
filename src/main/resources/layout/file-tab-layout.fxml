@@ -13,19 +13,15 @@
       </HBox>
    </bottom>
    <center>
-      <ScrollPane prefViewportHeight="385.0" prefViewportWidth="600.0">
-         <content>
-            <TableView fx:id="dirTableView" editable="true" prefHeight="402.0" prefWidth="599.0" BorderPane.alignment="CENTER">
-              <columns>
-                <TableColumn fx:id="idColumn" editable="false" prefWidth="27.0" sortable="false" />
-                <TableColumn fx:id="nameColumn" prefWidth="123.0" text="Name" />
-                  <TableColumn fx:id="extColumn" prefWidth="75.0" text="Ext" />
-                  <TableColumn fx:id="sizeColumn" prefWidth="75.0" text="Size" />
-                  <TableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
-                  <TableColumn fx:id="attribsColumn" prefWidth="75.0" text="Attribs" />
-              </columns>
-            </TableView>
-         </content>
-      </ScrollPane>
+      <TableView fx:id="dirTableView" editable="true" prefHeight="402.0" prefWidth="599.0" BorderPane.alignment="CENTER">
+        <columns>
+          <TableColumn fx:id="idColumn" editable="false" prefWidth="27.0" sortable="false" />
+          <TableColumn fx:id="nameColumn" prefWidth="123.0" text="Name" />
+            <TableColumn fx:id="extColumn" prefWidth="75.0" text="Ext" />
+            <TableColumn fx:id="sizeColumn" prefWidth="75.0" text="Size" />
+            <TableColumn fx:id="dateColumn" prefWidth="75.0" text="Date" />
+            <TableColumn fx:id="attribsColumn" prefWidth="75.0" text="Attribs" />
+        </columns>
+      </TableView>
    </center>
 </BorderPane>

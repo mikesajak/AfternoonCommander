@@ -37,7 +37,7 @@ object Main extends JFXApp {
 
 
   stage = new PrimaryStage() {
-    title = "ScalaCommander"
+    title = "AfternoonCommander"
 //    scene = new Scene(new jfxs.Scene(root))
     scene = new Scene(
 //        FXMLView(
