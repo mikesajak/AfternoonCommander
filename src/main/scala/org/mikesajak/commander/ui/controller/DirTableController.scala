@@ -1,4 +1,4 @@
-package org.mikesajak.commander
+package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 
@@ -17,7 +17,7 @@ class FileRow(path: VPath) {
   val modifiyDate = new StringProperty(path.modificationDate.toString)
   val attributes = new StringProperty(path.attribs)
 
-  def mkName(p: VPath) = if (p.isDirectory) s"[${p.name}]" else p.name
+  def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else p.name
 }
 
 @sfxml

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<MenuBar xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.MenuController">
+  <menus>
+    <Menu mnemonicParsing="false" text="File">
+      <items>
+            <MenuItem mnemonicParsing="false" text="Preferences" />
+            <MenuItem mnemonicParsing="false" text="Access rights" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Find..." />
+            <MenuItem mnemonicParsing="false" text="Filter" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Close" />
+      </items>
+    </Menu>
+    <Menu mnemonicParsing="false" text="Edit">
+      <items>
+        <MenuItem mnemonicParsing="false" text="Delete" />
+      </items>
+    </Menu>
+      <Menu mnemonicParsing="false" text="Selection">
+        <items>
+          <MenuItem mnemonicParsing="false" text="Action 1" />
+        </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Unspecified Menu">
+        <items>
+          <MenuItem mnemonicParsing="false" text="Action 1" />
+        </items>
+      </Menu>
+      <Menu mnemonicParsing="false" text="Help">
+         <items>
+            <MenuItem mnemonicParsing="false" text="About" />
+         </items>
+      </Menu>
+  </menus>
+</MenuBar>

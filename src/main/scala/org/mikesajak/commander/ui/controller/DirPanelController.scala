@@ -1,10 +1,11 @@
-package org.mikesajak.commander
+package org.mikesajak.commander.ui.controller
 
 import java.io.IOException
 import javax.swing.filechooser.FileSystemView
 
 import com.google.inject.AbstractModule
 import net.codingwell.scalaguice.ScalaModule
+import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.fs.{FsMgr, VDirectory}
@@ -21,6 +22,10 @@ object PanelId {
   case object RightPanel extends PanelId
 }
 
+
+trait DirPanelControllerInterface {
+  def init(panelId: String)
+}
 /**
   * Created by mike on 14.04.17.
   */
@@ -33,24 +38,21 @@ class DirPanelController(tabPane: TabPane,
                          drivesCombo: ComboBox[String],
                          freeSpaceLabel: Label,
                          showHiddenToggleButton: ToggleButton,
-                         params: DirPanelParams,
-                         config: Configuration) {
+                         config: Configuration)
+    extends DirPanelControllerInterface {
 
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
 
-  println(s"DirPanelController - params=$params")
-  init()
+  println(s"DirPanelController - config=$config")
 
-  private def init() {
+  def init(panelId: String) {
     tabPane.tabs.clear()
 
     tabPane.selectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) => {
       println(s"Left selection change: ${newTab.getText}")
     })
 
-    //  tabPane += createTab("Left example tab")
-
-    val numTabs = config.intProperty(s"${params.panelId}.numTabs").getOrElse(0)
+    val numTabs = config.intProperty(s"${panelId}.numTabs").getOrElse(0)
 
     val tabPathNames =
       if (numTabs != 0) {

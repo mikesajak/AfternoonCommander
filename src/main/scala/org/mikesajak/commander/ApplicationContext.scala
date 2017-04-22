@@ -10,12 +10,8 @@ import org.mikesajak.commander.fs.FsMgr
   */
 class ApplicationContext extends AbstractModule with ScalaModule {
   def configure(): Unit = {
-    //    bind[ButtonBarController].to(classOf[ButtonBarController])
-    //    bind[PanelsController].to(classOf[PanelsController])
-    bind(classOf[ButtonBarController]).in(classOf[Singleton])
     bind(classOf[PanelsController]).in(classOf[Singleton])
 
-    //    bind[Configuration].to(classOf[SimpleConfig])
     val configuration = new TypesafeConfig(ApplicationController.configFile)
     bind[Configuration].toInstance(configuration)
 
