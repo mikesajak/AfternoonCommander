@@ -2,7 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.Pane?>
-<ToolBar xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="org.mikesajak.commander.ui.controller.ButtonBarController">
+<ToolBar xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ButtonBarController">
   <items>
     <Button fx:id="viewButton" mnemonicParsing="false" text="F3 View" />
       <Button fx:id="editButton" mnemonicParsing="false" text="F4 Edit" />
@@ -11,6 +11,6 @@
       <Button fx:id="mkdirButton" mnemonicParsing="false" text="F7 MkDir" />
       <Button fx:id="deleteButton" mnemonicParsing="false" text="F8 Delete" />
       <Pane minWidth="20.0" />
-      <Button fx:id="exitButton" mnemonicParsing="false" text="F10 Exit" />
+      <Button fx:id="exitButton" mnemonicParsing="false" onAction="#handleExit" text="F10 Exit" />
   </items>
 </ToolBar>

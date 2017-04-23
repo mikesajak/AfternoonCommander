@@ -2,7 +2,6 @@ package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.ApplicationController
 
-import scalafx.Includes.handle
 import scalafx.scene.control.Button
 import scalafxml.core.macros.sfxml
 
@@ -18,13 +17,15 @@ class ButtonBarController(viewButton: Button,
                           deleteButton: Button,
                           exitButton: Button,
                           applicationController: ApplicationController) {
-    viewButton.disable = true
-    editButton.disable = true
-    copyButton.disable = true
-    moveButton.disable = true
-    mkdirButton.disable = true
-    deleteButton.disable = true
-    exitButton.onAction = handle {
-      applicationController.exitApplication()
-    }
+  // Disable not implemented buttons...
+  viewButton.disable = true
+  editButton.disable = true
+  copyButton.disable = true
+  moveButton.disable = true
+  mkdirButton.disable = true
+  deleteButton.disable = true
+
+  def handleExit(): Unit = {
+    applicationController.exitApplication()
+  }
 }

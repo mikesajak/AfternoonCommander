@@ -10,15 +10,28 @@ import org.mikesajak.commander.fs.FsMgr
   */
 class ApplicationContext extends AbstractModule with ScalaModule {
   def configure(): Unit = {
-    bind(classOf[PanelsController]).in(classOf[Singleton])
-
     val configuration = new TypesafeConfig(ApplicationController.configFile)
     bind[Configuration].toInstance(configuration)
 
     bind(classOf[ApplicationController]).in(classOf[Singleton])
 
-    FsMgr.init()
+    val fileTypeManager = initFileTypeManager()
+    bind[FileTypeManager].toInstance(fileTypeManager)
 
+    val fsMgr = new FsMgr()
+    fsMgr.init()
+    bind[FsMgr].toInstance(fsMgr)
+  }
+
+  private def initFileTypeManager() = {
+    val fileTypeManager = new FileTypeManager()
+
+    fileTypeManager.registerIcon(DirectoryType, "ic_folder_black_24dp_1x.png")
+    fileTypeManager.registerIcon(ParentDirectoryType, "ic_arrow_back_black_24dp_1x.png")
+    fileTypeManager.registerIcon(GraphicFile, "ic_image_black_24dp_1x.png")
+
+
+    fileTypeManager
   }
 }
 

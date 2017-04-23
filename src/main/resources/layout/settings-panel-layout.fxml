@@ -1,39 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<SplitPane dividerPositions="0.29797979797979796" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8">
-  <items>
-    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="50.0" prefHeight="400.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.SettingsPanelController">
+   <children>
+      <SplitPane dividerPositions="0.3" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
+         <items>
+            <TreeView fx:id="categoriesTreeView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="300.0" prefWidth="200.0" showRoot="false" />
+            <AnchorPane fx:id="categoryPanel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="100.0" />
+         </items>
+      </SplitPane>
+      <HBox alignment="TOP_RIGHT" spacing="10.0" VBox.vgrow="NEVER">
          <children>
-            <Accordion layoutX="14.0" layoutY="39.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-              <panes>
-                <TitledPane animated="false" text="Appearance">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <ListView prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                           </children>
-                        </AnchorPane>
-                  </content>
-                </TitledPane>
-                <TitledPane animated="false" text="Operations">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <ListView prefHeight="317.0" prefWidth="174.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                           </children>
-                        </AnchorPane>
-                  </content>
-                </TitledPane>
-                <TitledPane animated="false" text="Other">
-                  <content>
-                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-                  </content>
-                </TitledPane>
-              </panes>
-            </Accordion>
-         </children></AnchorPane>
-    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
-  </items>
-</SplitPane>
+            <Button fx:id="okButton" mnemonicParsing="false" text="OK">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </Button>
+            <Button fx:id="applyButton" mnemonicParsing="false" text="Apply">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </Button>
+            <Button fx:id="cancelButton" mnemonicParsing="false" text="Cancel">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </Button>
+         </children>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <VBox.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </VBox.margin>
+      </HBox>
+   </children>
+</VBox>

@@ -7,7 +7,7 @@ import org.mikesajak.commander.fs.local.LocalFS
 /**
 *  Created by mike on 25.10.14.
 */
-object FsMgr {
+class FsMgr {
   private var filesystems = Seq[FS]()
 
   def rootFilesystems: Seq[FS] = filesystems
@@ -24,7 +24,7 @@ object FsMgr {
     rootFiles.map(new LocalFS(_))
   }
 
-  val PathPattern = raw"(\S+)://(.+)".r
+  private val PathPattern = raw"(\S+)://(.+)".r
 
   def resolvePath(path: String): Option[VPath] = {
       path match {

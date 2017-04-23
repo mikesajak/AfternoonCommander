@@ -1,20 +1,17 @@
 package org.mikesajak.commander.ui.controller
 
-import java.io.IOException
 import javax.swing.filechooser.FileSystemView
 
 import com.google.inject.AbstractModule
 import net.codingwell.scalaguice.ScalaModule
-import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.fs.{FsMgr, VDirectory}
+import org.mikesajak.commander.ui.UILoader
 
 import scalafx.scene.Node
 import scalafx.scene.control._
-import scalafxml.core.FXMLLoader
 import scalafxml.core.macros.sfxml
-import scalafxml.guice.GuiceDependencyResolver
 
 sealed trait PanelId
 object PanelId {
@@ -38,7 +35,8 @@ class DirPanelController(tabPane: TabPane,
                          drivesCombo: ComboBox[String],
                          freeSpaceLabel: Label,
                          showHiddenToggleButton: ToggleButton,
-                         config: Configuration)
+                         config: Configuration,
+                         fsMgr: FsMgr)
     extends DirPanelControllerInterface {
 
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
@@ -68,7 +66,7 @@ class DirPanelController(tabPane: TabPane,
 
 
     val tabPaths = tabPathNames
-      .flatMap(path => FsMgr.resolvePath(path))
+      .flatMap(path => fsMgr.resolvePath(path))
       // todo log problem with path
       .map(vpath => vpath.directory)
 
@@ -86,18 +84,9 @@ class DirPanelController(tabPane: TabPane,
     tabPane.getSelectionModel.selectFirst()
   }
 
-
   private def createTab(path: VDirectory) = {
-    implicit val injector = ApplicationContext.globalInjector.createChildInjector(new DirTableContext(DirTableParams(path)))
-
-    val resource = getClass.getResource(dirTableLayout)
-    if (resource == null)
-      throw new IOException(s"Cannot load resource: $dirTableLayout")
-
-    val loader = new FXMLLoader(resource, new GuiceDependencyResolver())
-    loader.load
-
-    val root = loader.getRoot[javafx.scene.Parent]
+    val root = UILoader.loadScene(dirTableLayout,
+                                  new DirTableContext(DirTableParams(path)))
 
     val tab = new Tab {
       text = path.name

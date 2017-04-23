@@ -17,6 +17,7 @@ trait VPath {
 
 trait VFile extends VPath {
   def size: Long
+  def extension: Option[String]
 
   def getInStream: InputStream
   def getOutStream: OutputStream
