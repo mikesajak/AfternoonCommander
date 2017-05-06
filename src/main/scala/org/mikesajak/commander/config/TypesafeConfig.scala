@@ -1,8 +1,8 @@
 package org.mikesajak.commander.config
 
-import java.io.FileWriter
+import java.io.{File, FileWriter}
 
-import com.typesafe.config.{ConfigFactory, ConfigRenderOptions, ConfigValueFactory}
+import com.typesafe.config._
 import com.typesafe.scalalogging.Logger
 
 /**
@@ -11,47 +11,60 @@ import com.typesafe.scalalogging.Logger
 class TypesafeConfig(filename: String) extends Configuration {
 
   private val logger = Logger[TypesafeConfig]
-  private var config = ConfigFactory.load(filename)
+  private var config: Config = ConfigFactory.empty("Afternoon Commander settings")
+
+  private val appName = "afternooncommander"
 
   override def load(): Unit = {
     logger.info(s"Loading settings from $filename")
-    config = ConfigFactory.load(filename)
+    config = ConfigFactory.parseFile(new File(filename))
+    config = config.withOnlyPath(appName)
+    logger.info(s"Current config:\n${renderConfig()}")
+  }
+
+  def renderConfig(): String = {
+    val opts = ConfigRenderOptions.defaults()
+      .setOriginComments(false)
+      .setFormatted(true)
+      .setJson(false)
+    config.withOnlyPath(appName).root.render(opts)
   }
 
   override def save(): Unit = {
     logger.info(s"Saving settings to $filename")
-    val opts = ConfigRenderOptions.defaults()
-      .setOriginComments(false)
-      .setFormatted(true)
-      .setFormatted(true)
-      .setJson(false)
-    val contents = config.getConfig("app").root.render(opts)
+    val contents = renderConfig()
     val writer = new FileWriter(filename)
     writer.write(contents)
     writer.close()
   }
 
-  override def boolProperty(name: String): Option[Boolean] = {
-    val path = s"app.$name"
+  override def boolProperty(category: String, name: String): Option[Boolean] = {
+    val path = s"$appName.$category.$name"
     if (config.hasPath(path)) Some(config.getBoolean(path)) else None
   }
 
-  override def boolProperty(name: String, value: Boolean): Unit =
-    config = config.withValue(s"app.$name", ConfigValueFactory.fromAnyRef(value))
+  override def setProperty(category: String, name: String, value: Boolean): Unit = {
+    config = config.withValue(s"$appName.$category.$name", ConfigValueFactory.fromAnyRef(value))
+    notifyObservers(category, name)
+  }
 
-  override def intProperty(name: String): Option[Int] = {
-    val path = s"app.$name"
+  override def intProperty(category: String, name: String): Option[Int] = {
+    val path = s"$appName.$category.$name"
     if (config.hasPath(path)) Some(config.getInt(path)) else None
   }
 
-  override def intProperty(name: String, value: Int): Unit =
-    config = config.withValue(s"app.$name", ConfigValueFactory.fromAnyRef(value))
+  override def setProperty(category: String, name: String, value: Int): Unit = {
+    config = config.withValue(s"$appName.$category.$name", ConfigValueFactory.fromAnyRef(value))
+    notifyObservers(category, name)
+  }
 
-  override def stringProperty(name: String): Option[String] = {
-    val path = s"app.$name"
+  override def stringProperty(category: String, name: String): Option[String] = {
+    val path = s"$appName.$category.$name"
     if (config.hasPath(path)) Some(config.getString(path)) else None
   }
 
-  override def stringProperty(name: String, value: String): Unit =
-    config = config.withValue(s"app.$name", ConfigValueFactory.fromAnyRef(value))
+  override def setProperty(category: String, name: String, value: String): Unit = {
+    config = config.withValue(s"$appName.$category.$name", ConfigValueFactory.fromAnyRef(value))
+    notifyObservers(category, name)
+  }
 }

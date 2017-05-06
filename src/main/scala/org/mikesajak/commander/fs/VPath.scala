@@ -1,14 +1,14 @@
 package org.mikesajak.commander.fs
 
 import java.io.{InputStream, OutputStream}
-import java.util.Date
+import java.time.Instant
 
 trait VPath {
   def name: String
   def parent: Option[VDirectory]
   def directory: VDirectory
   def absolutePath: String
-  def modificationDate: Date
+  def modificationDate: Instant
   def attribs: String
   def isDirectory: Boolean
   def isFile: Boolean = !isDirectory
@@ -17,7 +17,12 @@ trait VPath {
 
 trait VFile extends VPath {
   def size: Long
-  def extension: Option[String]
+  def extension: Option[String] = {
+    val extPos = name.lastIndexOf('.')
+    if (extPos != -1 && extPos < name.length - 1) {
+      Some(name.slice(extPos+1, name.length))
+    } else None
+  }
 
   def getInStream: InputStream
   def getOutStream: OutputStream

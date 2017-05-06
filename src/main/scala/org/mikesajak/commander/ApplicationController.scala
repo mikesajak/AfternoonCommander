@@ -29,8 +29,8 @@ class ApplicationController @Inject()(config: Configuration) {
   def exitApplication(): Boolean = {
     if (canExit) {
       // TODO: save config, close connections, etc.
-      config.intProperty("window.width", mainStage.width.toInt)
-      config.intProperty("window.height", mainStage.height.toInt)
+      config.setProperty("window", "width", mainStage.width.toInt)
+      config.setProperty("window", "height", mainStage.height.toInt)
       config.save()
 
       Platform.exit()
@@ -39,7 +39,7 @@ class ApplicationController @Inject()(config: Configuration) {
   }
 
   private def canExit: Boolean = {
-    val confirm = config.boolProperty("application.exitConfirmation").getOrElse(true)
+    val confirm = config.boolProperty("application", "exitConfirmation").getOrElse(true)
 
     if (confirm) askUserForExit()
     else true
@@ -53,6 +53,7 @@ class ApplicationController @Inject()(config: Configuration) {
       contentText = "Are you sure?"
       buttonTypes = Seq(ButtonType.No, ButtonType.Yes)
     }
+
     alert.showAndWait() match {
       case Some(ButtonType.Yes) => true
       case _ => false
@@ -62,5 +63,5 @@ class ApplicationController @Inject()(config: Configuration) {
 }
 
 object ApplicationController {
-  val configFile = "afternooncommander.properties"
+  val configFile = "afternooncommander.conf"
 }

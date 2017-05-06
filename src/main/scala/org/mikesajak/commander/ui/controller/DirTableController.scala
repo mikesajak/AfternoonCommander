@@ -1,6 +1,7 @@
 package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.FileTypeManager
+import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.ui.ResourceManager
 
@@ -40,7 +41,8 @@ class DirTableController(dirTableView: TableView[FileRow],
                          params: DirTableParams,
 
                          fileTypeManager: FileTypeManager,
-                         resourceManager: ResourceManager) {
+                         resourceManager: ResourceManager,
+                         config: Configuration) {
 
   idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
   idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
@@ -87,16 +89,20 @@ class DirTableController(dirTableView: TableView[FileRow],
   def initTable(directory: VDirectory) {
     val (dirs0, files0) = directory.children.partition(p => p.isDirectory)
 
+    val showHidden= config.boolProperty("filePanels", "showHiddenFiles").getOrElse(true)
+
     val dirs =
       (if (directory.parent.isDefined) Seq(new PathToParent(directory)) else Seq()) ++
       dirs0.sortBy(d => d.name)
     val files = files0.sortBy(f => f.name)
 
-    val fileRows =
-      dirs.map(d => new FileRow(d)) ++
-      files.map(f => new FileRow(f))
+    val fileRows = (dirs ++ files).view
+      .filter(f => showHidden || f.attribs.contains('h'))
+      .map(f => new FileRow(f))
+      .toList
 
     dirTableView.items = ObservableBuffer(fileRows)
+    dirTableView.scrollTo(0)
   }
 
   def handleAction(path: VPath): Unit = {

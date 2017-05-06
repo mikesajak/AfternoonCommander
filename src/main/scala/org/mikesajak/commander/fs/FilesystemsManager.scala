@@ -7,7 +7,7 @@ import org.mikesajak.commander.fs.local.LocalFS
 /**
 *  Created by mike on 25.10.14.
 */
-class FsMgr {
+class FilesystemsManager {
   private var filesystems = Seq[FS]()
 
   def rootFilesystems: Seq[FS] = filesystems

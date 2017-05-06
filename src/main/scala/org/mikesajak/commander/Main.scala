@@ -37,8 +37,8 @@ object Main extends JFXApp {
 
   appController.mainStage = stage
 
-  stage.width = config.intProperty("window.width").getOrElse(1000): Int
-  stage.height = config.intProperty("window.height").getOrElse(600): Int
+  stage.width = config.intProperty("window", "width").getOrElse(1000): Int
+  stage.height = config.intProperty("window", "height").getOrElse(600): Int
 
 
   override def main(args: Array[String]): Unit = {

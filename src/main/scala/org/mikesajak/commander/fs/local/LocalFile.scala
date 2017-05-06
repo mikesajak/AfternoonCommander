@@ -11,13 +11,6 @@ class LocalFile(override val file: File, override val fileSystem: LocalFS) exten
 
   override def size: Long = file.length()
 
-  override def extension: Option[String] = {
-    val extPos = name.lastIndexOf('.')
-    if (extPos != -1 && extPos < name.length - 1) {
-      Some(name.slice(extPos+1, name.length))
-    } else None
-  }
-
   override def getInStream = new BufferedInputStream(new FileInputStream(file))
 
   override def getOutStream = new BufferedOutputStream(new FileOutputStream(file))

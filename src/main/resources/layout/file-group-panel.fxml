@@ -27,13 +27,16 @@
       <HBox>
          <children>
             <TextField fx:id="curDirField" editable="false" prefHeight="25.0" prefWidth="623.0" promptText="Current directory" />
-            <Button fx:id="favoritiesButton" mnemonicParsing="false" textOverrun="CLIP">
+            <Button fx:id="favDirsButton" alignment="CENTER" contentDisplay="CENTER" graphicTextGap="0.0" mnemonicParsing="false" textOverrun="CLIP">
               <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../images/ic_bookmark_border_black_24dp_1x.png" />
                      </image></ImageView>
               </graphic>
+               <tooltip>
+                  <Tooltip text="Favorities" />
+               </tooltip>
             </Button>
             <Button fx:id="backDirButton" graphicTextGap="0.0" mnemonicParsing="false">
               <graphic>
@@ -43,6 +46,9 @@
                    </image>
                 </ImageView>
               </graphic>
+               <tooltip>
+                  <Tooltip text="Bo back" />
+               </tooltip>
             </Button>
             <Button fx:id="topDirButton" graphicTextGap="0.0" mnemonicParsing="false">
               <graphic>
@@ -52,19 +58,22 @@
                    </image>
                 </ImageView>
               </graphic>
+               <tooltip>
+                  <Tooltip text="Go to top directory" />
+               </tooltip>
             </Button>
          </children>
       </HBox>
-      <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+      <TabPane fx:id="tabPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" tabClosingPolicy="ALL_TABS" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">
         <tabs>
           <Tab text="Untitled Tab 1">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
             </content>
           </Tab>
           <Tab text="Untitled Tab 2">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
             </content>
           </Tab>
         </tabs>

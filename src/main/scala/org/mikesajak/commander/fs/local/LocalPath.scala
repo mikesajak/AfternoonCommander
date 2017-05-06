@@ -1,7 +1,7 @@
 package org.mikesajak.commander.fs.local
 
 import java.io.File
-import java.util.Date
+import java.time.Instant
 
 import org.mikesajak.commander.fs.{VDirectory, VPath}
 
@@ -19,10 +19,11 @@ trait LocalPath extends VPath {
       (if (file.isDirectory) "d" else " ") +
       (if (file.canRead) "r" else " ") +
       (if (file.canWrite) "w" else " ") +
-      (if (file.canExecute) "x" else " ")
+      (if (file.canExecute) "x" else " ") +
+      (if (file.isHidden) "h" else " ")
   }
 
-  override def modificationDate = new Date(file.lastModified())
+  override def modificationDate = Instant.ofEpochMilli(file.lastModified())
 
   override def isDirectory: Boolean = file.isDirectory
 
