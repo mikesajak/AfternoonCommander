@@ -1,6 +1,5 @@
 package org.mikesajak.commander
 
-import com.google.inject.Inject
 import org.mikesajak.commander.config.Configuration
 
 import scalafx.application.Platform
@@ -11,7 +10,7 @@ import scalafx.stage.Stage
 /**
   * Created by mike on 09.04.17.
   */
-class ApplicationController @Inject()(config: Configuration) {
+class ApplicationController(config: Configuration) {
 
   private var mainStage0: Option[Stage] = None
 

@@ -1,6 +1,5 @@
 package org.mikesajak.commander
 
-import com.google.inject.Inject
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 
 import scala.annotation.tailrec
@@ -8,7 +7,7 @@ import scala.annotation.tailrec
 /**
   * Created by mike on 22.04.17.
   */
-class FileTypeManager @Inject()(archiveManager: ArchiveManager) {
+class FileTypeManager(archiveManager: ArchiveManager) {
   private var fileTypeDetectors = List[FileTypeDetector](new DefaultFileTypeDetector(),
                                                          archiveManager)
   private var handlersMap = Map[FileType, FileHandler]()
