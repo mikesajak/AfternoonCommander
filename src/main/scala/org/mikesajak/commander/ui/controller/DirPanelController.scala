@@ -1,9 +1,11 @@
 package org.mikesajak.commander.ui.controller
 
-import javax.swing.filechooser.FileSystemView
+import javafx.scene.Parent
 
-import com.google.inject.AbstractModule
+import com.google.inject.name.Names
+import com.google.inject.{AbstractModule, Key}
 import net.codingwell.scalaguice.ScalaModule
+import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
@@ -20,7 +22,6 @@ object PanelId {
   case object RightPanel extends PanelId
 }
 
-
 trait DirPanelControllerInterface {
   def init(panelId: String)
 }
@@ -36,15 +37,20 @@ class DirPanelController(tabPane: TabPane,
                          drivesCombo: ComboBox[String],
                          freeSpaceLabel: Label,
                          showHiddenToggleButton: ToggleButton,
+
                          config: Configuration,
                          fsMgr: FilesystemsManager,
                          resourceManager: ResourceManager)
     extends DirPanelControllerInterface {
 
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
+  private var dirTabManager: DirTabManager = _
   private var currentTab: Tab = _
 
   def init(panelId: String) {
+    // TODO: better way of getting dependency - use injection!!
+    dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager], Names.named(panelId)))
+
     favDirsButton.disable = true
     backDirButton.disable = true
     topDirButton.disable = true
@@ -52,12 +58,27 @@ class DirPanelController(tabPane: TabPane,
     showHiddenToggleButton.onAction = a => config.setProperty("filePanel", "showHiddenFiles", showHiddenToggleButton.selected.value)
 
     tabPane.tabs.clear()
+    dirTabManager.clearTabs()
 
+    var tabSelectionPending = false
     tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
       println(s"$panelId selected tab index change: $oldIdx->$newIdx")
-      val selectedTab = tabPane.tabs.get(newIdx.intValue())
-      println(s"selectedTab=$selectedTab")
+      val prevIdx = oldIdx.intValue
+      val tabIdx = newIdx.intValue
+      if (!tabSelectionPending && isNewTabButton(tabIdx)) {
+        println(s"Last tab!!")
+        try {
+          tabSelectionPending = true
+          addNewTabToPane()
+        } finally {
+          tabSelectionPending = false
+        }
+      }
 
+      if (tabIdx < tabPane.tabs.size) {
+        val selectedTab = tabPane.tabs.get(tabIdx)
+        println(s"selectedTab=$selectedTab")
+      }
     }
 
     tabPane.selectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) => {
@@ -68,37 +89,58 @@ class DirPanelController(tabPane: TabPane,
 //      currentTab = newTab
     })
 
-    val numTabs = config.intProperty("tabs", s"${panelId}.numTabs").getOrElse(0)
+    val numTabs = config.intProperty("tabs", s"$panelId.numTabs").getOrElse(0)
 
     val tabPathNames =
-      if (numTabs != 0) {
-        for (i <- 0 until numTabs) yield {
-          val tabPath = config.stringProperty("tabs", s"panelId.tab[$i].path").get
-          tabPath
-        }
-      } else {
-        val fsv = FileSystemView.getFileSystemView
-        val path = LocalFS.mkLocalPathName(fsv.getHomeDirectory.getAbsolutePath)
-        List(path)
-      }
-
+      config.stringSeqProperty("tabs", s"$panelId.tabs")
+        .getOrElse(List(homePath))
 
     val tabPaths = tabPathNames
       .flatMap(path => fsMgr.resolvePath(path))
       // todo log problem with path
       .map(vpath => vpath.directory)
 
-    tabPaths
-      .map(createTab)
-      .foreach(t => tabPane += t)
+    tabPaths.foreach { t =>
+      val tab = createTab(t)
+      tabPane += tab
+      tabPane.selectionModel.select(tab.text.value)
+      dirTabManager.addTab(t)
+      tabPane
+    }
 
     tabPane += createNewTabTab()
 
     val selectedPath = tabPaths.head
     // todo - selection
     curDirField.text = selectedPath.absolutePath
-    tabPane.selectionModel.select(selectedPath.name)
+//    tabPane.selectionModel.select(selectedPath.name)
     tabPane.getSelectionModel.selectFirst()
+  }
+
+  private def homePath = {
+//    val fsv = FileSystemView.getFileSystemView
+//    LocalFS.mkLocalPathName(fsv.getHomeDirectory.getAbsolutePath)
+    LocalFS.mkLocalPathName(System.getProperty("user.dir"))
+  }
+
+  private def pathForNewTab() = {
+    val newTabPathName = homePath
+    fsMgr.resolvePath(newTabPathName).map(_.directory)
+  }
+
+  private def isNewTabButton(tabIdx: Int) =
+    tabIdx == tabPane.tabs.size - 1 && tabPane.tabs.size > 1
+
+  private def addNewTabToPane(): Unit = {
+    tabPane.tabs.remove(tabPane.tabs.size - 1)
+
+    val newTabPath = pathForNewTab()
+
+    for (dir <- newTabPath) {
+      tabPane += createTab(dir)
+      dirTabManager.addTab(dir)
+      tabPane += createNewTabTab()
+    }
   }
 
   private def createTab(path: VDirectory) = {
@@ -108,7 +150,7 @@ class DirPanelController(tabPane: TabPane,
   private def createNewTabTab() = {
     new Tab {
       closable = false
-      disable = true
+//      disable = true
       graphic = new ImageView(resourceManager.getIcon("ic_add_box_black_24dp_1x.png"))
       text = ""
     }
@@ -118,18 +160,19 @@ class DirPanelController(tabPane: TabPane,
 class DirTab(val tabPath: VDirectory) extends Tab {
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
 
-  val root = UILoader.loadScene(dirTableLayout,
-                                new DirTableContext(DirTableParams(tabPath)))
+  val root: Parent = UILoader.loadScene(dirTableLayout,
+                                        new DirTableContext(DirTableParams(tabPath)))
 
   text = tabPath.name
   val pane = new Node(root){}
   content = pane
+  tooltip = tabPath.absolutePath
 }
 
 case class DirPanelParams(panelId: PanelId)
 
 class DirTableContext(dirTableParams: DirTableParams) extends AbstractModule with ScalaModule {
-  def configure() = {
+  def configure(): Unit = {
     bind(classOf[DirTableParams]).toInstance(dirTableParams)
   }
 }

@@ -27,11 +27,18 @@ class SimpleConfig extends Configuration {
     updateValue(category, name, value.toString)
 
   override def stringProperty(category: String, name: String): Option[String] =
-    settingsMap.get(name)
+    settingsMap.get(s"$category.$name")
   override def setProperty(category: String, name: String, value: String): Unit =
     updateValue(category, name, value)
 
-  override def load() = {
+  override def stringSeqProperty(category: String, name: String): Option[Seq[String]] =
+//    settingsMap.get(s"$category.$name")
+    throw new UnsupportedOperationException
+
+  override def setProperty(category: String, name: String, value: Seq[String]): Unit =
+    throw new UnsupportedOperationException
+
+  override def load(): Unit = {
     logger.warn("Config load not implemented")
   }
 

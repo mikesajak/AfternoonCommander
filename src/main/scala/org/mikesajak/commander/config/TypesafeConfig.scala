@@ -5,6 +5,8 @@ import java.io.{File, FileWriter}
 import com.typesafe.config._
 import com.typesafe.scalalogging.Logger
 
+import scala.collection.JavaConverters._
+
 /**
   * Created by mike on 17.04.17.
   */
@@ -65,6 +67,16 @@ class TypesafeConfig(filename: String) extends Configuration {
 
   override def setProperty(category: String, name: String, value: String): Unit = {
     config = config.withValue(s"$appName.$category.$name", ConfigValueFactory.fromAnyRef(value))
+    notifyObservers(category, name)
+  }
+
+  def stringSeqProperty(category: String, name: String): Option[Seq[String]] = {
+    val path = s"$appName.$category.$name"
+    if (config.hasPath(path)) Some(config.getStringList(path).asScala) else None
+  }
+
+  def setProperty(category: String, name: String, value: Seq[String]): Unit = {
+    config = config.withValue(s"$appName.$category.$name", ConfigValueFactory.fromIterable(value.asJava))
     notifyObservers(category, name)
   }
 }
