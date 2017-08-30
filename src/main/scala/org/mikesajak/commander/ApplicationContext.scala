@@ -1,10 +1,12 @@
 package org.mikesajak.commander
 
 import com.google.inject._
-import com.google.inject.name.Names
+import com.google.inject.name.{Named, Names}
+import com.typesafe.scalalogging.Logger
 import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
+import org.mikesajak.commander.status.{OperationMgr, StatusMgr}
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
 
@@ -54,15 +56,25 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     pluginMgr
   }
 
-//  @Provides
-//  @Singleton
-//  def provideDirTabManager(): DirTabManager = new DirTabManager()
+  @Provides
+  @Singleton
+  def provideStatusManager(@Named("LeftPanel") leftDirTabMgr: DirTabManager,
+                           @Named("RightPanel") rightDirTabMgr: DirTabManager): StatusMgr = {
+    new StatusMgr(leftDirTabMgr, rightDirTabMgr)
+  }
+
+  @Provides
+  @Singleton
+  def provideOperationManager(statusMgr: StatusMgr, applicationController: ApplicationController): OperationMgr = {
+    new OperationMgr(statusMgr, applicationController)
+  }
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
-  println(s"Creating PanelContext with panelId=$panelId")
+  private val logger = Logger(this.getClass)
+
   override def configure(): Unit = {
-    println(s"Configuring PanelContext for panelId=${panelId.toString}")
+    logger.trace(s"Configuring PanelContext for panelId=${panelId.toString}")
     bind(classOf[DirTabManager]).annotatedWith(Names.named(panelId.toString))
       //.to(classOf[DirTabManager])
       .toInstance(new DirTabManager(panelId)) // todo: use better way - some provider etc...
@@ -71,7 +83,10 @@ class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
 
   @Provides
   @Singleton
-  def provideDirTabManager(): DirTabManager = new DirTabManager(panelId)
+  def provideDirTabManager(): DirTabManager = {
+//    println(s"### PROVIDER ###  dirTabManager for $panelId")
+    new DirTabManager(panelId)
+  }
 }
 
 

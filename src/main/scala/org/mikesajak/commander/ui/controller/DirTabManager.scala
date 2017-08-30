@@ -1,14 +1,18 @@
 package org.mikesajak.commander.ui.controller
 
+import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.VDirectory
 
 /**
   * Created by mike on 07.05.17.
   */
 class DirTabManager(panelId: PanelId) {
-  private var tabs = IndexedSeq[TabData]()
+  private val logger = Logger(this.getClass)
 
-  println(s"Creating DirTabManager with panelId=$panelId")
+  private var tabs = IndexedSeq[TabData]()
+  private var selectedTabIdx0 = 0
+
+  logger.debug(s"Creating DirTabManager with panelId=$panelId")
 
   def addTab(dir: VDirectory): Unit = {
     tabs :+= new TabData(dir)
@@ -27,6 +31,14 @@ class DirTabManager(panelId: PanelId) {
   }
 
   def tab(idx: Int): TabData = tabs(idx)
+
+  def selectedTab: TabData = tabs(selectedTabIdx0)
+
+  def selectedTabIdx: Int = selectedTabIdx0
+  def selectedTabIdx_=(newIdx: Int): Unit = {
+    logger.debug(s"Tab selection change: panelId=$panelId, tab selection: $selectedTabIdx0 -> $newIdx")
+    selectedTabIdx0 = newIdx
+  }
 }
 
 class TabData(val dir: VDirectory) {

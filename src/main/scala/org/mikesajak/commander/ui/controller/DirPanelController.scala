@@ -9,11 +9,15 @@ import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
+import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 
+import scalafx.Includes._
 import scalafx.scene.Node
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
+import scalafx.scene.input.MouseEvent
+import scalafx.scene.layout.Pane
 import scalafxml.core.macros.sfxml
 
 sealed trait PanelId
@@ -23,7 +27,7 @@ object PanelId {
 }
 
 trait DirPanelControllerInterface {
-  def init(panelId: String)
+  def init(panelId: PanelId)
 }
 /**
   * Created by mike on 14.04.17.
@@ -37,9 +41,11 @@ class DirPanelController(tabPane: TabPane,
                          drivesCombo: ComboBox[String],
                          freeSpaceLabel: Label,
                          showHiddenToggleButton: ToggleButton,
+                         topUIPane: Pane,
 
                          config: Configuration,
                          fsMgr: FilesystemsManager,
+                         statusMgr: StatusMgr,
                          resourceManager: ResourceManager)
     extends DirPanelControllerInterface {
 
@@ -47,15 +53,30 @@ class DirPanelController(tabPane: TabPane,
   private var dirTabManager: DirTabManager = _
   private var currentTab: Tab = _
 
-  def init(panelId: String) {
+  def init(panelId: PanelId) {
     // TODO: better way of getting dependency - use injection!!
-    dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager], Names.named(panelId)))
+    dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
+                                                                          Names.named(panelId.toString)))
 
     favDirsButton.disable = true
     backDirButton.disable = true
     topDirButton.disable = true
 
-    showHiddenToggleButton.onAction = a => config.setProperty("filePanel", "showHiddenFiles", showHiddenToggleButton.selected.value)
+    topUIPane.setStyle("-fx-border-color: Transparent")
+
+    statusMgr.addPanelSelectionListener { (oldPanelId, newPanelId) =>
+      if (newPanelId == panelId)
+        topUIPane.setStyle("-fx-border-color: Blue")
+      else
+        topUIPane.setStyle("-fx-border-color: Transparent")
+    }
+
+    topUIPane.filterEvent(MouseEvent.MousePressed) {
+      (me: MouseEvent) => statusMgr.selectedPanel = panelId
+    }
+
+    showHiddenToggleButton.onAction = a => config.setProperty("filePanel", "showHiddenFiles",
+                                                              showHiddenToggleButton.selected.value)
 
     tabPane.tabs.clear()
     dirTabManager.clearTabs()
@@ -77,7 +98,7 @@ class DirPanelController(tabPane: TabPane,
 
       if (tabIdx < tabPane.tabs.size) {
         val selectedTab = tabPane.tabs.get(tabIdx)
-        println(s"selectedTab=$selectedTab")
+        statusMgr.selectedTabManager.selectedTabIdx = tabIdx
       }
     }
 

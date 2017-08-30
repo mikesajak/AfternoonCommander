@@ -21,7 +21,7 @@ class TypesafeConfig(filename: String) extends Configuration {
     logger.info(s"Loading settings from $filename")
     config = ConfigFactory.parseFile(new File(filename))
     config = config.withOnlyPath(appName)
-    logger.info(s"Current config:\n${renderConfig()}")
+    logger.debug(s"Current config:\n${renderConfig()}")
   }
 
   def renderConfig(): String = {
