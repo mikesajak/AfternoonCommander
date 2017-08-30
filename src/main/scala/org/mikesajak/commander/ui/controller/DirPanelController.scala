@@ -83,7 +83,6 @@ class DirPanelController(tabPane: TabPane,
 
     var tabSelectionPending = false
     tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
-      println(s"$panelId selected tab index change: $oldIdx->$newIdx")
       val prevIdx = oldIdx.intValue
       val tabIdx = newIdx.intValue
       if (!tabSelectionPending && isNewTabButton(tabIdx)) {

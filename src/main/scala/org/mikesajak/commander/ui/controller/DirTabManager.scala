@@ -41,6 +41,6 @@ class DirTabManager(panelId: PanelId) {
   }
 }
 
-class TabData(val dir: VDirectory) {
+case class TabData(dir: VDirectory) {
 
 }

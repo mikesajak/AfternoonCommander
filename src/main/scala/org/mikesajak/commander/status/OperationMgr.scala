@@ -23,7 +23,7 @@ class OperationMgr(statusMgr: StatusMgr, appController: ApplicationController) {
   }
 
   def handleMkDir(): Unit = {
-//    logger.warn(s"handleMkDir - Not implemented yet!")
+    logger.warn(s"handleMkDir - Not implemented yet!")
     val curTab = statusMgr.selectedTabManager.selectedTab
     logger.debug(s"handleMkDir - curTab=$curTab")
   }
