@@ -14,7 +14,7 @@ class FileTypeManager(archiveManager: ArchiveManager) {
   private var iconsMap = Map[FileType, String]()
 
   registerIcon(DirectoryType, "ic_folder_black_24dp_1x.png")
-  registerIcon(ParentDirectoryType, "ic_arrow_back_black_24dp_1x.png")
+  registerIcon(ParentDirectoryType, "arrow-left-thick-36.png")
   registerIcon(GraphicFile, "ic_image_black_24dp_1x.png")
   registerIcon(ArchiveFile, "ic_business_center_black_24dp_1x.png")
 
@@ -78,7 +78,7 @@ class DefaultFileTypeDetector extends FileTypeDetector {
   override def detect(path: VPath): Option[FileType] = path match {
     case d: PathToParent => Some(ParentDirectoryType)
     case d: VDirectory=> Some(DirectoryType)
-    case f: VFile if f.attribs contains('x')=> Some(ExecutableFile)
+    case f: VFile if f.attribs contains 'x' => Some(ExecutableFile)
     case _ => None
   }
 }
