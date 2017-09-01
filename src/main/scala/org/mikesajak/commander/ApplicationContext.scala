@@ -7,6 +7,7 @@ import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.{OperationMgr, StatusMgr}
+import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
 
@@ -65,8 +66,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideOperationManager(statusMgr: StatusMgr, applicationController: ApplicationController): OperationMgr = {
-    new OperationMgr(statusMgr, applicationController)
+  def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
+                              applicationController: ApplicationController): OperationMgr = {
+    new OperationMgr(statusMgr, resourceMgr, applicationController)
   }
 }
 
