@@ -5,10 +5,10 @@ import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 
 import scalafx.Includes._
-import scalafx.scene.Scene
-import scalafx.scene.control.Dialog
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control._
 import scalafx.scene.image.ImageView
-import scalafx.stage.{Modality, Stage, StageStyle}
+import scalafx.stage.{Modality, StageStyle}
 
 class OperationMgr(statusMgr: StatusMgr,
                    resourceMgr: ResourceManager,
@@ -38,41 +38,52 @@ class OperationMgr(statusMgr: StatusMgr,
 
     val settingsLayout = "/layout/ops/mkdir-dialog.fxml"
 
-    val root = UILoader.loadScene(settingsLayout)
-//    val stage = new Stage()
-
-    val dialog = new Dialog[Option[String]]() {
-      title ="Afternoon Commander - create folder"
-      headerText = "Create new folder"
-      graphic = new ImageView(resourceMgr.getIcon("folder-plus-48.png"))
-
-      initOwner(appController.mainStage)
-      initStyle(StageStyle.Utility)
-      initModality(Modality.ApplicationModal)
-
-      dialogPane().content = root
-
-      val okButton = dialogPane().lookup("#okButton")
-      val cancelButton = dialogPane().lookup("#cancelButton")
-
-      resultConverter = x => {
-        println(s"x=$x")
-        None
-      }
-
-      width = 500
-      height = 250
-
-      dialogPane()
-    }
+    val dialog = prepareOkCancelDialog()
+    dialog.headerText = "Create new folder"
+    dialog.graphic = new ImageView(resourceMgr.getIcon("folder-plus-48.png"))
+    dialog.dialogPane().content = UILoader.loadScene(settingsLayout)
 
     val result = dialog.showAndWait()
 
     println(s"MkDir dialog result=$result")
   }
 
+  private def prepareOkCancelDialog() = {
+    new Dialog[String]() {
+      title ="Afternoon Commander"
+//      headerText = "Create new folder"
+//      graphic = new ImageView(resourceMgr.getIcon("folder-plus-48.png"))
+
+      initOwner(appController.mainStage)
+      initStyle(StageStyle.Utility)
+      initModality(Modality.ApplicationModal)
+
+      dialogPane().buttonTypes = Seq(ButtonType.OK, ButtonType.Cancel)
+
+//      resultConverter = bt => bt match {
+//        case ButtonType.OK => "OK"
+//        case ButtonType.Cancel => "Cancel"
+//      }
+//
+//      dialogPane()
+    }
+  }
+
   def handleDelete(): Unit = {
     logger.warn(s"handleDelete - Not implemented yet!")
+    val target = "file/directory" // todo: choose basing on actual selection in current panel
+
+    val result =
+      new Alert(AlertType.Warning) {
+        title = "Afternoon Commander"
+        headerText = s"Delete $target"
+    //      graphic =
+        contentText = s"Do you really want to delete selected $target"
+        buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
+
+      }.showAndWait()
+
+    println(s"Delete confirmation dialog result=$result")
   }
 
   def handleExit(): Unit = {
