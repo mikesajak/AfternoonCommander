@@ -67,8 +67,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
+                              fsMgr: FilesystemsManager,
                               applicationController: ApplicationController): OperationMgr = {
-    new OperationMgr(statusMgr, resourceMgr, applicationController)
+    new OperationMgr(statusMgr, resourceMgr, fsMgr, applicationController)
   }
 }
 

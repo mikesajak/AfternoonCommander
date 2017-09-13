@@ -52,6 +52,10 @@ class ZipRoot(parentDir: VDirectory, zipFile: jZipFile) extends VDirectory {
       .toSeq
   }
   override def fileSystem: FS = ???
+
+  override def mkChildDir(child: String): Nothing = ???
+
+  override def mkChildFile(child: String): Nothing = ???
 }
 
 class ZipDir(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) extends VDirectory {
@@ -67,14 +71,18 @@ class ZipDir(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) exte
   override def attribs: String = "r"
 
   override def fileSystem: FS = ???
+
+  override def mkChildDir(child: String): Nothing = ???
+
+  override def mkChildFile(child: String): Nothing = ???
 }
 
 class ZipInternalFile(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) extends VFile {
   override def size: Long = zipEntry.getSize
 
-  override def getInStream: InputStream = zipFile.getInputStream(zipEntry)
+  override def inStream: InputStream = zipFile.getInputStream(zipEntry)
 
-  override def getOutStream: OutputStream =
+  override def outStream: OutputStream =
     throw new UnsupportedOperationException(s"Cannot get output stream of zip file: $zipFile")
 
   override def name: String = "/" + zipEntry.getName

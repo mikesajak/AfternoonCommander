@@ -2,7 +2,7 @@ package org.mikesajak.commander.fs.local
 
 import java.io.File
 
-import org.mikesajak.commander.fs.{FS, VDirectory}
+import org.mikesajak.commander.fs.VDirectory
 
 /**
  * Created by mike on 26.10.14.
@@ -21,4 +21,7 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
       }
     else Seq.empty
   }
+
+  override def mkChildDir(child: String): LocalDirectory = new LocalDirectory(new File(file.getAbsolutePath + File.separator + child), this.fileSystem)
+  override def mkChildFile(child: String): LocalFile = new LocalFile(new File(file.getAbsolutePath + File.separator + child), this.fileSystem)
 }

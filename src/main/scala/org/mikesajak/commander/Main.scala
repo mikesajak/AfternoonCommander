@@ -21,7 +21,7 @@ object Main extends JFXApp {
 
   logger.info(s"AfternoonCommander starting")
 
-  val root = UILoader.loadScene(mainPanelDef)
+  val (root, _) = UILoader.loadScene(mainPanelDef)
 
   stage = new PrimaryStage() {
     title = "AfternoonCommander"

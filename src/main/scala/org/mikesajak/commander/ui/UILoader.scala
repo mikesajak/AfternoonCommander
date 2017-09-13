@@ -14,7 +14,7 @@ import scalafxml.guice.GuiceDependencyResolver
   */
 object UILoader {
 
-  def loadScene(layout: String, additionalContexts: Module*): Parent = {
+  def loadScene[CtrlType](layout: String, additionalContexts: Module*): (Parent, CtrlType) = {
     implicit val injector: Injector = ApplicationContext.globalInjector.createChildInjector(additionalContexts: _*)
 
     val resource = getClass.getResource(layout)
@@ -24,7 +24,8 @@ object UILoader {
     val loader = new FXMLLoader(resource, new GuiceDependencyResolver())
 
     loader.load()
-    val root = loader.getRoot[Parent]
-    root
+    val root = loader.getRoot[Parent]()
+    val controller = loader.getController[CtrlType]()
+    (root, controller)
   }
 }

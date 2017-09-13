@@ -180,7 +180,7 @@ class DirPanelController(tabPane: TabPane,
 class DirTab(val tabPath: VDirectory) extends Tab {
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
 
-  val root: Parent = UILoader.loadScene(dirTableLayout,
+  val (root: Parent, _) = UILoader.loadScene(dirTableLayout,
                                         new DirTableContext(DirTableParams(tabPath)))
 
   text = tabPath.name

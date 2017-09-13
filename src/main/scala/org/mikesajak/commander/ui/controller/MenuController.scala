@@ -16,7 +16,7 @@ class MenuController(appController: ApplicationController) {
   val settingsLayout = "/layout/settings-panel-layout.fxml"
 
   def onSettingsAction() {
-    val root = UILoader.loadScene(settingsLayout)
+    val (root, _) = UILoader.loadScene(settingsLayout)
     val stage = new Stage()
     stage.initModality(Modality.ApplicationModal)
     stage.initStyle(StageStyle.Utility)

@@ -24,12 +24,14 @@ trait VFile extends VPath {
     } else None
   }
 
-  def getInStream: InputStream
-  def getOutStream: OutputStream
+  def inStream: InputStream
+  def outStream: OutputStream
 }
 
 trait VDirectory extends VPath {
   def children: Seq[VPath]
+  def mkChildDir(child: String): VDirectory
+  def mkChildFile(child: String): VFile
 
   override val isDirectory = true
   override val directory: VDirectory = this
