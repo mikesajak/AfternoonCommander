@@ -7,7 +7,6 @@ import com.google.inject.{AbstractModule, Key}
 import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
@@ -113,7 +112,7 @@ class DirPanelController(tabPane: TabPane,
 
     val tabPathNames =
       config.stringSeqProperty("tabs", s"$panelId.tabs")
-        .getOrElse(List(homePath))
+        .getOrElse(List(fsMgr.homePath))
 
     val tabPaths = tabPathNames
       .flatMap(path => fsMgr.resolvePath(path))
@@ -124,7 +123,7 @@ class DirPanelController(tabPane: TabPane,
       val tab = createTab(t)
       tabPane += tab
       tabPane.selectionModel.select(tab.text.value)
-      dirTabManager.addTab(t)
+      dirTabManager.addTab(t, tab.controller)
       tabPane
     }
 
@@ -137,14 +136,8 @@ class DirPanelController(tabPane: TabPane,
     tabPane.getSelectionModel.selectFirst()
   }
 
-  private def homePath = {
-//    val fsv = FileSystemView.getFileSystemView
-//    LocalFS.mkLocalPathName(fsv.getHomeDirectory.getAbsolutePath)
-    LocalFS.mkLocalPathName(System.getProperty("user.dir"))
-  }
-
   private def pathForNewTab() = {
-    val newTabPathName = homePath
+    val newTabPathName = fsMgr.homePath
     fsMgr.resolvePath(newTabPathName).map(_.directory)
   }
 
@@ -157,8 +150,9 @@ class DirPanelController(tabPane: TabPane,
     val newTabPath = pathForNewTab()
 
     for (dir <- newTabPath) {
-      tabPane += createTab(dir)
-      dirTabManager.addTab(dir)
+      val tab = createTab(dir)
+      tabPane += tab
+      dirTabManager.addTab(dir, tab.controller)
       tabPane += createNewTabTab()
     }
   }
@@ -180,11 +174,12 @@ class DirPanelController(tabPane: TabPane,
 class DirTab(val tabPath: VDirectory) extends Tab {
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
 
-  val (root: Parent, _) = UILoader.loadScene(dirTableLayout,
-                                        new DirTableContext(DirTableParams(tabPath)))
+  val (root: Parent, controller) =
+    UILoader.loadScene[DirTableControllerIntf](dirTableLayout,
+                                           new DirTableContext(DirTableParams(tabPath)))
 
   text = tabPath.name
-  val pane = new Node(root){}
+  private val pane = new Node(root){}
   content = pane
   tooltip = tabPath.absolutePath
 }

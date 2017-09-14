@@ -20,6 +20,10 @@ class PathToParent(curDir: VDirectory) extends VDirectory {
 
   override def children: Seq[VPath] = curDir.parent.get.children
 
+  override def childDirs: Seq[VDirectory] = curDir.parent.get.childDirs
+
+  override def childFiles: Seq[VFile] = curDir.parent.get.childFiles
+
   override def mkChildDir(child: String) = throw new UnsupportedOperationException(s"Create child dir not supported on this wrapper directory")
 
   override def mkChildFile(child: String) = throw new UnsupportedOperationException(s"Create child file not supported on this wrapper directory")

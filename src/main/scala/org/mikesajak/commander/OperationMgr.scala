@@ -1,10 +1,11 @@
-package org.mikesajak.commander.status
+package org.mikesajak.commander
 
 import javafx.scene.control
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.ApplicationController
-import org.mikesajak.commander.fs.FilesystemsManager
+import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
+import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.task.{ConsoleProgressMonitor, DirStatsTask}
 import org.mikesajak.commander.ui.controller.ops.MkDirPanelController
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 
@@ -17,6 +18,7 @@ import scalafx.stage.{Modality, StageStyle}
 class OperationMgr(statusMgr: StatusMgr,
                    resourceMgr: ResourceManager,
                    fsMgr: FilesystemsManager,
+                   taskManager: TaskManager,
                    appController: ApplicationController) {
   private val logger = Logger(this.getClass)
 
@@ -92,6 +94,17 @@ class OperationMgr(statusMgr: StatusMgr,
       }.showAndWait()
 
     println(s"Delete confirmation dialog result=$result")
+  }
+
+  def handleCountDirStats(): Unit = {
+    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.selectedRow.path
+
+    if (selectedPath.isDirectory) {
+      val selDir = selectedPath.asInstanceOf[VDirectory]
+      taskManager.runTaskConcurrently(new DirStatsTask(selDir), new ConsoleProgressMonitor)
+    } else {
+      println(s"Cannot run count dir stats on file: $selectedPath")
+    }
   }
 
   def handleExit(): Unit = {

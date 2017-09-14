@@ -1,6 +1,6 @@
 package org.mikesajak.commander.ui.controller
 
-import org.mikesajak.commander.status.OperationMgr
+import org.mikesajak.commander.OperationMgr
 
 import scalafx.scene.control.Button
 import scalafxml.core.macros.sfxml

@@ -51,7 +51,12 @@ class ZipRoot(parentDir: VDirectory, zipFile: jZipFile) extends VDirectory {
       .map(ze => if (ze.isDirectory) new ZipDir(this, zipFile, ze) else new ZipInternalFile(this, zipFile, ze))
       .toSeq
   }
-  override def fileSystem: FS = ???
+
+  override def childDirs: Seq[VDirectory] = ??? // TODO
+
+  override def childFiles: Seq[VFile] = ??? // TODO
+
+  override def fileSystem: FS = ??? // TODO
 
   override def mkChildDir(child: String): Nothing = ???
 
@@ -64,7 +69,9 @@ class ZipDir(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) exte
   override def parent: Option[VDirectory] = Some(parentDir)
   override def absolutePath: String = s"${ZipFS.id}://${zipFile.getName}/$zipEntry"
 
-  override def children: Seq[VPath] = ???
+  override def children: Seq[VPath] = ??? // TODO
+  override def childDirs: Seq[VDirectory] = ??? // TODO
+  override def childFiles: Seq[VFile] = ??? // TODO
 
   override def modificationDate: Instant = zipEntry.getLastModifiedTime.toInstant
 

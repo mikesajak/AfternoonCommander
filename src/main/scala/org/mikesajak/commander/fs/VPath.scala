@@ -30,6 +30,9 @@ trait VFile extends VPath {
 
 trait VDirectory extends VPath {
   def children: Seq[VPath]
+  def childDirs: Seq[VDirectory]
+  def childFiles: Seq[VFile]
+
   def mkChildDir(child: String): VDirectory
   def mkChildFile(child: String): VFile
 

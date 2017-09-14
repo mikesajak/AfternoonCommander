@@ -14,8 +14,8 @@ class DirTabManager(panelId: PanelId) {
 
   logger.debug(s"Creating DirTabManager with panelId=$panelId")
 
-  def addTab(dir: VDirectory): Unit = {
-    tabs :+= new TabData(dir)
+  def addTab(dir: VDirectory, controller: DirTableControllerIntf): Unit = {
+    tabs :+= TabData(dir, controller)
   }
 
   def removeTab(idx: Int): Unit = {
@@ -26,9 +26,10 @@ class DirTabManager(panelId: PanelId) {
     tabs = IndexedSeq()
   }
 
-  def updateTab(idx: Int, dir: VDirectory): Unit = {
-    tabs = tabs.patch(idx, Seq(new TabData(dir)), 1)
-  }
+//  def updateTab(idx: Int, dir: VDirectory): Unit = {
+//    val curTab = tabs(idx)
+//    tabs = tabs.patch(idx, Seq(new TabData(dir, curTab.controller)), 1)
+//  }
 
   def tab(idx: Int): TabData = tabs(idx)
 
@@ -41,6 +42,6 @@ class DirTabManager(panelId: PanelId) {
   }
 }
 
-case class TabData(dir: VDirectory) {
+case class TabData(dir: VDirectory, controller: DirTableControllerIntf) {
 
 }

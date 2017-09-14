@@ -13,13 +13,23 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
   if (!file.isDirectory)
     throw new IllegalArgumentException(s"Cannot create LocalDirectory for param file=$file that is NOT a directory")
 
-  override def children: Seq[LocalPath] = {
-    val childFiles = file.listFiles()
-    if (childFiles != null) childFiles.map { f =>
-        if (f.isDirectory) new LocalDirectory(f, fileSystem)
-        else new LocalFile(f, fileSystem)
-      }
-    else Seq.empty
+  override def children: Seq[LocalPath] =
+    childDirs ++ childFiles
+
+  override def childFiles: Seq[LocalFile] = {
+    val files = file.listFiles()
+    if (files != null)
+      files.filter(f => !f.isDirectory)
+        .map(f => new LocalFile(f, fileSystem))
+    else Seq()
+  }
+
+  override def childDirs: Seq[LocalDirectory] ={
+    val files = file.listFiles()
+    if (files != null)
+      files.filter(f => f.isDirectory)
+          .map(d => new LocalDirectory(d, fileSystem))
+    else Seq()
   }
 
   override def mkChildDir(child: String): LocalDirectory = new LocalDirectory(new File(file.getAbsolutePath + File.separator + child), this.fileSystem)

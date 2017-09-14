@@ -28,6 +28,10 @@ class FileRow(val path: VPath) {
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifiyDate, $attributes)"
 }
 
+trait DirTableControllerIntf {
+  def selectedRow: FileRow
+}
+
 @sfxml
 class DirTableController(dirTableView: TableView[FileRow],
                          idColumn: TableColumn[FileRow, VPath],
@@ -42,7 +46,8 @@ class DirTableController(dirTableView: TableView[FileRow],
 
                          fileTypeManager: FileTypeManager,
                          resourceManager: ResourceManager,
-                         config: Configuration) {
+                         config: Configuration)
+    extends DirTableControllerIntf {
 
   idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
   idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
@@ -114,6 +119,8 @@ class DirTableController(dirTableView: TableView[FileRow],
       println(s"TODO: file action $path, fileType=$fileType, fileTypeActionHandler=$fileTypeActionHandler")
     }
   }
+
+  override def selectedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
 
 }
 

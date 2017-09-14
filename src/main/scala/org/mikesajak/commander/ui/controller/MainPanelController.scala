@@ -1,6 +1,7 @@
 package org.mikesajak.commander.ui.controller
 
-import org.mikesajak.commander.status.{OperationMgr, StatusMgr}
+import org.mikesajak.commander.OperationMgr
+import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 
 import scalafx.Includes._
@@ -38,6 +39,9 @@ class MainPanelController(dirsSplitPane: SplitPane,
       case KeyCode.F7  => operationMgr.handleMkDir()
       case KeyCode.F8  => operationMgr.handleDelete()
       case KeyCode.F10 => operationMgr.handleExit()
+
+      // Debug: temporary
+      case KeyCode.F2 => operationMgr.handleCountDirStats()
 
       case KeyCode.Tab => // todo
 

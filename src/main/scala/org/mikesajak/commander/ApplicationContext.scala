@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.Logger
 import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
-import org.mikesajak.commander.status.{OperationMgr, StatusMgr}
+import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
@@ -66,10 +66,16 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
+  def provideTaskManager(): TaskManager = {
+    new TaskManager
+  }
+
+  @Provides
+  @Singleton
   def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
-                              fsMgr: FilesystemsManager,
+                              fsMgr: FilesystemsManager, taskManager: TaskManager,
                               applicationController: ApplicationController): OperationMgr = {
-    new OperationMgr(statusMgr, resourceMgr, fsMgr, applicationController)
+    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, applicationController)
   }
 }
 
