@@ -18,8 +18,8 @@ class MainPanelController(dirsSplitPane: SplitPane,
                           leftTabPane: TabPane,
                           rightTabPane: TabPane,
                           mainPane: Pane,
-                          @nested[DirPanelController] leftDirPanelController: DirPanelControllerInterface,
-                          @nested[DirPanelController] rightDirPanelController: DirPanelControllerInterface,
+                          @nested[DirPanelController] leftDirPanelController: DirPanelControllerIntf,
+                          @nested[DirPanelController] rightDirPanelController: DirPanelControllerIntf,
 
                           statusMgr: StatusMgr,
                           operationMgr: OperationMgr) {

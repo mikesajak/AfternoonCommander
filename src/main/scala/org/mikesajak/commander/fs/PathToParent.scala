@@ -5,8 +5,10 @@ import java.time.Instant
 /**
  * Created by mike on 26.10.14.
  */
-class PathToParent(curDir: VDirectory) extends VDirectory {
+class PathToParent(val curDir: VDirectory) extends VDirectory {
   override val name = ".."
+
+  def targetDir: VDirectory = curDir.parent.get
 
   override def fileSystem: FS = curDir.fileSystem
 

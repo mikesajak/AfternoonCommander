@@ -1,10 +1,9 @@
 package org.mikesajak.commander.ui.controller
 
-import javafx.scene.Parent
+import javafx.scene.{Parent, control}
 
+import com.google.inject.Key
 import com.google.inject.name.Names
-import com.google.inject.{AbstractModule, Key}
-import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
@@ -25,8 +24,9 @@ object PanelId {
   case object RightPanel extends PanelId
 }
 
-trait DirPanelControllerInterface {
+trait DirPanelControllerIntf {
   def init(panelId: PanelId)
+  def updateCurTab(path: VDirectory)
 }
 /**
   * Created by mike on 14.04.17.
@@ -46,9 +46,8 @@ class DirPanelController(tabPane: TabPane,
                          fsMgr: FilesystemsManager,
                          statusMgr: StatusMgr,
                          resourceManager: ResourceManager)
-    extends DirPanelControllerInterface {
+    extends DirPanelControllerIntf {
 
-  private val dirTableLayout = "/layout/file-tab-layout.fxml"
   private var dirTabManager: DirTabManager = _
   private var currentTab: Tab = _
 
@@ -132,7 +131,6 @@ class DirPanelController(tabPane: TabPane,
     val selectedPath = tabPaths.head
     // todo - selection
     curDirField.text = selectedPath.absolutePath
-//    tabPane.selectionModel.select(selectedPath.name)
     tabPane.getSelectionModel.selectFirst()
   }
 
@@ -154,11 +152,19 @@ class DirPanelController(tabPane: TabPane,
       tabPane += tab
       dirTabManager.addTab(dir, tab.controller)
       tabPane += createNewTabTab()
+
+      val lastDirTab = tabPane.tabs.size - 2
+      tabPane.selectionModel.value.select(lastDirTab)
     }
   }
 
   private def createTab(path: VDirectory) = {
-    new DirTab(path)
+    new DirTab(this, path)
+  }
+
+  def updateCurTab(path: VDirectory): Unit = {
+    val curTab = tabPane.selectionModel.value.getSelectedItem
+    DirTab.updateTab(curTab, path)
   }
 
   private def createNewTabTab() = {
@@ -171,23 +177,31 @@ class DirPanelController(tabPane: TabPane,
   }
 }
 
-class DirTab(val tabPath: VDirectory) extends Tab {
-  private val dirTableLayout = "/layout/file-tab-layout.fxml"
+object DirTab {
+  // this is a small hack - scalafx TabPane does not store actual tabs
+  // but their delegates (original javafx tabs) so all data in scalafx Tabs is lost
+  // as soon tab is added... This sucks...
 
-  val (root: Parent, controller) =
-    UILoader.loadScene[DirTableControllerIntf](dirTableLayout,
-                                           new DirTableContext(DirTableParams(tabPath)))
+  // This is helper to operate on tabs to work around that.
 
-  text = tabPath.name
-  private val pane = new Node(root){}
-  content = pane
-  tooltip = tabPath.absolutePath
+  def updateTab(jfxTab: control.Tab, path: VDirectory): Unit = {
+    jfxTab.text = path.name
+    jfxTab.tooltip = path.absolutePath
+  }
+
 }
 
-case class DirPanelParams(panelId: PanelId)
+class DirTab(panelController: DirPanelControllerIntf, tabPath: VDirectory) extends Tab {
+  import DirTab._
 
-class DirTableContext(dirTableParams: DirTableParams) extends AbstractModule with ScalaModule {
-  def configure(): Unit = {
-    bind(classOf[DirTableParams]).toInstance(dirTableParams)
-  }
+  private val dirTableLayout = "/layout/file-tab-layout.fxml"
+
+  val (root: Parent, controller) = UILoader.loadScene[DirTableControllerIntf](dirTableLayout)
+
+  private val pane = new Node(root){}
+  content = pane
+
+  updateTab(this, tabPath)
+
+  controller.init(panelController, tabPath)
 }

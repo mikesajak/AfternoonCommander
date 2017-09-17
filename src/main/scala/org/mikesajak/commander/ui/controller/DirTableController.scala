@@ -29,6 +29,7 @@ class FileRow(val path: VPath) {
 }
 
 trait DirTableControllerIntf {
+  def init(panelController: DirPanelControllerIntf, path: VDirectory)
   def selectedRow: FileRow
 }
 
@@ -42,56 +43,74 @@ class DirTableController(dirTableView: TableView[FileRow],
                          attribsColumn: TableColumn[FileRow, String],
                          statusLabel1: Label,
                          statusLabel2: Label,
-                         params: DirTableParams,
 
                          fileTypeManager: FileTypeManager,
                          resourceManager: ResourceManager,
                          config: Configuration)
     extends DirTableControllerIntf {
 
-  idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
-  idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
-    new TableCell[FileRow, VPath]() {
-      item.onChange { (observable, oldValue, newValue) =>
-        val fileType = fileTypeManager.detectFileType(newValue)
-        val typeIcon = fileTypeManager.getIcon(fileType)
-        val imageView = typeIcon.map { icon =>
-          val imageView = new ImageView(resourceManager.getIcon(icon, 18, 18))
-          imageView.preserveRatio = true
-          imageView
-        }.orNull
-        graphic = imageView
+  override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
+    idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
+    idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
+      new TableCell[FileRow, VPath]() {
+        item.onChange { (observable, oldValue, newValue) =>
+          val fileType = fileTypeManager.detectFileType(newValue)
+          val typeIcon = fileTypeManager.getIcon(fileType)
+          val imageView = typeIcon.map { icon =>
+            val imageView = new ImageView(resourceManager.getIcon(icon, 18, 18))
+            imageView.preserveRatio = true
+            imageView
+          }.orNull
+          graphic = imageView
+        }
       }
     }
-  }
-  nameColumn.cellValueFactory = { _.value.name }
-  sizeColumn.cellValueFactory = {_.value.size }
-  dateColumn.cellValueFactory = { _.value.modifiyDate }
-  attribsColumn.cellValueFactory = { _.value.attributes }
+    nameColumn.cellValueFactory = {
+      _.value.name
+    }
+    sizeColumn.cellValueFactory = {
+      _.value.size
+    }
+    dateColumn.cellValueFactory = {
+      _.value.modifiyDate
+    }
+    attribsColumn.cellValueFactory = {
+      _.value.attributes
+    }
 
-  dirTableView.rowFactory = { tableView =>
-    val row = new TableRow[FileRow]()
-    row.handleEvent(MouseEvent.MouseClicked) { event: MouseEvent =>
-      if (!row.isEmpty && event.button == MouseButton.Primary && event.clickCount == 2) {
-        handleAction(row.item.value.path)
+    dirTableView.rowFactory = { tableView =>
+      val row = new TableRow[FileRow]()
+      row.handleEvent(MouseEvent.MouseClicked) { event: MouseEvent =>
+        if (!row.isEmpty && event.button == MouseButton.Primary && event.clickCount == 2) {
+          handleAction(dirPanelController, row.item.value.path)
+        }
+      }
+
+      row
+    }
+
+    dirTableView.handleEvent(KeyEvent.KeyTyped) { event: KeyEvent =>
+      if (event.character.contains("\n") || event.character.contains("\r")) {
+        val items = dirTableView.selectionModel.value.selectedItems
+        if (items.nonEmpty) {
+          handleAction(dirPanelController, items.head.path)
+        }
       }
     }
 
-    row
+    initTable(path)
   }
 
-  dirTableView.handleEvent(KeyEvent.KeyTyped) { event: KeyEvent =>
-    if (event.character.contains("\n") || event.character.contains("\r")) {
-      val items = dirTableView.selectionModel.value.selectedItems
-      if (items.nonEmpty) {
-        handleAction(items.head.path)
-      }
-    }
+  private def changeDir(panelController: DirPanelControllerIntf, directory: VDirectory): Unit = {
+    updateParentTab(panelController, directory)
+    initTable(directory)
   }
 
-  initTable(params.path)
+  private def updateParentTab(panelController: DirPanelControllerIntf, directory: VDirectory): Unit = {
+    panelController.updateCurTab(directory)
+  }
 
-  def initTable(directory: VDirectory) {
+  private def initTable(directory: VDirectory) {
     val (dirs0, files0) = directory.children.partition(p => p.isDirectory)
 
     val showHidden= config.boolProperty("filePanels", "showHiddenFiles").getOrElse(true)
@@ -110,9 +129,15 @@ class DirTableController(dirTableView: TableView[FileRow],
     dirTableView.scrollTo(0)
   }
 
-  def handleAction(path: VPath): Unit = {
-    if (path.isDirectory)
-      initTable(path.directory)
+  private def handleAction(panelController: DirPanelControllerIntf, path: VPath): Unit = {
+    if (path.isDirectory) {
+      val targetDir = path.directory match {
+        case parent: PathToParent => parent.targetDir
+        case target @ _ => target
+      }
+
+      changeDir(panelController, targetDir)
+    }
     else {
       val fileType = fileTypeManager.detectFileType(path)
       val fileTypeActionHandler = fileTypeManager.fileTypeHandler(path)
