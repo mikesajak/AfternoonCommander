@@ -5,11 +5,12 @@ import javafx.scene.control
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{FilesystemsManager, PathToParent, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.{ConsoleProgressMonitor, DirStatsTask, TestTask}
-import org.mikesajak.commander.ui.controller.ops.MkDirPanelController
+import org.mikesajak.commander.task._
+import org.mikesajak.commander.ui.controller.ops.{CountStatsPanelController, MkDirPanelController}
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 
 import scalafx.Includes._
+import scalafx.scene.Parent
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
@@ -40,33 +41,30 @@ class OperationMgr(statusMgr: StatusMgr,
 
   def handleMkDir(): Unit = {
     logger.warn(s"handleMkDir - Not implemented yet!")
+
     val curTab = statusMgr.selectedTabManager.selectedTab
     logger.debug(s"handleMkDir - curTab=$curTab")
 
-    val settingsLayout = "/layout/ops/mkdir-dialog.fxml"
+    val contentLayout = "/layout/ops/mkdir-dialog2.fxml"
 
-    val dialog = prepareOkCancelDialog()
-    dialog.headerText = "Create new folder"
-    dialog.graphic = new ImageView(resourceMgr.getIcon("folder-plus-48.png"))
-
-    val (contentPane, contentCtrl) = UILoader.loadScene[MkDirPanelController](settingsLayout)
+    val (contentPane, contentCtrl) = UILoader.loadScene[MkDirPanelController](contentLayout)
     val selectedTab = statusMgr.selectedTabManager.selectedTab
 
-    val okButton = new Button(dialog.dialogPane().lookupButton(ButtonType.OK).asInstanceOf[control.Button])
-    contentCtrl.init(selectedTab.dir.toString, okButton)
-    dialog.dialogPane().content = contentPane
+    val dialog = new Dialog[String]() {
+      title ="Afternoon Commander"
+      initOwner(appController.mainStage)
+      initStyle(StageStyle.Utility)
+      initModality(Modality.ApplicationModal)
+      dialogPane().content = contentPane
+    }
+
+    contentCtrl.init(selectedTab.dir.toString, dialog)
 
     val result = dialog.showAndWait()
 
     println(s"MkDir dialog result=$result")
 
-    result.foreach { selButton =>
-      if (selButton == ButtonType.OK) {
-        val fs = selectedTab.dir.fileSystem
-        val newPath = selectedTab.dir.mkChildDir(contentCtrl.folderNameCombo.value.value)
-        fs.create(newPath)
-      }
-    }
+    // todo: create directory, refresh view
   }
 
   private def prepareOkCancelDialog() = {
@@ -97,21 +95,61 @@ class OperationMgr(statusMgr: StatusMgr,
   }
 
   def handleCountDirStats(): Unit = {
-    val selectedRow = statusMgr.selectedTabManager.selectedTab.controller.selectedRow
-    if (selectedRow != null) {
-      val selectedPath = selectedRow.path
-      if (selectedPath.isDirectory && !selectedPath.isInstanceOf[PathToParent]) {
-          val selDir = selectedPath.asInstanceOf[VDirectory]
-          taskManager.runTaskAsync(new DirStatsTask(selDir), new ConsoleProgressMonitor)
-        } else {
-          println(s"Cannot run count dir stats on file: $selectedPath")
+    val contentLayout = "/layout/ops/count-stats-dialog.fxml"
+
+    val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
+    val selectedTab = statusMgr.selectedTabManager.selectedTab
+
+    val dialog = new Dialog[DirStats]() {
+      title = "Afternoon Commander"
+      initOwner(appController.mainStage)
+      initStyle(StageStyle.Utility)
+      initModality(Modality.ApplicationModal)
+      dialogPane().content = contentPane
+    }
+
+    contentCtrl.init(selectedTab.dir, dialog)
+
+    class CountStatsProgressMonitor extends ProgressMonitor2[DirStats] {
+      override def notifyProgressIndeterminate(message: Option[String], state: Option[DirStats]): Unit = {
+        state.foreach(s => contentCtrl.updateStats(s, message))
+      }
+
+      override def notifyProgress(progress: Float, message: Option[String], state: Option[DirStats]): Unit = {
+        state.foreach(s => contentCtrl.updateStats(s, message))
+      }
+
+      override def notifyFinished(message: String, state: Option[DirStats]): Unit = {
+        println(s"Finished: $message, stats=$state")
+      }
+
+      override def notifyError(message: String, state: Option[DirStats]): Unit = {
+        state match {
+          case Some(stats) => contentCtrl.updateStats(stats, Some(message))
+          case _ => contentCtrl.updateMsg(message)
         }
-     } else println(s"No directory is selected")
+      }
+    }
+
+    Option(statusMgr.selectedTabManager.selectedTab.controller.selectedRow)
+      .map(_.path) match {
+        case Some(selectedPath) =>
+          if (selectedPath.isDirectory && !selectedPath.isInstanceOf[PathToParent]) {
+            val selDir = selectedPath.asInstanceOf[VDirectory]
+//            taskManager.runTaskAsync(new DirStatsTask(selDir), new ConsoleProgressMonitor2[DirStats])
+            taskManager.runTaskAsync(new DirStatsTask(selDir), new CountStatsProgressMonitor)
+          } else {
+            println(s"Cannot run count dir stats on file: $selectedPath")
+          }
+        case None => println(s"No directory is selected")
+      }
+
+    val result = dialog.showAndWait()
   }
 
   def handleTestTask(sync: Boolean): Unit = {
-    if (sync) taskManager.runTaskSync(new TestTask(), new ConsoleProgressMonitor)
-    else      taskManager.runTaskAsync(new TestTask(), new ConsoleProgressMonitor)
+    if (sync) taskManager.runTaskSync(new TestTask(), new ConsoleProgressMonitor2[Unit])
+    else      taskManager.runTaskAsync(new TestTask(), new ConsoleProgressMonitor2[Unit])
   }
 
   def handleExit(): Unit = {

@@ -18,3 +18,23 @@ class ConsoleProgressMonitor extends ProgressMonitor {
 
   override def notifyError(errMessage: String): Unit = println(s"Error executing task: $errMessage")
 }
+
+trait ProgressMonitor2[A] {
+  def notifyProgressIndeterminate(message: Option[String], state: Option[A])
+  def notifyProgress(progress: Float, message: Option[String], state: Option[A])
+
+  def notifyFinished(message: String, state: Option[A])
+  def notifyError(message: String, state: Option[A])
+}
+
+class ConsoleProgressMonitor2[A] extends ProgressMonitor2[A] {
+  override def notifyProgressIndeterminate(message: Option[String], state: Option[A]): Unit =
+    println(s"$message, state=$state")
+
+  override def notifyProgress(progress: Float, message: Option[String], state: Option[A]): Unit =
+    println(s"$progress% - $message, state=$state")
+
+  override def notifyFinished(message: String, state: Option[A]): Unit = println(s"Finished task: $message, state=$state")
+
+  override def notifyError(message: String, state: Option[A]): Unit = println(s"Error executing task: $message, state=$state")
+}
