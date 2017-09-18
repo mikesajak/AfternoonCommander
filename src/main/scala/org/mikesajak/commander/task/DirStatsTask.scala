@@ -5,6 +5,12 @@ import org.mikesajak.commander.util.UnitFormatter
 
 case class DirStats(dir: VDirectory, numFiles: Int, numDirs: Int, totalNumFiles: Int, totalNumDirs: Int,
                     curDirSize: Long, totalSubTreeSize: Long, subTreeLevels: Int) {
+
+  def mergeChildStats(stats2: DirStats): DirStats = {
+    DirStats(dir, numFiles, numDirs, numFiles + stats2.totalNumFiles, numDirs + stats2.totalNumDirs,
+             curDirSize, curDirSize + stats2.totalSubTreeSize, math.max(subTreeLevels, stats2.subTreeLevels))
+  }
+
   override def toString: String = {
     val (dirSize, dirSizeUnit) = UnitFormatter.byteUnit(curDirSize)
     val (totalSize, totalSizeUnit) = UnitFormatter.byteUnit(totalSubTreeSize)
@@ -29,18 +35,26 @@ class DirStatsTask(rootDir: VDirectory) extends Task{
     progressMonitor.updateIndeterminate(s"${indent(level)}Counting stats for dir ${dir.name}: files=${files.size}, dirs=${subDirs.size}, files size=$filesSize")
 
     val subStats = subDirs.map(d => countStats(d, progressMonitor, level + 1))
-    val subTreeSize = subStats.map(s => s.totalSubTreeSize).sum
 
-    val numFiles = files.size
-    val numDirs = subDirs.size
+    def prepStats(): DirStats = {
+      val subTreeSize = subStats.map(s => s.totalSubTreeSize).sum
 
-    val subNumFiles = subStats.map(s => s.totalNumFiles).sum
-    val subNumDirs = subStats.map(s => s.totalNumDirs).sum
+      val numFiles = files.size
+      val numDirs = subDirs.size
 
-    val subLevels = (subStats foldLeft level)((maxLevel, stats) => math.max(maxLevel, stats.subTreeLevels)) + 1
+      val subNumFiles = subStats.map(s => s.totalNumFiles).sum
+      val subNumDirs = subStats.map(s => s.totalNumDirs).sum
 
-    val stats = DirStats(dir, numFiles, numDirs, numFiles + subNumFiles, numDirs + subNumDirs, filesSize, filesSize + subTreeSize, subLevels)
-    progressMonitor.updateIndeterminate(s"$stats")
+      val subLevels = (subStats foldLeft level)((maxLevel, stats) => math.max(maxLevel, stats.subTreeLevels)) + 1
+
+      DirStats(dir, numFiles, numDirs, numFiles + subNumFiles, numDirs + subNumDirs, filesSize, filesSize + subTreeSize, subLevels)
+    }
+
+    val statsOld = prepStats()
+    val stats = (subStats foldLeft DirStats(dir, files.size, subDirs.size, 0, 0, filesSize, 0, level))((acc, stats) => acc.mergeChildStats(stats))
+
+    progressMonitor.updateIndeterminate(s"old=$stats")
+    progressMonitor.updateIndeterminate(s"new=$stats")
     stats
   }
 }

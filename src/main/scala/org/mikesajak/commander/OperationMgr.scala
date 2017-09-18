@@ -3,9 +3,9 @@ package org.mikesajak.commander
 import javafx.scene.control
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
+import org.mikesajak.commander.fs.{FilesystemsManager, PathToParent, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.{ConsoleProgressMonitor, DirStatsTask}
+import org.mikesajak.commander.task.{ConsoleProgressMonitor, DirStatsTask, TestTask}
 import org.mikesajak.commander.ui.controller.ops.MkDirPanelController
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 
@@ -97,14 +97,21 @@ class OperationMgr(statusMgr: StatusMgr,
   }
 
   def handleCountDirStats(): Unit = {
-    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.selectedRow.path
+    val selectedRow = statusMgr.selectedTabManager.selectedTab.controller.selectedRow
+    if (selectedRow != null) {
+      val selectedPath = selectedRow.path
+      if (selectedPath.isDirectory && !selectedPath.isInstanceOf[PathToParent]) {
+          val selDir = selectedPath.asInstanceOf[VDirectory]
+          taskManager.runTaskAsync(new DirStatsTask(selDir), new ConsoleProgressMonitor)
+        } else {
+          println(s"Cannot run count dir stats on file: $selectedPath")
+        }
+     } else println(s"No directory is selected")
+  }
 
-    if (selectedPath.isDirectory) {
-      val selDir = selectedPath.asInstanceOf[VDirectory]
-      taskManager.runTaskConcurrently(new DirStatsTask(selDir), new ConsoleProgressMonitor)
-    } else {
-      println(s"Cannot run count dir stats on file: $selectedPath")
-    }
+  def handleTestTask(sync: Boolean): Unit = {
+    if (sync) taskManager.runTaskSync(new TestTask(), new ConsoleProgressMonitor)
+    else      taskManager.runTaskAsync(new TestTask(), new ConsoleProgressMonitor)
   }
 
   def handleExit(): Unit = {
