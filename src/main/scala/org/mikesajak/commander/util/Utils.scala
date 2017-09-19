@@ -1,4 +1,4 @@
-package org.mikesajak.commander
+package org.mikesajak.commander.util
 
 import scala.language.reflectiveCalls
 
@@ -7,6 +7,17 @@ import scala.language.reflectiveCalls
   */
 object Utils {
   type ClosableResource = { def close() }
+
+  trait Closable {
+    def close(): Unit
+  }
+
+  def using[A <: Closable, B](res: A)(f: A => B): B =
+    try {
+      f(res)
+    } finally {
+      res.close()
+    }
 
   def using[A <: ClosableResource, B](res: A)(f: A => B): B =
     try {

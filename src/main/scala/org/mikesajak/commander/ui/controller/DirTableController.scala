@@ -1,9 +1,10 @@
 package org.mikesajak.commander.ui.controller
 
+import com.sun.javafx.scene.control.skin.TableViewSkin
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
-import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
@@ -48,6 +49,10 @@ class DirTableController(dirTableView: TableView[FileRow],
                          resourceManager: ResourceManager,
                          config: Configuration)
     extends DirTableControllerIntf {
+
+  import org.mikesajak.commander.ui.UIParams._
+
+  override def selectedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
@@ -101,13 +106,27 @@ class DirTableController(dirTableView: TableView[FileRow],
     initTable(path)
   }
 
+  private def handleAction(panelController: DirPanelControllerIntf, path: VPath): Unit = {
+    if (path.isDirectory)
+      changeDir(panelController, path.directory)
+    else {
+      val fileType = fileTypeManager.detectFileType(path)
+      val fileTypeActionHandler = fileTypeManager.fileTypeHandler(path)
+      println(s"TODO: file action $path, fileType=$fileType, fileTypeActionHandler=$fileTypeActionHandler")
+    }
+  }
+
   private def changeDir(panelController: DirPanelControllerIntf, directory: VDirectory): Unit = {
     updateParentTab(panelController, directory)
     initTable(directory)
   }
 
   private def updateParentTab(panelController: DirPanelControllerIntf, directory: VDirectory): Unit = {
-    panelController.updateCurTab(directory)
+    val targetDir = directory match {
+      case p: PathToParent => p.targetDir
+      case _ => directory
+    }
+    panelController.updateCurTab(targetDir)
   }
 
   private def initTable(directory: VDirectory) {
@@ -126,27 +145,19 @@ class DirTableController(dirTableView: TableView[FileRow],
       .toList
 
     dirTableView.items = ObservableBuffer(fileRows)
-    dirTableView.scrollTo(0)
-  }
 
-  private def handleAction(panelController: DirPanelControllerIntf, path: VPath): Unit = {
-    if (path.isDirectory) {
-      val targetDir = path.directory match {
-        case parent: PathToParent => parent.targetDir
-        case target @ _ => target
-      }
-
-      changeDir(panelController, targetDir)
+    val fromDir = directory match {
+      case p: PathToParent => Some(p.curDir)
+      case _ => None
     }
-    else {
-      val fileType = fileTypeManager.detectFileType(path)
-      val fileTypeActionHandler = fileTypeManager.fileTypeHandler(path)
-      println(s"TODO: file action $path, fileType=$fileType, fileTypeActionHandler=$fileTypeActionHandler")
-    }
+
+    val selIndex = fromDir.map { prevDir =>
+      val idx = dirs.map(_.name).indexOf(prevDir.name)
+      if (idx > 0) idx else 0
+    }.getOrElse(0)
+
+    dirTableView.getSelectionModel.select(selIndex)
+
+    dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
   }
-
-  override def selectedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
-
 }
-
-case class DirTableParams(path: VDirectory)
