@@ -13,10 +13,10 @@ trait VPath {
   def isDirectory: Boolean
   def isFile: Boolean = !isDirectory
   def fileSystem: FS
+  def size: Long
 }
 
 trait VFile extends VPath {
-  def size: Long
   def extension: Option[String] = {
     val extPos = name.lastIndexOf('.')
     if (extPos != -1 && extPos < name.length - 1) {

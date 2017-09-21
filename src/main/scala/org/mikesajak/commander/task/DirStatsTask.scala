@@ -5,15 +5,24 @@ import org.mikesajak.commander.util.UnitFormatter
 
 object DirStats {
   def apply(dir: VDirectory, numFiles: Int, numDirs: Int, curDirSize: Long) =
-    new DirStats(dir, numFiles, numDirs, numFiles, numDirs, curDirSize, curDirSize, 0)
+    new DirStats(dir, numFiles, numDirs, curDirSize, numFiles, numDirs, curDirSize, 0)
 }
 
-case class DirStats(dir: VDirectory, numFiles: Int, numDirs: Int, totalNumFiles: Int, totalNumDirs: Int,
-                    curDirSize: Long, totalSubTreeSize: Long, subTreeLevels: Int) {
+case class DirCounts(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
+  def +(other: DirCounts): DirCounts =
+    DirCounts(numFiles + other.numFiles, numDirs + other.numDirs, size + other.size, math.max(depth, other.depth))
+
+  override def toString: String =
+    s"DirCounts(numFiles=$numFiles, numDirs=$numDirs, size=${UnitFormatter.formatUnit(size)}, depth=$depth)}"
+}
+
+case class DirStats(dir: VDirectory, numFiles: Int, numDirs: Int, curDirSize: Long,
+                    totalNumFiles: Int, totalNumDirs: Int, totalSubTreeSize: Long, subTreeLevels: Int) {
 
   def mergeChildStats(stats2: DirStats): DirStats = {
-    DirStats(dir, numFiles, numDirs, numFiles + stats2.totalNumFiles, numDirs + stats2.totalNumDirs,
-             curDirSize, curDirSize + stats2.totalSubTreeSize, math.max(subTreeLevels, stats2.subTreeLevels))
+    DirStats(dir, numFiles, numDirs, curDirSize,
+      numFiles + stats2.totalNumFiles, numDirs + stats2.totalNumDirs, curDirSize + stats2.totalSubTreeSize,
+      math.max(subTreeLevels, stats2.subTreeLevels))
   }
 
   override def toString: String = {
@@ -24,71 +33,29 @@ case class DirStats(dir: VDirectory, numFiles: Int, numDirs: Int, totalNumFiles:
   }
 }
 
-class DirStatsTask(rootDir: VDirectory) extends Task[DirStats] {
-  override def run(progressMonitor: ProgressMonitor2[DirStats]): DirStats = {
-    countStats2(rootDir, progressMonitor, 0, DirStats(rootDir, 0, 0, 0, 0, 0, 0, 0))
+class DirStatsTask(rootDir: VDirectory) extends Task[DirStats, DirCounts] {
+  override def run(progressMonitor: ProgressMonitor2[DirCounts]): DirStats = {
+    val total = countStats(rootDir, progressMonitor, DirCounts(0, 0, 0, 0), 0)
+    progressMonitor.notifyFinished("", Some(total))
+    val cur = dirCounts(rootDir, 0)
+    DirStats(rootDir, cur.numFiles, cur.numDirs, cur.size, total.numFiles, total.numDirs, total.size, total.depth)
   }
 
-  private def countStats(dir: VDirectory, progressMonitor: ProgressMonitor2[DirStats], level: Int): DirStats = {
-    def indent(l: Int) = "  " * l
 
+  private def dirCounts(dir: VDirectory, level: Int) = {
     val subDirs = dir.childDirs
     val files = dir.childFiles
+    val filesSize = files.map(_.size).sum
+    val dirsSize = subDirs.map(_.size).sum
 
-    val filesSize = files.map(f => f.size).sum
-
-    val subStats = subDirs.map(d => countStats(d, progressMonitor, level + 1))
-
-    def prepStats(): DirStats = {
-      val subTreeSize = subStats.map(s => s.totalSubTreeSize).sum
-
-      val numFiles = files.size
-      val numDirs = subDirs.size
-
-      val subNumFiles = subStats.map(s => s.totalNumFiles).sum
-      val subNumDirs = subStats.map(s => s.totalNumDirs).sum
-
-      val subLevels = (subStats foldLeft level)((maxLevel, stats) => math.max(maxLevel, stats.subTreeLevels)) + 1
-
-      DirStats(dir, numFiles, numDirs, numFiles + subNumFiles, numDirs + subNumDirs, filesSize, filesSize + subTreeSize, subLevels)
-    }
-
-    val statsOld = prepStats()
-    val stats = (subStats foldLeft DirStats(dir, files.size, subDirs.size, 0, 0, filesSize, 0, level))((acc, stats) => acc.mergeChildStats(stats))
-
-//    progressMonitor.notifyProgressIndeterminate(Some(s"${indent(level)}Counting OLD stats for dir ${dir.name}"), Some(statsOld))
-//    progressMonitor.notifyProgressIndeterminate(Some(s"${indent(level)}Counting NEW stats for dir ${dir.name}"), Some(stats))
-    progressMonitor.notifyProgressIndeterminate(None, Some(stats))
-    stats
+    DirCounts(files.size, subDirs.size, filesSize + dirsSize, level)
   }
 
-  private def countStats2(dir: VDirectory, progressMonitor: ProgressMonitor2[DirStats], level: Int, totalStats: DirStats): DirStats = {
-    def indent(l: Int) = "  " * l
+  private def countStats(dir: VDirectory, progressMonitor: ProgressMonitor2[DirCounts], globalCounts: DirCounts, level: Int): DirCounts = {
+    val curCounts = globalCounts + dirCounts(dir, level)
+    val totalCounts = (dir.childDirs foldLeft curCounts)((accCounts, subDir) => countStats(subDir, progressMonitor, accCounts, level + 1))
 
-    val subDirs = dir.childDirs
-    val files = dir.childFiles
-
-    val filesSize = files.map(f => f.size).sum
-
-    val curStats = DirStats(dir, files.size, subDirs.size, filesSize)
-
-//    val subStats = subDirs.map(d => countStats2(d, progressMonitor, level + 1, ))
-
-//    val stats = (subDirs foldLeft totalStats)((stats, curDir) => stats.mergeChildStats(countStats2(curDir, progressMonitor, level + 1, stats)))
-//    var stats = totalStats.mergeChildStats(curStats)
-    var stats = curStats.mergeChildStats(totalStats)
-    for (curDir <- subDirs) {
-      val subStats = countStats2(curDir, progressMonitor, level + 1, stats)
-      println(s"${indent(level)}subStats=$subStats")
-      stats = stats.mergeChildStats(subStats)
-      println(s"${indent(level)} upStats=$stats")
-    }
-
-//    val stats = (subStats foldLeft totalStats)((acc, stats) => acc.mergeChildStats(stats))
-
-    //    progressMonitor.notifyProgressIndeterminate(Some(s"${indent(level)}Counting OLD stats for dir ${dir.name}"), Some(statsOld))
-    //    progressMonitor.notifyProgressIndeterminate(Some(s"${indent(level)}Counting NEW stats for dir ${dir.name}"), Some(stats))
-    progressMonitor.notifyProgressIndeterminate(Some(s"Current folder: ${stats.dir.absolutePath}"), Some(stats))
-    stats
+    progressMonitor.notifyProgressIndeterminate(Some(s"Current folder: ${dir.absolutePath}"), Some(totalCounts))
+    totalCounts
   }
 }

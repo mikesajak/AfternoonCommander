@@ -45,6 +45,8 @@ class ZipRoot(parentDir: VDirectory, zipFile: jZipFile) extends VDirectory {
   override def modificationDate: Instant = Instant.now()
   override def attribs: String = "r"
 
+  override def size: Long = 0
+
   override def children: Seq[VPath] = {
     zipFile.entries().asScala
       .filter(ze => s"/${ze.getName}".startsWith(name))
@@ -68,6 +70,8 @@ class ZipDir(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) exte
   override def name: String = "/" + zipEntry.getName
   override def parent: Option[VDirectory] = Some(parentDir)
   override def absolutePath: String = s"${ZipFS.id}://${zipFile.getName}/$zipEntry"
+
+  override def size: Long = 0
 
   override def children: Seq[VPath] = ??? // TODO
   override def childDirs: Seq[VDirectory] = ??? // TODO

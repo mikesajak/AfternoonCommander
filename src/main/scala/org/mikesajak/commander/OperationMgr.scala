@@ -1,7 +1,5 @@
 package org.mikesajak.commander
 
-import javafx.scene.control
-
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{FilesystemsManager, PathToParent, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
@@ -10,10 +8,8 @@ import org.mikesajak.commander.ui.controller.ops.{CountStatsPanelController, MkD
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 
 import scalafx.Includes._
-import scalafx.scene.Parent
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
-import scalafx.scene.image.ImageView
 import scalafx.stage.{Modality, StageStyle}
 
 class OperationMgr(statusMgr: StatusMgr,
@@ -110,20 +106,20 @@ class OperationMgr(statusMgr: StatusMgr,
 
     contentCtrl.init(selectedTab.dir, dialog)
 
-    class CountStatsProgressMonitor extends ProgressMonitor2[DirStats] {
-      override def notifyProgressIndeterminate(message: Option[String], state: Option[DirStats]): Unit = {
+    class CountStatsProgressMonitor extends ProgressMonitor2[DirCounts] {
+      override def notifyProgressIndeterminate(message: Option[String], state: Option[DirCounts]): Unit = {
         state.foreach(s => contentCtrl.updateStats(s, message))
       }
 
-      override def notifyProgress(progress: Float, message: Option[String], state: Option[DirStats]): Unit = {
+      override def notifyProgress(progress: Float, message: Option[String], state: Option[DirCounts]): Unit = {
         state.foreach(s => contentCtrl.updateStats(s, message))
       }
 
-      override def notifyFinished(message: String, state: Option[DirStats]): Unit = {
+      override def notifyFinished(message: String, state: Option[DirCounts]): Unit = {
         println(s"Finished: $message, stats=$state")
       }
 
-      override def notifyError(message: String, state: Option[DirStats]): Unit = {
+      override def notifyError(message: String, state: Option[DirCounts]): Unit = {
         state match {
           case Some(stats) => contentCtrl.updateStats(stats, Some(message))
           case _ => contentCtrl.updateMsg(message)

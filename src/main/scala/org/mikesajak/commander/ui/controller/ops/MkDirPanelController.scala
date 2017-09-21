@@ -28,7 +28,6 @@ class MkDirPanelControllerImpl(headerImageView: ImageView,
 
   override def init(parentFolderName: String, parentDialog: Dialog[String]): Unit = {
     parentFolderLabel.text = parentFolderName
-    folderNameCombo.promptText = "Raz dwa trzy"
 
     // todo: fill combo suggestion list
 

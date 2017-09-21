@@ -14,6 +14,8 @@ trait LocalPath extends VPath {
 
   override def absolutePath: String = s"${LocalFS.id}://${file.getAbsolutePath}"
 
+  override def size: Long = file.length()
+
   override def attribs: String = {
     "" +
       (if (file.isDirectory) "d" else " ") +
@@ -23,7 +25,7 @@ trait LocalPath extends VPath {
       (if (file.isHidden) "h" else " ")
   }
 
-  override def modificationDate = Instant.ofEpochMilli(file.lastModified())
+  override def modificationDate: Instant = Instant.ofEpochMilli(file.lastModified())
 
   override def isDirectory: Boolean = file.isDirectory
 

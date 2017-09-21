@@ -1,10 +1,10 @@
 package org.mikesajak.commander.ui.controller
 
-import com.sun.javafx.scene.control.skin.TableViewSkin
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
-import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
+import org.mikesajak.commander.fs.{PathToParent, VDirectory, VPath}
+import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.util.UnitFormatter
 
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
@@ -20,11 +20,14 @@ import scalafxml.core.macros.sfxml
 class FileRow(val path: VPath) {
   val name = new StringProperty(mkName(path))
   val extension = new StringProperty("")
-  val size = new StringProperty((if (path.isFile) path.asInstanceOf[VFile].size else 0).toString)
+  val size = new StringProperty(formatSize(path))
   val modifiyDate = new StringProperty(path.modificationDate.toString)
   val attributes = new StringProperty(path.attribs)
 
   def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else p.name
+
+  def formatSize(vFile: VPath): String =
+    if (path.isInstanceOf[PathToParent]) "PARENT" else UnitFormatter.formatUnit(path.size, true)
 
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifiyDate, $attributes)"
 }

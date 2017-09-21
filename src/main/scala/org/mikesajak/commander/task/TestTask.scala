@@ -10,7 +10,7 @@ object TestTask {
   }
 }
 
-class TestTask extends Task[Unit] {
+class TestTask extends Task[Unit, Unit] {
   private val id = TestTask.taskCreated()
 
   override def run(progressMonitor: ProgressMonitor2[Unit]): Unit = {
