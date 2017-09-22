@@ -96,7 +96,7 @@ class OperationMgr(statusMgr: StatusMgr,
     val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
     val selectedTab = statusMgr.selectedTabManager.selectedTab
 
-    val dialog = new Dialog[DirStats]() {
+    val dialog = new Dialog[ButtonType]() {
       title = "Afternoon Commander"
       initOwner(appController.mainStage)
       initStyle(StageStyle.Utility)
@@ -104,7 +104,8 @@ class OperationMgr(statusMgr: StatusMgr,
       dialogPane().content = contentPane
     }
 
-    contentCtrl.init(selectedTab.dir, dialog)
+    contentCtrl.init(selectedTab.dir, dialog, showClose = true, showCancel = true, showSkip = false)
+    contentCtrl.updateButtons(enableClose = false, enableCancel = true, enableSkip = false)
 
     class CountStatsProgressMonitor extends ProgressMonitor2[DirCounts] {
       override def notifyProgressIndeterminate(message: Option[String], state: Option[DirCounts]): Unit = {
@@ -117,6 +118,8 @@ class OperationMgr(statusMgr: StatusMgr,
 
       override def notifyFinished(message: String, state: Option[DirCounts]): Unit = {
         println(s"Finished: $message, stats=$state")
+//        contentCtrl.showButtons(true, )
+        contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
       }
 
       override def notifyError(message: String, state: Option[DirCounts]): Unit = {
@@ -124,6 +127,8 @@ class OperationMgr(statusMgr: StatusMgr,
           case Some(stats) => contentCtrl.updateStats(stats, Some(message))
           case _ => contentCtrl.updateMsg(message)
         }
+//        contentCtrl.showButtons(showClose = true, showCancel = false, showSkip = false)
+        contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
       }
     }
 

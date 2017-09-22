@@ -19,7 +19,12 @@ object UnitFormatter {
   def formatUnit(num: Double, raw: Boolean = false): String = {
     val (value, unit) = byteUnit(num, raw)
     val strValue = if (value == value.toLong) value.toLong.toString else f"$value%.2f"
-    s"$strValue$unit"
+    s"$strValue $unit"
+  }
+
+  def formatNumElements(numElems: Int): String = {
+    val unit = if (numElems == 1) "element" else "elements"
+    s"$numElems $unit"
   }
 
 }

@@ -2,7 +2,7 @@ package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.{PathToParent, VDirectory, VPath}
+import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.util.UnitFormatter
 
@@ -27,7 +27,11 @@ class FileRow(val path: VPath) {
   def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else p.name
 
   def formatSize(vFile: VPath): String =
-    if (path.isInstanceOf[PathToParent]) "PARENT" else UnitFormatter.formatUnit(path.size, true)
+    path match {
+      case p: PathToParent => "PARENT"
+      case p: VDirectory => UnitFormatter.formatNumElements(path.directory.children.size)
+      case p: VFile => UnitFormatter.formatUnit(path.size, false)
+    }
 
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifiyDate, $attributes)"
 }
@@ -55,9 +59,15 @@ class DirTableController(dirTableView: TableView[FileRow],
 
   import org.mikesajak.commander.ui.UIParams._
 
+  private var curDir: VDirectory = _
+  private var panelController: DirPanelControllerIntf = _
+
   override def selectedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
+    curDir = path
+    this.panelController = dirPanelController
+
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
     idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
       new TableCell[FileRow, VPath]() {
@@ -90,7 +100,7 @@ class DirTableController(dirTableView: TableView[FileRow],
       val row = new TableRow[FileRow]()
       row.handleEvent(MouseEvent.MouseClicked) { event: MouseEvent =>
         if (!row.isEmpty && event.button == MouseButton.Primary && event.clickCount == 2) {
-          handleAction(dirPanelController, row.item.value.path)
+          handleAction(row.item.value.path)
         }
       }
 
@@ -101,7 +111,7 @@ class DirTableController(dirTableView: TableView[FileRow],
       if (event.character.contains("\n") || event.character.contains("\r")) {
         val items = dirTableView.selectionModel.value.selectedItems
         if (items.nonEmpty) {
-          handleAction(dirPanelController, items.head.path)
+          handleAction(items.head.path)
         }
       }
     }
@@ -109,9 +119,13 @@ class DirTableController(dirTableView: TableView[FileRow],
     initTable(path)
   }
 
-  private def handleAction(panelController: DirPanelControllerIntf, path: VPath): Unit = {
+  def reload(): Unit = {
+    initTable(curDir)
+  }
+
+  private def handleAction(path: VPath): Unit = {
     if (path.isDirectory)
-      changeDir(panelController, path.directory)
+      changeDir(path.directory)
     else {
       val fileType = fileTypeManager.detectFileType(path)
       val fileTypeActionHandler = fileTypeManager.fileTypeHandler(path)
@@ -119,12 +133,12 @@ class DirTableController(dirTableView: TableView[FileRow],
     }
   }
 
-  private def changeDir(panelController: DirPanelControllerIntf, directory: VDirectory): Unit = {
-    updateParentTab(panelController, directory)
+  private def changeDir(directory: VDirectory): Unit = {
+    updateParentTab(directory)
     initTable(directory)
   }
 
-  private def updateParentTab(panelController: DirPanelControllerIntf, directory: VDirectory): Unit = {
+  private def updateParentTab(directory: VDirectory): Unit = {
     val targetDir = directory match {
       case p: PathToParent => p.targetDir
       case _ => directory
