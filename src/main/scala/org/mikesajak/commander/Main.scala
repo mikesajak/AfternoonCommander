@@ -11,7 +11,6 @@ import scalafx.application.JFXApp.PrimaryStage
 import scalafx.application.{JFXApp, Platform}
 import scalafx.scene.Scene
 
-
 /**
  * Created by mike on 25.10.14.
  */

@@ -60,7 +60,10 @@ class OperationMgr(statusMgr: StatusMgr,
 
     println(s"MkDir dialog result=$result")
 
-    // todo: create directory, refresh view
+//    for (newDirName <- result) {
+//      selectedTab.dir.mkChildDir(newDirName)
+//      selectedTab.controller.reload()
+//    }
   }
 
   private def prepareOkCancelDialog() = {

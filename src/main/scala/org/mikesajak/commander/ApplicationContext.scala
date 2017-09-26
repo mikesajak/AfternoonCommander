@@ -23,7 +23,7 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideConfig(): Configuration = {
-    val config = new TypesafeConfig(ApplicationController.configFile)
+    val config = new TypesafeConfig(s"${ApplicationController.configPath}/${ApplicationController.configFile}")
     config.load()
     config
   }
@@ -74,8 +74,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
                               fsMgr: FilesystemsManager, taskManager: TaskManager,
-                              applicationController: ApplicationController): OperationMgr = {
-    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, applicationController)
+                              appController: ApplicationController): OperationMgr = {
+    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, appController)
   }
 }
 

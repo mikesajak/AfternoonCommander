@@ -39,6 +39,7 @@ class FileRow(val path: VPath) {
 trait DirTableControllerIntf {
   def init(panelController: DirPanelControllerIntf, path: VDirectory)
   def selectedRow: FileRow
+  def reload(): Unit
 }
 
 @sfxml
@@ -119,7 +120,7 @@ class DirTableController(dirTableView: TableView[FileRow],
     initTable(path)
   }
 
-  def reload(): Unit = {
+  override def reload(): Unit = {
     initTable(curDir)
   }
 

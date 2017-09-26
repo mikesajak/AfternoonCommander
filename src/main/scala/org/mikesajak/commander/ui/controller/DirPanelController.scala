@@ -81,6 +81,7 @@ class DirPanelController(tabPane: TabPane,
 
     var tabSelectionPending = false
     tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
+      println(s"$panelId - tab selection change $oldIdx->$newIdx")
       val prevIdx = oldIdx.intValue
       val tabIdx = newIdx.intValue
       if (!tabSelectionPending && isNewTabButton(tabIdx)) {
@@ -91,6 +92,9 @@ class DirPanelController(tabPane: TabPane,
         } finally {
           tabSelectionPending = false
         }
+      } else {
+        // todo: refresh newly selected tab
+//        dirTabManager.tab(tabIdx).controller.reload()
       }
 
       if (tabIdx < tabPane.tabs.size) {
@@ -123,7 +127,6 @@ class DirPanelController(tabPane: TabPane,
       tabPane += tab
       tabPane.selectionModel.select(tab.text.value)
       dirTabManager.addTab(t, tab.controller)
-      tabPane
     }
 
     tabPane += createNewTabTab()
