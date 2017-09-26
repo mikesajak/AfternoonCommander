@@ -1,7 +1,7 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import org.mikesajak.commander.fs.VDirectory
-import org.mikesajak.commander.task.DirCounts
+import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.util.UnitFormatter
 
@@ -13,7 +13,7 @@ import scalafxml.core.macros.sfxml
 
 trait CountStatsPanelController {
   def init(path: VDirectory, parentDialog: Dialog[ButtonType], showClose: Boolean, showCancel: Boolean, showSkip: Boolean): Unit
-  def updateStats(stats: DirCounts, message: Option[String])
+  def updateStats(stats: DirStats, message: Option[String])
   def updateStats(foldersCount: Int, filesCount: Int, totalSize: Long, depth: Int, message: Option[String])
   def updateMsg(message: String)
   def showButtons(showClose: Boolean, showCancel: Boolean, showSkip: Boolean)
@@ -60,7 +60,7 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
   }
 
-  override def updateStats(stats: DirCounts, message: Option[String]): Unit =
+  override def updateStats(stats: DirStats, message: Option[String]): Unit =
     updateStats(stats.numDirs, stats.numFiles, stats.size, stats.depth, message)
 
   override def updateStats(foldersCount: Int, filesCount: Int, totalSize: Long, depth: Int, message: Option[String]): Unit =

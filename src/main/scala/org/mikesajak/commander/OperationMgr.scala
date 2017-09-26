@@ -107,22 +107,22 @@ class OperationMgr(statusMgr: StatusMgr,
     contentCtrl.init(selectedTab.dir, dialog, showClose = true, showCancel = true, showSkip = false)
     contentCtrl.updateButtons(enableClose = false, enableCancel = true, enableSkip = false)
 
-    class CountStatsProgressMonitor extends ProgressMonitor2[DirCounts] {
-      override def notifyProgressIndeterminate(message: Option[String], state: Option[DirCounts]): Unit = {
+    class CountStatsProgressMonitor extends ProgressMonitor2[DirStats] {
+      override def notifyProgressIndeterminate(message: Option[String], state: Option[DirStats]): Unit = {
         state.foreach(s => contentCtrl.updateStats(s, message))
       }
 
-      override def notifyProgress(progress: Float, message: Option[String], state: Option[DirCounts]): Unit = {
+      override def notifyProgress(progress: Float, message: Option[String], state: Option[DirStats]): Unit = {
         state.foreach(s => contentCtrl.updateStats(s, message))
       }
 
-      override def notifyFinished(message: String, state: Option[DirCounts]): Unit = {
+      override def notifyFinished(message: String, state: Option[DirStats]): Unit = {
         println(s"Finished: $message, stats=$state")
 //        contentCtrl.showButtons(true, )
         contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
       }
 
-      override def notifyError(message: String, state: Option[DirCounts]): Unit = {
+      override def notifyError(message: String, state: Option[DirStats]): Unit = {
         state match {
           case Some(stats) => contentCtrl.updateStats(stats, Some(message))
           case _ => contentCtrl.updateMsg(message)
