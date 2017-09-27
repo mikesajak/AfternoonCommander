@@ -135,6 +135,7 @@ class DirTableController(dirTableView: TableView[FileRow],
   }
 
   private def changeDir(directory: VDirectory): Unit = {
+    curDir = directory
     updateParentTab(directory)
     initTable(directory)
   }

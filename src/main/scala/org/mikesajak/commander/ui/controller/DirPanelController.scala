@@ -79,6 +79,35 @@ class DirPanelController(tabPane: TabPane,
     tabPane.tabs.clear()
     dirTabManager.clearTabs()
 
+    val numTabs = config.intProperty("tabs", s"$panelId.numTabs").getOrElse(0)
+
+    val tabPathNames =
+      config.stringSeqProperty("tabs", s"$panelId.tabs")
+        .getOrElse(List(fsMgr.homePath))
+
+    val tabPaths = tabPathNames
+      .flatMap(path => fsMgr.resolvePath(path))
+      // todo log problem with path
+      .map(vpath => vpath.directory)
+
+    tabPaths.foreach { t =>
+      val tab = createTab(t)
+      dirTabManager.addTab(t, tab.controller)
+      tabPane += tab
+      tabPane.selectionModel.select(tab.text.value)
+    }
+
+    tabPane += createNewTabTab()
+
+    val selectedPath = tabPaths.head
+    // todo - selection
+    curDirField.text = selectedPath.absolutePath
+    tabPane.getSelectionModel.selectFirst()
+
+    registerListeners(panelId)
+  }
+
+  private def registerListeners(panelId: PanelId): Unit = {
     var tabSelectionPending = false
     tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
       println(s"$panelId - tab selection change $oldIdx->$newIdx")
@@ -93,8 +122,8 @@ class DirPanelController(tabPane: TabPane,
           tabSelectionPending = false
         }
       } else {
-        // todo: refresh newly selected tab
-//        dirTabManager.tab(tabIdx).controller.reload()
+        // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
+        dirTabManager.tab(tabIdx).controller.reload()
       }
 
       if (tabIdx < tabPane.tabs.size) {
@@ -105,36 +134,11 @@ class DirPanelController(tabPane: TabPane,
 
     tabPane.selectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) => {
       if (newTab.getGraphic != null) {
-//        val oldPath = oldTab.asInstanceOf[DirTab].tabPath
-//        tabPane += createTab(oldPath)
+        //        val oldPath = oldTab.asInstanceOf[DirTab].tabPath
+        //        tabPane += createTab(oldPath)
       }
-//      currentTab = newTab
+      //      currentTab = newTab
     })
-
-    val numTabs = config.intProperty("tabs", s"$panelId.numTabs").getOrElse(0)
-
-    val tabPathNames =
-      config.stringSeqProperty("tabs", s"$panelId.tabs")
-        .getOrElse(List(fsMgr.homePath))
-
-    val tabPaths = tabPathNames
-      .flatMap(path => fsMgr.resolvePath(path))
-      // todo log problem with path
-      .map(vpath => vpath.directory)
-
-    tabPaths.foreach { t =>
-      val tab = createTab(t)
-      tabPane += tab
-      tabPane.selectionModel.select(tab.text.value)
-      dirTabManager.addTab(t, tab.controller)
-    }
-
-    tabPane += createNewTabTab()
-
-    val selectedPath = tabPaths.head
-    // todo - selection
-    curDirField.text = selectedPath.absolutePath
-    tabPane.getSelectionModel.selectFirst()
   }
 
   private def pathForNewTab() = {
@@ -166,7 +170,10 @@ class DirPanelController(tabPane: TabPane,
   }
 
   def updateCurTab(path: VDirectory): Unit = {
-    val curTab = tabPane.selectionModel.value.getSelectedItem
+    val selectionModel = tabPane.selectionModel.value
+    val curTab = selectionModel.getSelectedItem
+
+    dirTabManager.tab(selectionModel.getSelectedIndex).dir = path
     DirTab.updateTab(curTab, path)
   }
 

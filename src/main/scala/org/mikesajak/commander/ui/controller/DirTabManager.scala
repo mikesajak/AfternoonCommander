@@ -9,31 +9,33 @@ import org.mikesajak.commander.fs.VDirectory
 class DirTabManager(panelId: PanelId) {
   private val logger = Logger(this.getClass)
 
-  private var tabs = IndexedSeq[TabData]()
+  private var tabs0 = IndexedSeq[TabData]()
   private var selectedTabIdx0 = 0
 
   logger.debug(s"Creating DirTabManager with panelId=$panelId")
 
+  def tabs: IndexedSeq[TabData] = tabs0
+
   def addTab(dir: VDirectory, controller: DirTableControllerIntf): Unit = {
-    tabs :+= TabData(dir, controller)
+    tabs0 :+= TabData(dir, controller)
   }
 
   def removeTab(idx: Int): Unit = {
-    tabs = tabs.patch(idx, Nil, 1)
+    tabs0 = tabs0.patch(idx, Nil, 1)
   }
 
   def clearTabs(): Unit = {
-    tabs = IndexedSeq()
+    tabs0 = IndexedSeq()
   }
 
 //  def updateTab(idx: Int, dir: VDirectory): Unit = {
-//    val curTab = tabs(idx)
-//    tabs = tabs.patch(idx, Seq(new TabData(dir, curTab.controller)), 1)
+//    val curTab = tabs0(idx)
+//    tabs0 = tabs0.patch(idx, Seq(new TabData(dir, curTab.controller)), 1)
 //  }
 
-  def tab(idx: Int): TabData = tabs(idx)
+  def tab(idx: Int): TabData = tabs0(idx)
 
-  def selectedTab: TabData = tabs(selectedTabIdx0)
+  def selectedTab: TabData = tabs0(selectedTabIdx0)
 
   def selectedTabIdx: Int = selectedTabIdx0
   def selectedTabIdx_=(newIdx: Int): Unit = {
@@ -42,6 +44,4 @@ class DirTabManager(panelId: PanelId) {
   }
 }
 
-case class TabData(dir: VDirectory, controller: DirTableControllerIntf) {
-
-}
+case class TabData(var dir: VDirectory, controller: DirTableControllerIntf)
