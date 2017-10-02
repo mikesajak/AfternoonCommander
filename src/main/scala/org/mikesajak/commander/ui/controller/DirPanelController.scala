@@ -4,6 +4,7 @@ import javafx.scene.{Parent, control}
 
 import com.google.inject.Key
 import com.google.inject.name.Names
+import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
@@ -50,6 +51,8 @@ class DirPanelController(tabPane: TabPane,
 
   private var dirTabManager: DirTabManager = _
   private var currentTab: Tab = _
+
+  private val logger = Logger[DirPanelController]
 
   def init(panelId: PanelId) {
     // TODO: better way of getting dependency - use injection!!
@@ -123,6 +126,7 @@ class DirPanelController(tabPane: TabPane,
         }
       } else {
         // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
+        logger.debug(s"$panelId - reloading tab: $tabIdx: ${dirTabManager.tab(tabIdx).dir}")
         dirTabManager.tab(tabIdx).controller.reload()
       }
 

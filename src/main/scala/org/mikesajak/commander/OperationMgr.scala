@@ -56,14 +56,15 @@ class OperationMgr(statusMgr: StatusMgr,
 
     contentCtrl.init(selectedTab.dir.toString, dialog)
 
-    val result = dialog.showAndWait()
+    val result = dialog.showAndWait().asInstanceOf[Option[String]]
 
     println(s"MkDir dialog result=$result")
 
-//    for (newDirName <- result) {
-//      selectedTab.dir.mkChildDir(newDirName)
-//      selectedTab.controller.reload()
-//    }
+    result foreach { newDirName =>
+      selectedTab.dir.mkChildDir(newDirName)
+      selectedTab.controller.reload()
+    }
+
   }
 
   private def prepareOkCancelDialog() = {
