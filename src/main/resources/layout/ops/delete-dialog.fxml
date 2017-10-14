@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.DeletePanelControllerImpl">
+   <children>
+      <HBox alignment="BASELINE_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
+         <children>
+            <Label fx:id="pathTypeLabel" text="Directory" HBox.hgrow="NEVER">
+               <HBox.margin>
+                  <Insets right="5.0" />
+               </HBox.margin>
+            </Label>
+            <Label maxWidth="1.7976931348623157E308" text="to delete:" />
+         </children>
+      </HBox>
+      <HBox alignment="BASELINE_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
+         <children>
+            <Label fx:id="pathToTargetLabel" graphicTextGap="0.0" text="full/path/to/" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="ALWAYS" />
+            <Label fx:id="targetNameLabel" graphicTextGap="0.0" text="TargetDirectory" HBox.hgrow="NEVER">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
+            </Label>
+         </children>
+         <padding>
+            <Insets left="14.0" right="14.0" />
+         </padding>
+      </HBox>
+   </children>
+</VBox>

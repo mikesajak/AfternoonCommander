@@ -32,6 +32,12 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
     else Seq()
   }
 
-  override def mkChildDir(child: String): LocalDirectory = new LocalDirectory(new File(file.getAbsolutePath + File.separator + child), this.fileSystem)
+  override def mkChildDir(child: String): LocalDirectory = {
+    val newDir = new File(file, child)
+    if (newDir.mkdir())
+      new LocalDirectory(newDir, this.fileSystem)
+    else throw new IllegalStateException(s"Couldnt't create new directory: $newDir")
+
+  }
   override def mkChildFile(child: String): LocalFile = new LocalFile(new File(file.getAbsolutePath + File.separator + child), this.fileSystem)
 }

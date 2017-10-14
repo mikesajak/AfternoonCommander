@@ -39,7 +39,9 @@ class FileRow(val path: VPath) {
 trait DirTableControllerIntf {
   def init(panelController: DirPanelControllerIntf, path: VDirectory)
   def selectedRow: FileRow
+  def selectedPath: VPath
   def reload(): Unit
+  def select(fileName: String): Unit
 }
 
 @sfxml
@@ -64,6 +66,8 @@ class DirTableController(dirTableView: TableView[FileRow],
   private var panelController: DirPanelControllerIntf = _
 
   override def selectedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
+
+  override def selectedPath: VPath = selectedRow.path
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
     curDir = path
@@ -124,6 +128,18 @@ class DirTableController(dirTableView: TableView[FileRow],
     initTable(curDir)
   }
 
+  override def select(target: String): Unit = {
+    val selIndex = {
+      val idx = curDir.children.map(_.name).indexOf(target)
+      if (idx > 0) idx else 0
+    }
+
+    println(s"Select $target => index=$selIndex")
+
+    dirTableView.getSelectionModel.select(selIndex)
+    dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
+  }
+
   private def handleAction(path: VPath): Unit = {
     if (path.isDirectory)
       changeDir(path.directory)
@@ -176,7 +192,6 @@ class DirTableController(dirTableView: TableView[FileRow],
     }.getOrElse(0)
 
     dirTableView.getSelectionModel.select(selIndex)
-
     dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
   }
 }

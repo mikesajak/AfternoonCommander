@@ -1,33 +1,42 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import javafx.beans.value.{ChangeListener, ObservableValue}
+import javafx.scene.control
 
+import org.mikesajak.commander.fs.VDirectory
 import org.mikesajak.commander.ui.ResourceManager
 
+import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
 trait MkDirPanelController {
-  def parentFolderLabel: Label
+//  def parentFolderLabel: Label
   def folderNameCombo: ComboBox[String]
 
-  def init(parentFolderName: String, parentDialog: Dialog[String]): Unit
+  def init(parentFolder: VDirectory, parentDialog: Dialog[String]): Unit
 }
 
 @sfxml
 class MkDirPanelControllerImpl(headerImageView: ImageView,
-                               val parentFolderLabel: Label,
+                               val parentFolderPathLabel: Label,
+                               val parentFolderNameLabel: Label,
                                val folderNameCombo: ComboBox[String],
-                               okButton: Button,
-                               cancelButton: Button,
+                               resourceMgr: ResourceManager) extends MkDirPanelController {
 
-                               resourceMgr: ResourceManager)
-    extends MkDirPanelController {
+  override def init(parentFolder: VDirectory, dialog: Dialog[String]): Unit = {
+    val path = parentFolder.parent.map(_.absolutePath).getOrElse("")
+    parentFolderPathLabel.text = path + "/"
+    parentFolderNameLabel.text = parentFolder.name
 
-  override def init(parentFolderName: String, parentDialog: Dialog[String]): Unit = {
-    parentFolderLabel.text = parentFolderName
+    dialog.headerText = "Create new directory"
+    dialog.graphic = new ImageView(resourceMgr.getIcon("folder-plus-48.png"))
+
+
+    dialog.title ="Afternoon Commander - create directory"
+    dialog.getDialogPane.buttonTypes = Seq(ButtonType.OK, ButtonType.Cancel)
 
     // todo: fill combo suggestion list
 
@@ -38,7 +47,10 @@ class MkDirPanelControllerImpl(headerImageView: ImageView,
 //      println(s"MkDirPanelController: okButton disabled = ${okButton.disabled}")
 //    })
 
-    headerImageView.image = resourceMgr.getIcon("folder-plus-48.png")
+//    headerImageView.image = resourceMgr.getIcon("folder-plus-48.png")
+
+    val okButton: Button = new Button(dialog.getDialogPane.lookupButton(ButtonType.OK).asInstanceOf[control.Button])
+    val cancelButton = new Button(dialog.getDialogPane.lookupButton(ButtonType.Cancel).asInstanceOf[control.Button])
 
     folderNameCombo.editor.value.textProperty().addListener(new ChangeListener[String] {
       override def changed(observable: ObservableValue[_ <: String], oldValue: String, newValue: String): Unit = {
@@ -49,16 +61,21 @@ class MkDirPanelControllerImpl(headerImageView: ImageView,
 
     okButton.disable = true
 
-    okButton.onAction = e => {
-      parentDialog.close()
-      parentDialog.result = folderNameCombo.value.value
+    dialog.resultConverter =  {
+      case ButtonType.OK => folderNameCombo.value.value
+      case _ => null
     }
 
-    cancelButton.onAction = e => {
-      parentDialog.dialogPane().getButtonTypes.addAll(ButtonType.Cancel)
-      parentDialog.close()
-      parentDialog.result = null
-    }
+//    okButton.onAction = e => {
+//      parentDialog.close()
+//      parentDialog.result = folderNameCombo.value.value
+//    }
+//
+//    cancelButton.onAction = e => {
+//      parentDialog.dialogPane().getButtonTypes.addAll(ButtonType.Cancel)
+//      parentDialog.close()
+//      parentDialog.result = null
+//    }
     
     Platform.runLater {
       folderNameCombo.requestFocus()

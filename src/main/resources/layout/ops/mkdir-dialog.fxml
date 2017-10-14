@@ -1,37 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
-
-
-<GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="54.0" prefWidth="381.0" vgap="5.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.MkDirPanelControllerImpl">
-  <columnConstraints>
-    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-      <ColumnConstraints />
-  </columnConstraints>
-  <rowConstraints>
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-  </rowConstraints>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<VBox spacing="5.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.MkDirPanelControllerImpl">
    <children>
-      <ComboBox id="folderNameCombo" fx:id="folderNameCombo" editable="true" maxWidth="1.7976931348623157E308" promptText="New folder name" />
-      <HBox prefHeight="15.0" prefWidth="356.0" spacing="5.0" GridPane.rowIndex="1">
+      <Label maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="In parent folder:">
+         <padding>
+            <Insets right="5.0" />
+         </padding>
+      </Label>
+      <HBox prefHeight="15.0" prefWidth="356.0">
          <children>
-            <Label text="In parent folder:" HBox.hgrow="NEVER">
-               <HBox.margin>
-                  <Insets left="10.0" />
-               </HBox.margin>
+            <Label id="parentFolderLabel" fx:id="parentFolderPathLabel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" text="some/path/" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="ALWAYS" />
+            <Label fx:id="parentFolderNameLabel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" text="TargetDirectory" HBox.hgrow="NEVER">
+               <font>
+                  <Font name="System Bold" size="13.0" />
+               </font>
             </Label>
-            <Label id="parentFolderLabel" fx:id="parentFolderLabel" alignment="CENTER_RIGHT" text="Label" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="ALWAYS" />
          </children>
+         <padding>
+            <Insets left="14.0" />
+         </padding>
       </HBox>
+      <Separator prefWidth="200.0" />
+      <ComboBox id="folderNameCombo" fx:id="folderNameCombo" editable="true" maxWidth="1.7976931348623157E308" promptText="New folder name">
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+      </ComboBox>
    </children>
-   <padding>
-      <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
-   </padding>
-</GridPane>
+</VBox>
