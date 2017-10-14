@@ -73,10 +73,13 @@ class OperationMgr(statusMgr: StatusMgr,
       println(s"Delete confirmation dialog result=$result")
 
       result match {
-        case ButtonType.Yes =>
+        case Some(ButtonType.Yes) =>
           logger.debug(s"Deleting: $targetPath")
           val fs = targetPath.fileSystem
-          fs.delete(targetPath)
+          val deleted = fs.delete(targetPath)
+          if (!deleted) logger.info(s"Could not delete $targetPath")
+          selectedTab.controller.reload()
+          // todo: select previous file/directory to keep cursor near deleted dir
         case _ => // operation cancelled
       }
     }

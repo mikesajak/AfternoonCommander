@@ -12,7 +12,7 @@ trait LocalPath extends VPath {
 
   override def name: String = file.getName
 
-  override def absolutePath: String = s"${LocalFS.id}://${file.getAbsolutePath}"
+  override def absolutePath: String = file.getAbsolutePath
 
   override def size: Long = file.length()
 
@@ -38,5 +38,5 @@ trait LocalPath extends VPath {
     if (isDirectory) this.asInstanceOf[VDirectory] else parent.get
   }
 
-  override def toString: String = absolutePath
+  override def toString: String = s"${LocalFS.id}://$absolutePath"
 }

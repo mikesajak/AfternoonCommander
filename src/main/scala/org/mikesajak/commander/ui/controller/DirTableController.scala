@@ -130,11 +130,9 @@ class DirTableController(dirTableView: TableView[FileRow],
 
   override def select(target: String): Unit = {
     val selIndex = {
-      val idx = curDir.children.map(_.name).indexOf(target)
+      val idx = dirTableView.items.value.map(fileRow => fileRow.path.name).indexOf(target)
       if (idx > 0) idx else 0
     }
-
-    println(s"Select $target => index=$selIndex")
 
     dirTableView.getSelectionModel.select(selIndex)
     dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))

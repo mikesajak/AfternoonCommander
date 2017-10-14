@@ -1,6 +1,8 @@
 package org.mikesajak.commander.fs.local
 
 import java.io.File
+import java.net.URI
+import java.nio.file.{Files, Paths}
 import java.nio.{file => jfile}
 import java.{io => jio}
 
@@ -22,7 +24,10 @@ class LocalFS(rootFile: File) extends FS {
 
   override def exists(path: VPath): Boolean = new jio.File(path.name).exists
 
-  override def delete(path: VPath): Boolean = new jio.File(path.name).delete()
+  override def delete(path: VPath): Boolean = {
+    val fsPath = Paths.get(new URI(s"file://${path.absolutePath}"))
+    Files.deleteIfExists(fsPath)
+  }
 
   override def create(path: VPath): Boolean = {
     val f = new jio.File(path.name)
