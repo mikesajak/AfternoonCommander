@@ -1,5 +1,7 @@
 package org.mikesajak.commander.util
 
+import java.io.{PrintWriter, StringWriter}
+
 import scala.language.reflectiveCalls
 
 /**
@@ -21,4 +23,11 @@ object Utils {
     } finally {
       closable
     }
+
+  def getStackTraceText(e: Exception): String = {
+    val sw = new StringWriter()
+    val pw = new PrintWriter(sw)
+    e.printStackTrace(pw)
+    sw.toString
+  }
 }

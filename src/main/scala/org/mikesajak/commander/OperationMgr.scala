@@ -7,7 +7,7 @@ import org.mikesajak.commander.fs.{FilesystemsManager, PathToParent, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task._
 import org.mikesajak.commander.ui.controller.ops.{CountStatsPanelController, DeletePanelController, FindFilesPanelController, MkDirPanelController}
-import org.mikesajak.commander.ui.{ResourceManager, UILoader}
+import org.mikesajak.commander.ui.{ResourceManager, UILoader, UIUtils}
 
 import scalafx.Includes._
 import scalafx.scene.control._
@@ -50,17 +50,29 @@ class OperationMgr(statusMgr: StatusMgr,
     val result = dialog.showAndWait().asInstanceOf[Option[String]]
 
     result foreach { newDirName =>
-      logger.debug(s"Creating directory $newDirName, in parent directory: ${selectedTab.dir}")
-      selectedTab.dir.mkChildDir(newDirName)
-      selectedTab.controller.reload()
-      selectedTab.controller.select(newDirName)
+      try {
+        logger.debug(s"Creating directory $newDirName, in parent directory: ${selectedTab.dir}")
+        selectedTab.dir.mkChildDir(newDirName)
+        selectedTab.controller.reload()
+        selectedTab.controller.select(newDirName)
+      } catch {
+        case e: Exception =>
+          logger.info(s"Error during creating directory $newDirName in parent dir ${selectedTab.dir}", e)
+          UIUtils.prepareExceptionAlert(appController.mainStage,
+                                        "Create folder error",
+                                        "An error occurred during create folder operation.",
+                                        s"$newDirName could not be created in ${selectedTab.dir}.\n${e.getLocalizedMessage}",
+                                        e)
+            .showAndWait()
+      }
     }
 
   }
 
   def handleDelete(): Unit = {
     val deleteLayout = "/layout/ops/delete-dialog.fxml"
-    logger.warn(s"handleDelete - Not implemented yet!")
+    logger.warn(s"handleDelete - Not fully implemented yet!")
+
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val targetPath = selectedTab.controller.selectedPath
 
@@ -70,16 +82,26 @@ class OperationMgr(statusMgr: StatusMgr,
       contentCtrl.init(targetPath, dialog)
 
       val result = dialog.showAndWait()
-      println(s"Delete confirmation dialog result=$result")
 
       result match {
         case Some(ButtonType.Yes) =>
-          logger.debug(s"Deleting: $targetPath")
-          val fs = targetPath.fileSystem
-          val deleted = fs.delete(targetPath)
-          if (!deleted) logger.info(s"Could not delete $targetPath")
-          selectedTab.controller.reload()
-          // todo: select previous file/directory to keep cursor near deleted dir
+          try {
+            logger.debug(s"Deleting: $targetPath")
+            val fs = targetPath.fileSystem
+            val deleted = fs.delete(targetPath)
+            if (!deleted) logger.info(s"Could not delete $targetPath")
+            selectedTab.controller.reload()
+            // todo: select previous file/directory to keep cursor near deleted dir
+          } catch {
+            case e: Exception =>
+              logger.info(s"Error during deleting $targetPath:\n", e)
+              UIUtils.prepareExceptionAlert(appController.mainStage,
+                                            "Delete error",
+                                            "An error occurred during delete operation.",
+                                            s"$targetPath could not be deleted.",
+                                            e)
+                .showAndWait()
+          }
         case _ => // operation cancelled
       }
     }
@@ -138,7 +160,6 @@ class OperationMgr(statusMgr: StatusMgr,
     val findDialogLayout = "/layout/ops/search-files-dialog.fxml"
 
     val (contentPane, contentCtrl) = UILoader.loadScene[FindFilesPanelController](findDialogLayout)
-//    val selectedTab = statusMgr.selectedTabManager.selectedTab
 
     val dialog = mkModalDialog[ButtonType](contentPane)
     dialog.title = "Find files..."
