@@ -30,4 +30,8 @@ object Utils {
     e.printStackTrace(pw)
     sw.toString
   }
+
+  implicit class MyRichBoolean(val b: Boolean) extends AnyVal {
+    final def option[A](a: => A): Option[A] = if (b) Some(a) else None
+  }
 }

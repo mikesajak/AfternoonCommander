@@ -66,7 +66,6 @@ class OperationMgr(statusMgr: StatusMgr,
             .showAndWait()
       }
     }
-
   }
 
   def handleDelete(): Unit = {
@@ -108,29 +107,25 @@ class OperationMgr(statusMgr: StatusMgr,
   }
 
   def handleCountDirStats(): Unit = {
-    val contentLayout = "/layout/ops/count-stats-dialog.fxml"
+    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.selectedPath
+    selectedPath match {
+      case sp if !sp.isDirectory => logger.debug(s"Cannot run count stats on file: $selectedPath")
+      case sp if sp.isInstanceOf[PathToParent] => logger.debug(s"Cannot run count stats on PathToParent: $sp")
+      case _ => runCountDirStats(selectedPath.directory)
+    }
+  }
 
+  private def runCountDirStats(selectedDir: VDirectory) = {
+    val contentLayout = "/layout/ops/count-stats-dialog.fxml"
     val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
-    val selectedTab = statusMgr.selectedTabManager.selectedTab
 
     val dialog = mkModalDialog[ButtonType](contentPane)
     dialog.title = "Afternoon commander"
 
-    contentCtrl.init(selectedTab.dir, dialog, showClose = true, showCancel = true, showSkip = false)
+    contentCtrl.init(selectedDir, dialog, showClose = true, showCancel = true, showSkip = false)
     contentCtrl.updateButtons(enableClose = false, enableCancel = true, enableSkip = false)
 
-    Option(statusMgr.selectedTabManager.selectedTab.controller.selectedRow)
-      .map(_.path) match {
-        case Some(selectedPath) =>
-          if (selectedPath.isDirectory && !selectedPath.isInstanceOf[PathToParent]) {
-            val selDir = selectedPath.asInstanceOf[VDirectory]
-//            taskManager.runTaskAsync(new DirStatsTask(selDir), new ConsoleProgressMonitor2[DirStats])
-            taskManager.runTaskAsync(new DirStatsTask(selDir), new CountStatsProgressMonitor(contentCtrl))
-          } else {
-            println(s"Cannot run count dir stats on file: $selectedPath")
-          }
-        case None => println(s"No directory is selected")
-      }
+    taskManager.runTaskAsync(new DirStatsTask(selectedDir), new CountStatsProgressMonitor(contentCtrl))
 
     val result = dialog.showAndWait()
   }
@@ -193,6 +188,7 @@ private class CountStatsProgressMonitor(contentCtrl: CountStatsPanelController) 
 
   override def notifyFinished(message: String, state: Option[DirStats]): Unit = {
     println(s"Finished: $message, stats=$state")
+    state.foreach(s => contentCtrl.updateStats(s, Some(message)))
     //        contentCtrl.showButtons(true, )
     contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
   }

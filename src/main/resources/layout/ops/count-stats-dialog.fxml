@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+
 <GridPane hgap="14.0" maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CountStatsPanelControllerImpl">
   <children>
     <ImageView fx:id="headerImageView" fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="0" GridPane.valignment="TOP">
@@ -46,27 +50,6 @@
             <Label fx:id="messageLabel" text="Label" textOverrun="LEADING_ELLIPSIS" />
       </children>
     </VBox>
-    <HBox maxHeight="-Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1">
-      <children>
-        <HBox fx:id="actionParent" alignment="CENTER">
-          <HBox.margin>
-            <Insets />
-          </HBox.margin>
-        </HBox>
-        <Pane maxWidth="+Infinity" HBox.hgrow="ALWAYS" />
-            <Button fx:id="closeButton" minWidth="80.0" mnemonicParsing="false" text="Close" />
-        <Button fx:id="cancelButton" cancelButton="true" minWidth="80.0" mnemonicParsing="false" text="Cancel" HBox.hgrow="NEVER">
-          <HBox.margin>
-            <Insets left="14.0" />
-          </HBox.margin>
-        </Button>
-      <Button fx:id="skipButton" minWidth="80.0" mnemonicParsing="false" text="Skip" HBox.hgrow="NEVER">
-        <HBox.margin>
-          <Insets left="14.0" />
-        </HBox.margin>
-      </Button>
-      </children>
-    </HBox>
   </children>
   <columnConstraints>
     <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
@@ -77,6 +60,5 @@
   </padding>
   <rowConstraints>
     <RowConstraints maxHeight="+Infinity" minHeight="-Infinity" valignment="CENTER" vgrow="ALWAYS" />
-    <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
   </rowConstraints>
 </GridPane>

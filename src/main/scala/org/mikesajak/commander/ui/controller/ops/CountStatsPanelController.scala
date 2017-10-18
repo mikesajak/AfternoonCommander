@@ -4,9 +4,11 @@ import org.mikesajak.commander.fs.VDirectory
 import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.util.UnitFormatter
+import org.mikesajak.commander.util.Utils.MyRichBoolean
 
+import scalafx.Includes._
 import scalafx.application.Platform
-import scalafx.scene.control.{Button, ButtonType, Dialog, Label}
+import scalafx.scene.control.{ButtonType, Dialog, Label}
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
@@ -28,36 +30,21 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
                                     totalSizeLabel: Label,
                                     messageLabel: Label,
 
-                                    closeButton: Button,
-                                    cancelButton: Button,
-                                    skipButton: Button,
-
                                     resourceMgr: ResourceManager)
     extends CountStatsPanelController {
+  private var dialog: Dialog[ButtonType] = _
+
   headerImageView.image = resourceMgr.getIcon("counter-48.png")
 
   override def init(path: VDirectory, parentDialog: Dialog[ButtonType],
                     showClose: Boolean, showCancel: Boolean, showSkip: Boolean): Unit = {
+    this.dialog = parentDialog
     dirLabel.text = path.absolutePath
 
-    closeButton.visible = showClose
-    closeButton.onAction= e => {
-      parentDialog.close()
-      parentDialog.result = ButtonType.Close
-    }
-
-    cancelButton.visible = showCancel
-    cancelButton.onAction = e => {
-//      parentDialog.dialogPane().getButtonTypes.addAll(ButtonType.Cancel)
-      parentDialog.close()
-      parentDialog.result = ButtonType.Cancel
-    }
-
-    skipButton.visible = showSkip
-    skipButton.onAction = e => {
-      parentDialog.close()
-      parentDialog.result = ButtonType.OK
-    }
+    dialog.dialogPane().buttonTypes =
+      List(showClose.option(ButtonType.Close),
+           showCancel.option(ButtonType.Cancel),
+           showSkip.option(ButtonType.Next)).flatten
   }
 
   override def updateStats(stats: DirStats, message: Option[String]): Unit =
@@ -79,14 +66,14 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
 
   override def updateButtons(enableClose: Boolean, enableCancel: Boolean, enableSkip: Boolean): Unit = {
-    closeButton.disable = !enableClose
-    cancelButton.disable = !enableCancel
-    skipButton.disable = !enableSkip
+    Option(dialog.dialogPane().lookupButton(ButtonType.Close)).foreach(_.disable = !enableClose)
+    Option(dialog.dialogPane().lookupButton(ButtonType.Cancel)).foreach(_.disable = !enableCancel)
+    Option(dialog.dialogPane().lookupButton(ButtonType.Next)).foreach(_.disable = !enableSkip)
   }
 
   override def showButtons(showClose: Boolean, showCancel: Boolean, showSkip: Boolean): Unit = {
-    closeButton.visible = showClose
-    cancelButton.visible = showCancel
-    skipButton.visible = showSkip
+    Option(dialog.dialogPane().lookupButton(ButtonType.Close)).foreach(_.visible = !showClose)
+    Option(dialog.dialogPane().lookupButton(ButtonType.Cancel)).foreach(_.visible = !showCancel)
+    Option(dialog.dialogPane().lookupButton(ButtonType.Next)).foreach(_.visible = !showSkip)
   }
 }
