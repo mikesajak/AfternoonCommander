@@ -6,10 +6,11 @@ import com.sun.javafx.scene.control.skin.{TableViewSkin, VirtualFlow}
 import org.mikesajak.commander.util.Utils
 
 import scalafx.Includes._
+import scalafx.scene.Parent
 import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.{Alert, Label, TableView, TextArea}
+import scalafx.scene.control._
 import scalafx.scene.layout.{GridPane, Region}
-import scalafx.stage.Stage
+import scalafx.stage.{Modality, Stage, StageStyle}
 
 object UIParams {
   val NumPrevVisibleItems: Int = 5
@@ -48,5 +49,12 @@ object UIUtils {
       }
       dialogPane().setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE)
     }
+  }
+
+  def mkModalDialog[ResultType](owner: Stage, content: Parent): Dialog[ResultType] = new Dialog[ResultType]() {
+    initOwner(owner)
+    initStyle(StageStyle.Utility)
+    initModality(Modality.ApplicationModal)
+    dialogPane().content = content
   }
 }

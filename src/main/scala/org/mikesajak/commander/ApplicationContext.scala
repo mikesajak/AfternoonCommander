@@ -7,9 +7,9 @@ import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
+import org.mikesajak.commander.ui.{CountDirStatsOperationCtrl, DeleteOperationCtrl, MkDirOperationCtrl, ResourceManager}
 
 /**
   * Created by mike on 09.04.17.
@@ -18,6 +18,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   def configure(): Unit = {
     install(new PanelContext(LeftPanel))
     install(new PanelContext(RightPanel))
+
+    install(new UIOperationControllersContext)
   }
 
   @Provides
@@ -74,8 +76,11 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
                               fsMgr: FilesystemsManager, taskManager: TaskManager,
-                              appController: ApplicationController): OperationMgr = {
-    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, appController)
+                              appController: ApplicationController,
+                              mkDirOperationCtrl: MkDirOperationCtrl,
+                              deleteOperationCtrl: DeleteOperationCtrl,
+                              countDirStatsOperationCtrl: CountDirStatsOperationCtrl): OperationMgr = {
+    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, appController, mkDirOperationCtrl, deleteOperationCtrl, countDirStatsOperationCtrl)
   }
 }
 
@@ -98,6 +103,24 @@ class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
   }
 }
 
+class UIOperationControllersContext extends AbstractModule with ScalaModule {
+  override def configure(): Unit = {}
+
+  @Provides
+  @Singleton
+  def provideMkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController) =
+    new MkDirOperationCtrl(statusMgr, appController)
+
+  @Provides
+  @Singleton
+  def provideDeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController) =
+    new DeleteOperationCtrl(statusMgr, appController)
+
+  @Provides
+  @Singleton
+  def provideCountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager, appController: ApplicationController) =
+    new CountDirStatsOperationCtrl(statusMgr, taskManager, appController)
+}
 
 object ApplicationContext {
   val globalInjector: Injector = Guice.createInjector(new ApplicationContext)

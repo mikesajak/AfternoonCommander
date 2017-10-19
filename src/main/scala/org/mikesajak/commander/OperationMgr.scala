@@ -3,22 +3,25 @@ package org.mikesajak.commander
 import javafx.stage
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.fs.{FilesystemsManager, PathToParent, VDirectory}
+import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task._
-import org.mikesajak.commander.ui.controller.ops.{CountStatsPanelController, DeletePanelController, FindFilesPanelController, MkDirPanelController}
-import org.mikesajak.commander.ui.{ResourceManager, UILoader, UIUtils}
+import org.mikesajak.commander.ui._
+import org.mikesajak.commander.ui.controller.ops.FindFilesPanelController
 
 import scalafx.Includes._
+import scalafx.scene.Scene
 import scalafx.scene.control._
-import scalafx.scene.{Parent, Scene}
 import scalafx.stage.{Modality, Stage, StageStyle}
 
 class OperationMgr(statusMgr: StatusMgr,
                    resourceMgr: ResourceManager,
                    fsMgr: FilesystemsManager,
                    taskManager: TaskManager,
-                   appController: ApplicationController) {
+                   appController: ApplicationController,
+                   mkDirOperationCtrl: MkDirOperationCtrl,
+                   deleteOperationCtrl: DeleteOperationCtrl,
+                   countDirStatsCtrl: CountDirStatsOperationCtrl) {
   private val logger = Logger(this.getClass)
 
   def handleView(): Unit = {
@@ -37,98 +40,11 @@ class OperationMgr(statusMgr: StatusMgr,
     logger.warn(s"handleMove - Not implemented yet!")
   }
 
-  def handleMkDir(): Unit = {
-    val curTab = statusMgr.selectedTabManager.selectedTab
-    val contentLayout = "/layout/ops/mkdir-dialog.fxml"
+  def handleMkDir(): Unit = mkDirOperationCtrl.handleMkDir()
 
-    val (contentPane, contentCtrl) = UILoader.loadScene[MkDirPanelController](contentLayout)
-    val selectedTab = statusMgr.selectedTabManager.selectedTab
+  def handleDelete(): Unit = deleteOperationCtrl.handleDelete()
 
-    val dialog = mkModalDialog[String](contentPane)
-    contentCtrl.init(selectedTab.dir, dialog)
-
-    val result = dialog.showAndWait().asInstanceOf[Option[String]]
-
-    result foreach { newDirName =>
-      try {
-        logger.debug(s"Creating directory $newDirName, in parent directory: ${selectedTab.dir}")
-        selectedTab.dir.mkChildDir(newDirName)
-        selectedTab.controller.reload()
-        selectedTab.controller.select(newDirName)
-      } catch {
-        case e: Exception =>
-          logger.info(s"Error during creating directory $newDirName in parent dir ${selectedTab.dir}", e)
-          UIUtils.prepareExceptionAlert(appController.mainStage,
-                                        "Create folder error",
-                                        "An error occurred during create folder operation.",
-                                        s"$newDirName could not be created in ${selectedTab.dir}.\n${e.getLocalizedMessage}",
-                                        e)
-            .showAndWait()
-      }
-    }
-  }
-
-  def handleDelete(): Unit = {
-    val deleteLayout = "/layout/ops/delete-dialog.fxml"
-    logger.warn(s"handleDelete - Not fully implemented yet!")
-
-    val selectedTab = statusMgr.selectedTabManager.selectedTab
-    val targetPath = selectedTab.controller.selectedPath
-
-    if (!targetPath.isInstanceOf[PathToParent]) {
-      val (contentPane, contentCtrl) = UILoader.loadScene[DeletePanelController](deleteLayout)
-      val dialog = mkModalDialog[ButtonType](contentPane)
-      contentCtrl.init(targetPath, dialog)
-
-      val result = dialog.showAndWait()
-
-      result match {
-        case Some(ButtonType.Yes) =>
-          try {
-            logger.debug(s"Deleting: $targetPath")
-            val fs = targetPath.fileSystem
-            val deleted = fs.delete(targetPath)
-            if (!deleted) logger.info(s"Could not delete $targetPath")
-            selectedTab.controller.reload()
-            // todo: select previous file/directory to keep cursor near deleted dir
-          } catch {
-            case e: Exception =>
-              logger.info(s"Error during deleting $targetPath:\n", e)
-              UIUtils.prepareExceptionAlert(appController.mainStage,
-                                            "Delete error",
-                                            "An error occurred during delete operation.",
-                                            s"$targetPath could not be deleted.",
-                                            e)
-                .showAndWait()
-          }
-        case _ => // operation cancelled
-      }
-    }
-  }
-
-  def handleCountDirStats(): Unit = {
-    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.selectedPath
-    selectedPath match {
-      case sp if !sp.isDirectory => logger.debug(s"Cannot run count stats on file: $selectedPath")
-      case sp if sp.isInstanceOf[PathToParent] => logger.debug(s"Cannot run count stats on PathToParent: $sp")
-      case _ => runCountDirStats(selectedPath.directory)
-    }
-  }
-
-  private def runCountDirStats(selectedDir: VDirectory) = {
-    val contentLayout = "/layout/ops/count-stats-dialog.fxml"
-    val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
-
-    val dialog = mkModalDialog[ButtonType](contentPane)
-    dialog.title = "Afternoon commander"
-
-    contentCtrl.init(selectedDir, dialog, showClose = true, showCancel = true, showSkip = false)
-    contentCtrl.updateButtons(enableClose = false, enableCancel = true, enableSkip = false)
-
-    taskManager.runTaskAsync(new DirStatsTask(selectedDir), new CountStatsProgressMonitor(contentCtrl))
-
-    val result = dialog.showAndWait()
-  }
+  def handleCountDirStats(): Unit = countDirStatsCtrl.handleCountDirStats()
 
   def handleTestTask(sync: Boolean): Unit = {
     if (sync) taskManager.runTaskSync(new TestTask(), new ConsoleProgressMonitor2[Unit])
@@ -156,7 +72,7 @@ class OperationMgr(statusMgr: StatusMgr,
 
     val (contentPane, contentCtrl) = UILoader.loadScene[FindFilesPanelController](findDialogLayout)
 
-    val dialog = mkModalDialog[ButtonType](contentPane)
+    val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
     dialog.title = "Find files..."
     val window = dialog.getDialogPane.getScene.getWindow.asInstanceOf[stage.Stage]
     window.setMinHeight(600)
@@ -168,37 +84,4 @@ class OperationMgr(statusMgr: StatusMgr,
     println(s"Find action result: $result")
   }
 
-  private def mkModalDialog[ResultType](content: Parent) = new Dialog[ResultType]() {
-    initOwner(appController.mainStage)
-    initStyle(StageStyle.Utility)
-    initModality(Modality.ApplicationModal)
-    dialogPane().content = content
-  }
-
-}
-
-private class CountStatsProgressMonitor(contentCtrl: CountStatsPanelController) extends ProgressMonitor2[DirStats] {
-  override def notifyProgressIndeterminate(message: Option[String], state: Option[DirStats]): Unit = {
-    state.foreach(s => contentCtrl.updateStats(s, message))
-  }
-
-  override def notifyProgress(progress: Float, message: Option[String], state: Option[DirStats]): Unit = {
-    state.foreach(s => contentCtrl.updateStats(s, message))
-  }
-
-  override def notifyFinished(message: String, state: Option[DirStats]): Unit = {
-    println(s"Finished: $message, stats=$state")
-    state.foreach(s => contentCtrl.updateStats(s, Some(message)))
-    //        contentCtrl.showButtons(true, )
-    contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
-  }
-
-  override def notifyError(message: String, state: Option[DirStats]): Unit = {
-    state match {
-      case Some(stats) => contentCtrl.updateStats(stats, Some(message))
-      case _ => contentCtrl.updateMsg(message)
-    }
-    //        contentCtrl.showButtons(showClose = true, showCancel = false, showSkip = false)
-    contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
-  }
 }
