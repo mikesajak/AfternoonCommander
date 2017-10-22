@@ -1,6 +1,7 @@
 package org.mikesajak.commander.task
 
-trait ProgressMonitor[A] {necessaryotifyProgressIndeterminate(message: Option[String], state: Option[A])
+trait ProgressMonitor[A] {
+  def notifyProgressIndeterminate(message: Option[String], state: Option[A])
   def notifyProgress(progress: Float, message: Option[String], state: Option[A])
 
   def notifyFinished(message: String, state: Option[A])
