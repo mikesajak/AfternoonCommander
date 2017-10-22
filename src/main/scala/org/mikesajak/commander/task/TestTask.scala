@@ -13,7 +13,7 @@ object TestTask {
 class TestTask extends Task[Unit] {
   private val id = TestTask.taskCreated()
 
-  override def run(progressMonitor: ProgressMonitor2[Unit]): Unit = {
+  override def run(progressMonitor: ProgressMonitor[Unit]): Unit = {
     for (i <- 0 to 100) {
       progressMonitor.notifyProgress(i, Some(s"TestTask($id)"), None)
       Thread.sleep(50)

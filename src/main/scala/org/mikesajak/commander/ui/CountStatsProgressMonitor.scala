@@ -1,9 +1,9 @@
 package org.mikesajak.commander.ui
 
-import org.mikesajak.commander.task.{DirStats, ProgressMonitor2}
+import org.mikesajak.commander.task.{DirStats, ProgressMonitor}
 import org.mikesajak.commander.ui.controller.ops.CountStatsPanelController
 
-class CountStatsProgressMonitor(contentCtrl: CountStatsPanelController) extends ProgressMonitor2[DirStats] {
+class CountStatsProgressMonitor(contentCtrl: CountStatsPanelController) extends ProgressMonitor[DirStats] {
   override def notifyProgressIndeterminate(message: Option[String], state: Option[DirStats]): Unit = {
     state.foreach(s => contentCtrl.updateStats(s, message))
   }

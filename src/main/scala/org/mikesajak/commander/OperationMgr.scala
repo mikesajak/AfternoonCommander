@@ -47,8 +47,8 @@ class OperationMgr(statusMgr: StatusMgr,
   def handleCountDirStats(): Unit = countDirStatsCtrl.handleCountDirStats()
 
   def handleTestTask(sync: Boolean): Unit = {
-    if (sync) taskManager.runTaskSync(new TestTask(), new ConsoleProgressMonitor2[Unit])
-    else      taskManager.runTaskAsync(new TestTask(), new ConsoleProgressMonitor2[Unit])
+    if (sync) taskManager.runTaskSync(new TestTask(), new ConsoleProgressMonitor[Unit])
+    else      taskManager.runTaskAsync(new TestTask(), new ConsoleProgressMonitor[Unit])
   }
 
   def handleExit(): Unit = {

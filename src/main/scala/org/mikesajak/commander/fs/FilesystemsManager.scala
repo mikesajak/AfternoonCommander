@@ -35,7 +35,7 @@ class FilesystemsManager {
       }
   }
 
-  def homePath = {
+  def homePath: String = {
     //    val fsv = FileSystemView.getFileSystemView
     //    LocalFS.mkLocalPathName(fsv.getHomeDirectory.getAbsolutePath)
     LocalFS.mkLocalPathName(System.getProperty("user.dir"))
