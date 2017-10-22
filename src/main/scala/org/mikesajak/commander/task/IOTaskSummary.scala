@@ -23,4 +23,6 @@ object IOTaskSummary {
   }
 
   def failed(path: VPath, errorMsg: String) = IOTaskSummary(0, 0, 0, List((path, errorMsg)))
+
+  def empty = IOTaskSummary(0, 0, 0, List())
 }

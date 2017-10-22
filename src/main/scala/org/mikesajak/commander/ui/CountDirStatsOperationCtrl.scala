@@ -7,8 +7,10 @@ import org.mikesajak.commander.task.{DirStats, DirStatsTask}
 import org.mikesajak.commander.ui.controller.ops.CountStatsPanelController
 import org.mikesajak.commander.{ApplicationController, TaskManager}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 import scalafx.Includes._
+import scalafx.application.Platform
 import scalafx.scene.control.ButtonType
 
 class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager, appController: ApplicationController) {
@@ -19,11 +21,11 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
     selectedPath match {
       case sp if !sp.isDirectory => logger.debug(s"Cannot run count stats on file: $selectedPath")
       case sp if sp.isInstanceOf[PathToParent] => logger.debug(s"Cannot run count stats on PathToParent: $sp")
-      case _ => runCountDirStats(selectedPath.directory)
+      case _ => runCountDirStats(selectedPath.directory, autoClose = false)
     }
   }
 
-  private def runCountDirStats(selectedDir: VDirectory): Option[Try[DirStats]] = {
+  def runCountDirStats(selectedDir: VDirectory, autoClose: Boolean): Option[Try[DirStats]] = {
     val contentLayout = "/layout/ops/count-stats-dialog.fxml"
     val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
 
@@ -35,6 +37,9 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
 
     val progressMonitor = new CountStatsProgressMonitor(contentCtrl)
     val dirStatsResult = taskManager.runTaskAsync(new DirStatsTask(selectedDir), progressMonitor)
+
+    if (autoClose)
+      dirStatsResult.foreach(stats => Platform.runLater { dialog.result = ButtonType.OK })
 
     dialog.showAndWait() match {
       case ButtonType.OK => dirStatsResult.value

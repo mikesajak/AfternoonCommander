@@ -8,6 +8,7 @@ import org.mikesajak.commander.fs.{FS, VDirectory, VFile, VPath}
 import org.mikesajak.commander.{ArchiveFile, ArchiveHandler}
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 /**
   * Created by mike on 03.05.17.
@@ -126,9 +127,9 @@ class ZipFS extends FS {
 
   override def exists(path: VPath): Boolean = ???
 
-  override def create(parent: VPath): Boolean = ???
+  override def create(parent: VPath): Try[Boolean] = ???
 
-  override def delete(path: VPath): Boolean = ???
+  override def delete(path: VPath): Try[Boolean] = ???
 
   override def freeSpace: Long = ???
 }

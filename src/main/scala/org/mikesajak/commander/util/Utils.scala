@@ -39,7 +39,7 @@ object Utils {
     case Debug => logger.debug(msg)
     case Info => logger.info(msg)
     case Warn => logger.warn(msg)
-    case Debug => logger.error(msg)
+    case Error => logger.error(msg)
   }
 
   def log(msg: => String, ex: Exception, level: LogLevel)(implicit logger: Logger): Unit = level match {
@@ -47,7 +47,7 @@ object Utils {
     case Debug => logger.debug(msg, ex)
     case Info => logger.info(msg, ex)
     case Warn => logger.warn(msg, ex)
-    case Debug => logger.error(msg, ex)
+    case Error => logger.error(msg, ex)
   }
 
   def runWithTimer[B](name: String, stepLogLovel: LogLevel = Trace,
@@ -66,7 +66,7 @@ object Utils {
     }
   }
 
-  def getStackTraceText(e: Exception): String = {
+  def getStackTraceText(e: Throwable): String = {
     val sw = new StringWriter()
     val pw = new PrintWriter(sw)
     e.printStackTrace(pw)

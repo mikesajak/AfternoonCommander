@@ -29,7 +29,7 @@ object UIUtils {
                             alertTitle: String,
                             alertHeader: String,
                             alertContent: String,
-                            exception: Exception): Alert = {
+                            exception: Throwable): Alert = {
     new Alert(AlertType.Error) {
       initOwner(ownerWindow)
       title = alertTitle
@@ -46,7 +46,14 @@ object UIUtils {
           editable = false
           wrapText = true
         }, 0, 1)
+        minWidth = 300
+        minHeight = Region.USE_PREF_SIZE
+        maxWidth = Double.MaxValue
+        maxHeight = Double.MaxValue
+        prefWidth = Region.USE_COMPUTED_SIZE
+        prefHeight = Region.USE_COMPUTED_SIZE
       }
+      dialogPane().setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE)
       dialogPane().setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE)
     }
   }

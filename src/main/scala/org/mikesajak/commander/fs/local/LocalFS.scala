@@ -8,6 +8,8 @@ import java.{io => jio}
 
 import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
 
+import scala.util.Try
+
 /**
  * Created by mike on 25.10.14.
  */
@@ -24,12 +26,12 @@ class LocalFS(rootFile: File) extends FS {
 
   override def exists(path: VPath): Boolean = new jio.File(path.name).exists
 
-  override def delete(path: VPath): Boolean = {
-    val fsPath = Paths.get(new URI(s"file://${path.absolutePath}"))
-    Files.deleteIfExists(fsPath)
-  }
+  override def delete(path: VPath): Try[Boolean] = Try {
+      val fsPath = Paths.get(new URI(s"file://${path.absolutePath}"))
+      Files.deleteIfExists(fsPath)
+    }
 
-  override def create(path: VPath): Boolean = {
+  override def create(path: VPath): Try[Boolean] = Try {
     val f = new jio.File(path.name)
     if (f.isDirectory) f.mkdirs()
     else f.createNewFile()
