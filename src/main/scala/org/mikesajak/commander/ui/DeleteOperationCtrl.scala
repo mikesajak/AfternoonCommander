@@ -28,6 +28,8 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     if (!targetPath.isInstanceOf[PathToParent]) {
       val result = askForDecision(targetPath)
 
+      println(s"Delete confirm decision: $result")
+
       result match {
         case Some(ButtonType.Yes) => executeDelete(targetPath, selectedTab)
         case _ => // operation cancelled
