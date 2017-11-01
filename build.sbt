@@ -2,7 +2,7 @@ name := "AfternoonCommander"
 
 version := "1.0"
 
-scalaVersion := "2.12.1"
+scalaVersion := "2.12.4"
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
