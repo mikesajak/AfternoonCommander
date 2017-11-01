@@ -61,14 +61,11 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
     targetPath match {
       case d: VDirectory =>
-        countStatsOpCtrl.runCountDirStats(d, autoClose = true) match {
-          case Some(Success(stats)) => contentCtrl.init(d, stats.toString, dialog)
-          case Some(Failure(exception)) => contentCtrl.init(d, s"Couldn't count dir stats: $exception", dialog)
-          case None => contentCtrl.init(d, "[Skipped counting stats]", dialog)
-        }
+        val dirStats = countStatsOpCtrl.runCountDirStats(d, autoClose = true)
+        contentCtrl.init(d, dirStats, dialog)
 
       case f: VFile =>
-        contentCtrl.init(targetPath, null, dialog)
+        contentCtrl.init(targetPath, None, dialog)
     }
     val result = dialog.showAndWait()
     result.map(jfxbt => new ButtonType(jfxbt.asInstanceOf[control.ButtonType]))

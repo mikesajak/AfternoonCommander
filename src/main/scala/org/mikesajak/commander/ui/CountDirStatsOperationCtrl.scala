@@ -41,10 +41,11 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
     if (autoClose)
       dirStatsResult.foreach(stats => Platform.runLater { dialog.result = ButtonType.OK })
 
-    dialog.showAndWait() match {
-      case ButtonType.OK => dirStatsResult.value
-      case ButtonType.Yes => dirStatsResult.value
-      case ButtonType.Next => dirStatsResult.value
+    val dialogResult = dialog.showAndWait()
+    dialogResult match {
+      case Some(ButtonType.OK) => dirStatsResult.value
+      case Some(ButtonType.Yes) => dirStatsResult.value
+      case Some(ButtonType.Next) => dirStatsResult.value
       case _ => None
     }
   }

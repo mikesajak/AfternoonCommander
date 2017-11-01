@@ -3,13 +3,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-
-<GridPane hgap="14.0" maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CountStatsPanelControllerImpl">
+<GridPane hgap="14.0" maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CountStatsPanelControllerImpl">
   <children>
     <ImageView fx:id="headerImageView" fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="0" GridPane.valignment="TOP">
       <image>
@@ -23,31 +19,9 @@
             <Font name="System Bold" size="13.0" />
           </font>
         </Label>
-            <Label fx:id="dirLabel" text="Label" textOverrun="LEADING_ELLIPSIS" />
-            <GridPane hgap="5.0" vgap="5.0">
-               <columnConstraints>
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="162.0" minWidth="10.0" prefWidth="77.0" />
-                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="323.0" minWidth="10.0" prefWidth="323.0" />
-               </columnConstraints>
-               <rowConstraints>
-                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-               </rowConstraints>
-               <children>
-              <Label fx:id="detailsLabel" text="folders:" textAlignment="LEFT" wrapText="true" GridPane.halignment="RIGHT">
-                <font>
-                  <Font size="12.0" />
-                </font>
-              </Label>
-                  <Label text="files:" GridPane.halignment="RIGHT" GridPane.rowIndex="1" />
-                  <Label text="total size:" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
-                  <Label fx:id="foldersCountLabel" text="1234" GridPane.columnIndex="1" />
-                  <Label fx:id="filesCountLabel" text="1234" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <Label fx:id="totalSizeLabel" text="1234" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-               </children>
-            </GridPane>
-            <Label fx:id="messageLabel" text="Label" textOverrun="LEADING_ELLIPSIS" />
+            <Label fx:id="dirLabel" text="/path/to/target/directory" textOverrun="LEADING_ELLIPSIS" />
+            <fx:include fx:id="dirStatsPanel" source="dir-stats-panel.fxml" />
+            <Label fx:id="messageLabel" text="Message" textOverrun="LEADING_ELLIPSIS" />
       </children>
     </VBox>
   </children>

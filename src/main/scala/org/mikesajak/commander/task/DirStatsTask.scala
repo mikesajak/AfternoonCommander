@@ -29,7 +29,8 @@ class DirStatsTask(rootDir: VDirectory) extends Task[DirStats] {
 
   private def countStats(dir: VDirectory, progressMonitor: ProgressMonitor[DirStats], globalCounts: DirStats, level: Int): DirStats = {
     val curCounts = globalCounts + dirCounts(dir, level)
-    val totalCounts = (dir.childDirs foldLeft curCounts)((accCounts, subDir) => countStats(subDir, progressMonitor, accCounts, level + 1))
+    val totalCounts = (dir.childDirs foldLeft curCounts) ((accCounts, subDir) =>
+      countStats(subDir, progressMonitor, accCounts, level + 1))
 
     progressMonitor.notifyProgressIndeterminate(Some(s"Current folder: ${dir.absolutePath}"), Some(totalCounts))
     totalCounts
