@@ -11,7 +11,8 @@ case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
     s"DirCounts(numFiles=$numFiles, numDirs=$numDirs, size=${UnitFormatter.formatUnit(size)}, depth=$depth)}"
 }
 
-class DirStatsTask(rootDir: VDirectory) extends Task[DirStats] {
+class DirStatsTask(rootDir: VDirectory) extends CancellableTask[DirStats] {
+
   override def run(progressMonitor: ProgressMonitor[DirStats]): DirStats = {
     val total = countStats(rootDir, progressMonitor, DirStats(0, 0, 0, 0), 0)
     progressMonitor.notifyFinished("", Some(total))
@@ -28,6 +29,8 @@ class DirStatsTask(rootDir: VDirectory) extends Task[DirStats] {
   }
 
   private def countStats(dir: VDirectory, progressMonitor: ProgressMonitor[DirStats], globalCounts: DirStats, level: Int): DirStats = {
+    abortIfNeeded()
+
     val curCounts = globalCounts + dirCounts(dir, level)
     val totalCounts = (dir.childDirs foldLeft curCounts) ((accCounts, subDir) =>
       countStats(subDir, progressMonitor, accCounts, level + 1))
