@@ -7,17 +7,19 @@ import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.controller.TabData
-import org.mikesajak.commander.ui.controller.ops.DeletePanelController
+import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                          countStatsOpCtrl: CountDirStatsOperationCtrl) {
+                          countStatsOpCtrl: CountDirStatsOperationCtrl,
+                          resourceMgr: ResourceManager) {
   private val logger = Logger[DeletePanelController]
 
   private val deleteLayout = "/layout/ops/delete-dialog.fxml"
+  private val progressLayout = "/layout/ops/progress-dialog.fxml"
 
   def handleDelete(): Unit = {
     logger.warn(s"handleDelete - Not fully implemented yet!")
@@ -39,8 +41,10 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
   private def executeDelete(targetPath: VPath, selectedTab: TabData): Unit = {
     logger.debug(s"Deleting: $targetPath")
-    val fs = targetPath.fileSystem
-    fs.delete(targetPath) match {
+
+    val deleteResult = runDeleteOperation(targetPath)
+
+    deleteResult match {
       case Success(deleted) =>
       // todo: select previous file/directory to keep cursor near deleted dir
       case Failure(exception) =>
@@ -53,6 +57,21 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
           .showAndWait()
     }
     selectedTab.controller.reload()
+  }
+
+  private def runDeleteOperation(path: VPath): Try[Boolean] = {
+//    val fs = path.fileSystem
+//    fs.delete(path)
+    val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
+
+    val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
+    val pathType = if (path.isDirectory) "directory and all its contents" else "file"
+    ctrl.init(s"Delete", s"Delete selected $pathType\n$path",
+              s"Deleting $path", s"$path", resourceMgr.getIcon("delete-circle-48.png"), progressDialog)
+
+    val result = progressDialog.showAndWait()
+
+    Success(false)
   }
 
   private def askForDecision(targetPath: VPath): Option[ButtonType] = {

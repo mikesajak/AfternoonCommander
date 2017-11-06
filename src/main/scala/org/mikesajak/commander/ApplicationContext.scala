@@ -98,7 +98,6 @@ class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
   @Provides
   @Singleton
   def provideDirTabManager(): DirTabManager = {
-//    println(s"### PROVIDER ###  dirTabManager for $panelId")
     new DirTabManager(panelId)
   }
 }
@@ -114,8 +113,8 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideDeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                                 countDirOpCtrl: CountDirStatsOperationCtrl) =
-    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl)
+                                 countDirOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager) =
+    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceMgr)
 
   @Provides
   @Singleton
