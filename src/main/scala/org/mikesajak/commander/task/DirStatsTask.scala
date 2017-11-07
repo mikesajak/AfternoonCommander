@@ -1,6 +1,7 @@
 package org.mikesajak.commander.task
 
 import org.mikesajak.commander.fs.VDirectory
+import org.mikesajak.commander.task.CancellableTask._
 import org.mikesajak.commander.util.UnitFormatter
 
 case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
@@ -11,12 +12,15 @@ case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
     s"DirCounts(numFiles=$numFiles, numDirs=$numDirs, size=${UnitFormatter.formatUnit(size)}, depth=$depth)}"
 }
 
-class DirStatsTask(rootDir: VDirectory) extends CancellableTask[DirStats] {
+class DirStatsTask(rootDir: VDirectory) extends Task[DirStats] with CancellableTask {
 
-  override def run(progressMonitor: ProgressMonitor[DirStats]): DirStats = {
-    val total = countStats(rootDir, progressMonitor, DirStats(0, 0, 0, 0), 0)
-    progressMonitor.notifyFinished("", Some(total))
-    total
+  override def run(progressMonitor: ProgressMonitor[DirStats]): Option[DirStats] = {
+    implicit val pm: ProgressMonitor[DirStats] = progressMonitor
+    withAbort { () =>
+      val total = countStats(rootDir, progressMonitor, DirStats(0, 0, 0, 0), 0)
+      progressMonitor.notifyFinished("", Some(total))
+      total
+    }
   }
 
   private def dirCounts(dir: VDirectory, level: Int) = {

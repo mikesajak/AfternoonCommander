@@ -6,6 +6,8 @@ trait ProgressMonitor[A] {
 
   def notifyFinished(message: String, state: Option[A])
   def notifyError(message: String, state: Option[A])
+
+  def notifyAborted(message: String)
 }
 
 object ProgressMonitor {
@@ -34,6 +36,8 @@ class ConsoleProgressMonitor[A] extends ProgressMonitor[A] {
   override def notifyFinished(message: String, state: Option[A]): Unit = println(s"Finished task: $message, state=$state")
 
   override def notifyError(message: String, state: Option[A]): Unit = println(s"Error executing task: $message, state=$state")
+
+  override def notifyAborted(message: String): Unit = println(s"Task aborted: $message")
 }
 
 class MultiProgressMonitor[A](childMonitors: Seq[ProgressMonitor[A]]) extends ProgressMonitor[A] {
@@ -48,6 +52,9 @@ class MultiProgressMonitor[A](childMonitors: Seq[ProgressMonitor[A]]) extends Pr
 
   override def notifyError(message: String, state: Option[A]): Unit =
     childMonitors.foreach(_.notifyError(message, state))
+
+  override def notifyAborted(message: String): Unit =
+    childMonitors.foreach(_.notifyAborted(message))
 }
 
 object MultiProgressMonitor {

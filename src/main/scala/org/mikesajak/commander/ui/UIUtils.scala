@@ -5,6 +5,7 @@ import javafx.scene.control.IndexedCell
 import com.sun.javafx.scene.control.skin.{TableViewSkin, VirtualFlow}
 import org.mikesajak.commander.util.Utils
 
+import scala.language.implicitConversions
 import scalafx.Includes._
 import scalafx.scene.Parent
 import scalafx.scene.control.Alert.AlertType
@@ -64,4 +65,6 @@ object UIUtils {
     initModality(Modality.ApplicationModal)
     dialogPane().content = content
   }
+
+  implicit def jfxButton2SfxButton(button: javafx.scene.control.Button): Button = new Button(button)
 }

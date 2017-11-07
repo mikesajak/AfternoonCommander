@@ -2,19 +2,25 @@ package org.mikesajak.commander.ui.controller.ops
 
 import javafx.scene.control
 
+import org.mikesajak.commander.task.CancellableTask
+
+import scala.language.implicitConversions
 import scalafx.Includes._
+import scalafx.application.Platform
 import scalafx.event.ActionEvent
 import scalafx.scene.control._
 import scalafx.scene.image.{Image, ImageView}
 import scalafxml.core.macros.sfxml
 
-
 trait ProgressPanelController {
   def init(operationName: String, headerText: String, details1: String, details2: String,
-           operationIcon: Image, dialog: Dialog[ButtonType])
+              operationIcon: Image, dialog: Dialog[ButtonType],
+              task: CancellableTask)
 
   def updateIndeterminate(details: String)
   def update(details: String, progress: Double)
+
+  def close(): Unit
 }
 
 @sfxml
@@ -23,9 +29,12 @@ class ProgressPanelControllerImpl(nameLabel: Label,
                                   progressBar: ProgressBar)
     extends ProgressPanelController {
 
+  private var dialog: Dialog[ButtonType] = _
+
   override def init(operationName: String, headerText: String, details1: String, details2: String,
-                    operationIcon: Image, dialog: Dialog[ButtonType]): Unit = {
-//    headerImageView.image = operationIcon
+                       operationIcon: Image, dialog: Dialog[ButtonType],
+                       task: CancellableTask): Unit = {
+    this.dialog = dialog
 
     dialog.title = s"Afternoon Commander - $operationName"
     dialog.headerText = headerText
@@ -40,6 +49,8 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     cancelButton.filterEvent(ActionEvent.Any) {
       (ae: ActionEvent) =>
         println(s"Suppressing cancel: $ae")
+        ae.consume() // suppress cancel, notify task to cancel
+        task.cancel()
     }
   }
 
@@ -51,5 +62,11 @@ class ProgressPanelControllerImpl(nameLabel: Label,
   override def update(details: String, progress: Double): Unit = {
     detailsLabel.text = details
     progressBar.progress = progress
+  }
+
+  override def close(): Unit = {
+    Platform.runLater {
+      dialog.result = ButtonType.Cancel
+    }
   }
 }
