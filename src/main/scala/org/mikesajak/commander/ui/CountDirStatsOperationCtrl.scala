@@ -8,7 +8,7 @@ import org.mikesajak.commander.ui.controller.ops.CountStatsPanelController
 import org.mikesajak.commander.{ApplicationController, TaskManager}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Try
+import scala.util.{Success, Try}
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control.ButtonType
@@ -25,7 +25,7 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
     }
   }
 
-  def runCountDirStats(selectedDir: VDirectory, autoClose: Boolean): Option[Try[DirStats]] = {
+  def runCountDirStats(selectedDir: VDirectory, autoClose: Boolean): Try[Option[DirStats]] = {
     val contentLayout = "/layout/ops/count-stats-dialog.fxml"
     val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
 
@@ -43,10 +43,10 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
 
     val dialogResult = dialog.showAndWait()
     dialogResult match {
-      case Some(ButtonType.OK) => dirStatsResult.value
-      case Some(ButtonType.Yes) => dirStatsResult.value
-      case Some(ButtonType.Next) => dirStatsResult.value
-      case _ => None
+      case Some(ButtonType.OK) => dirStatsResult.value.get // wtf: this is ugly!
+      case Some(ButtonType.Yes) => dirStatsResult.value.get
+      case Some(ButtonType.Next) => dirStatsResult.value.get
+      case _ => Success(None)
     }
   }
 }

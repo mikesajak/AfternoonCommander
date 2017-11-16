@@ -113,8 +113,9 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideDeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                                 countDirOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager) =
-    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceMgr)
+                                 countDirOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager,
+                                 taskMgr: TaskManager) =
+    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceMgr, taskMgr)
 
   @Provides
   @Singleton

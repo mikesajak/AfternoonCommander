@@ -13,8 +13,8 @@ class TaskManager {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def runTaskAsync[A](task: Task[A], progressMonitor: ProgressMonitor[A]): Future[A] = {
-    Future[A] {
+  def runTaskAsync[A](task: Task[A], progressMonitor: ProgressMonitor[A]): Future[Option[A]] = {
+    Future[Option[A]] {
       task.run(progressMonitor)
     }
   }

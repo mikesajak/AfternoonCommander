@@ -12,7 +12,7 @@ import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
 
 trait DeletePanelController {
-  def init(targetPath: VPath, dirStats: Option[Try[DirStats]], dialog: Dialog[ButtonType]): Unit
+  def init(targetPath: VPath, dirStats: Try[Option[DirStats]], dialog: Dialog[ButtonType]): Unit
 }
 
 @sfxml
@@ -29,7 +29,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
                                 statsMessageLabel: Label,
                                 resourceMgr: ResourceManager) extends DeletePanelController {
 
-  def init(targetPath: VPath, dirStats: Option[Try[DirStats]], dialog: Dialog[ButtonType]): Unit = {
+  def init(targetPath: VPath, dirStats: Try[Option[DirStats]], dialog: Dialog[ButtonType]): Unit = {
     val targetPathType = if (targetPath.isDirectory) "directory" else "file"
 
     dialog.title = s"Afternoon Commander - delete $targetPathType"
@@ -57,19 +57,19 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     if (targetPath.isDirectory) {
       dirStats match {
-        case Some(Success(stats)) =>
+        case Success(Some(stats)) =>
           dirStatsPanel.visible = true
           fileStatsPanel.visible = false
           statsMessageLabel.visible = false
           dirStatsPanelController.init(targetPath, Some(stats))
 
-        case Some(Failure(reason)) =>
+        case Failure(reason) =>
           statsMessageLabel.visible = true
           statsMessageLabel.text = s"Couldn't get directory statistics because of: $reason"
           dirStatsPanel.visible = false
           fileStatsPanel.visible = false
 
-        case None =>
+        case Success(None) =>
           statsMessageLabel.visible = true
           statsMessageLabel.text = s"Statistics count skipped. Operation progress won't be available."
           dirStatsPanel.visible = false

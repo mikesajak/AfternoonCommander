@@ -3,11 +3,12 @@ package org.mikesajak.commander.ui
 import javafx.scene.control
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.task.RecursiveDeleteTask
 import org.mikesajak.commander.ui.controller.TabData
 import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
+import org.mikesajak.commander.{ApplicationController, TaskManager}
 
 import scala.util.{Failure, Success, Try}
 import scalafx.Includes._
@@ -15,7 +16,7 @@ import scalafx.scene.control.ButtonType
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                           countStatsOpCtrl: CountDirStatsOperationCtrl,
-                          resourceMgr: ResourceManager) {
+                          resourceMgr: ResourceManager, taskManager: TaskManager) {
   private val logger = Logger[DeletePanelController]
 
   private val deleteLayout = "/layout/ops/delete-dialog.fxml"
@@ -66,10 +67,16 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
     val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
     val pathType = if (path.isDirectory) "directory and all its contents" else "file"
-    ctrl.init(s"Delete", s"Delete selected $pathType\n$path",
-              s"Deleting $path", s"$path", resourceMgr.getIcon("delete-circle-48.png"), progressDialog)
 
-    val result = progressDialog.showAndWait()
+    val deleteTask = new RecursiveDeleteTask(path)
+
+    ctrl.init(s"Delete", s"Delete selected $pathType\n$path",
+              s"Deleting $path", s"$path", resourceMgr.getIcon("delete-circle-48.png"),
+              progressDialog, deleteTask)
+
+    // FIXME: run delete task!!
+//    taskManager.runTaskAsync(deleteTask, ctrl)
+//    val result = progressDialog.showAndWait()
 
     Success(false)
   }
@@ -84,7 +91,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
         contentCtrl.init(d, dirStats, dialog)
 
       case f: VFile =>
-        contentCtrl.init(targetPath, None, dialog)
+        contentCtrl.init(targetPath, Success(None), dialog)
     }
     val result = dialog.showAndWait()
     result.map(jfxbt => new ButtonType(jfxbt.asInstanceOf[control.ButtonType]))

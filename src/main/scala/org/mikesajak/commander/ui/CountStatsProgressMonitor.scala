@@ -27,4 +27,8 @@ class CountStatsProgressMonitor(contentCtrl: CountStatsPanelController) extends 
     //        contentCtrl.showButtons(showClose = true, showCancel = false, showSkip = false)
     contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
   }
+
+  override def notifyAborted(message: String): Unit = {
+    // TODO: do nothing?
+  }
 }
