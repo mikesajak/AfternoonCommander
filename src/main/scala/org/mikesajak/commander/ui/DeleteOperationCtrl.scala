@@ -5,13 +5,14 @@ import javafx.scene.control
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.RecursiveDeleteTask
+import org.mikesajak.commander.task.{ProgressMonitor, RecursiveDeleteTask}
 import org.mikesajak.commander.ui.controller.TabData
 import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
 import org.mikesajak.commander.{ApplicationController, TaskManager}
 
 import scala.util.{Failure, Success, Try}
 import scalafx.Includes._
+import scalafx.application.Platform
 import scalafx.scene.control.ButtonType
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
@@ -75,10 +76,31 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
               progressDialog, deleteTask)
 
     // FIXME: run delete task!!
-//    taskManager.runTaskAsync(deleteTask, ctrl)
+    taskManager.runTaskAsync(deleteTask, new ProgressMonitorWithGUIPanel(ctrl))
 //    val result = progressDialog.showAndWait()
 
     Success(false)
+  }
+
+  class ProgressMonitorWithGUIPanel(progressPanelController: ProgressPanelController) extends ProgressMonitor[Unit] {
+    override def notifyProgressIndeterminate(message: Option[String], state: Option[Unit]): Unit =
+      Platform.runLater {
+        progressPanelController.updateIndeterminate(message.getOrElse(""))
+      }
+
+    override def notifyProgress(progress: Float, message: Option[String], state: Option[Unit]): Unit =
+      Platform.runLater {
+        progressPanelController.update(message.getOrElse(""), progress)
+      }
+
+    override def notifyFinished(message: Option[String], state: Option[Unit]): Unit =
+      Platform.runLater {
+        progressPanelController.updateFinished(message.getOrElse(""))
+      }
+
+    override def notifyError(message: String, state: Option[Unit]): Unit = ??? // TODO
+
+    override def notifyAborted(message: String): Unit = ??? // TODO
   }
 
   private def askForDecision(targetPath: VPath): Option[ButtonType] = {

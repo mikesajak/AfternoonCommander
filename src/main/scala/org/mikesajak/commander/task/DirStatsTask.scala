@@ -18,7 +18,7 @@ class DirStatsTask(rootDir: VDirectory) extends Task[DirStats] with CancellableT
     implicit val pm: ProgressMonitor[DirStats] = progressMonitor
     withAbort { () =>
       val total = countStats(rootDir, progressMonitor, DirStats(0, 0, 0, 0), 0)
-      progressMonitor.notifyFinished("", Some(total))
+      progressMonitor.notifyFinished(None, Some(total))
       total
     }
   }

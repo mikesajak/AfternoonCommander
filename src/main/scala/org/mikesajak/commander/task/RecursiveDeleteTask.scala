@@ -24,7 +24,7 @@ class RecursiveDeleteTask(path: VPath) extends Task[IOTaskSummary] with Cancella
         deletePath(path)(progressMonitor)
       }
 
-      if (result.errors.isEmpty) progressMonitor.notifyFinished("Finished delete of $path", Some(result))
+      if (result.errors.isEmpty) progressMonitor.notifyFinished(Some("Finished delete of $path"), Some(result))
       else progressMonitor.notifyError(s"Delete of $path finished with errors: ${result.errors}", Some(result))
 
       result

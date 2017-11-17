@@ -18,7 +18,7 @@ class TestTask extends Task[Unit] {
       progressMonitor.notifyProgress(i, Some(s"TestTask($id)"), None)
       Thread.sleep(50)
     }
-    progressMonitor.notifyFinished(s"TestTask($id)", None)
+    progressMonitor.notifyFinished(Some(s"TestTask($id)"), None)
 
     Some(Unit)
   }

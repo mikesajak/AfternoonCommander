@@ -90,7 +90,6 @@ class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
   override def configure(): Unit = {
     logger.trace(s"Configuring PanelContext for panelId=${panelId.toString}")
     bind(classOf[DirTabManager]).annotatedWith(Names.named(panelId.toString))
-      //.to(classOf[DirTabManager])
       .toInstance(new DirTabManager(panelId)) // todo: use better way - some provider etc...
     expose(classOf[DirTabManager]).annotatedWith(Names.named(panelId.toString))
   }

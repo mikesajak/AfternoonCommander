@@ -19,6 +19,7 @@ trait ProgressPanelController {
 
   def updateIndeterminate(details: String)
   def update(details: String, progress: Double)
+  def updateFinished(details: String)
 
   def close(): Unit
 }
@@ -64,9 +65,15 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     progressBar.progress = progress
   }
 
+  override def updateFinished(details: String): Unit = {
+    detailsLabel.text = details
+    progressBar.progress = 100
+    dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
+  }
+
   override def close(): Unit = {
     Platform.runLater {
-      dialog.result = ButtonType.Cancel
+      dialog.result = ButtonType.Close
     }
   }
 }
