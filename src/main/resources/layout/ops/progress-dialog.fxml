@@ -53,6 +53,11 @@
                   </GridPane>
                </children>
             </GridPane>
+            <CheckBox fx:id="dontCloseCheckbox" mnemonicParsing="false" text="Don't close after finish">
+               <VBox.margin>
+                  <Insets top="10.0" />
+               </VBox.margin>
+            </CheckBox>
       </children>
     </VBox>
   </children>

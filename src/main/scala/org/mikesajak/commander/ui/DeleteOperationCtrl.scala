@@ -62,8 +62,6 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
   }
 
   private def runDeleteOperation(path: VPath): Try[Boolean] = {
-//    val fs = path.fileSystem
-//    fs.delete(path)
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
     val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
@@ -75,11 +73,10 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
               s"Deleting $path", s"$path", resourceMgr.getIcon("delete-circle-48.png"),
               progressDialog, deleteTask)
 
-    // FIXME: run delete task!!
     taskManager.runTaskAsync(deleteTask, new ProgressMonitorWithGUIPanel(ctrl))
-//    val result = progressDialog.showAndWait()
+    val result = progressDialog.showAndWait()
 
-    Success(false)
+    Success(false) // FIXME: evaluate the result of operation and return proper value
   }
 
   class ProgressMonitorWithGUIPanel(progressPanelController: ProgressPanelController) extends ProgressMonitor[Unit] {

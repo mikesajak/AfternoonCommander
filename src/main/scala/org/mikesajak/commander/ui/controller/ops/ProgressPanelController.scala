@@ -27,7 +27,10 @@ trait ProgressPanelController {
 @sfxml
 class ProgressPanelControllerImpl(nameLabel: Label,
                                   detailsLabel: Label,
-                                  progressBar: ProgressBar)
+                                  progressBar: ProgressBar,
+                                  elapsedTimeLabel: Label,
+                                  estimatedTimeLabel: Label,
+                                  dontCloseCheckbox: CheckBox)
     extends ProgressPanelController {
 
   private var dialog: Dialog[ButtonType] = _
@@ -51,6 +54,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
       (ae: ActionEvent) =>
         println(s"Suppressing cancel: $ae")
         ae.consume() // suppress cancel, notify task to cancel
+        cancelButton.disable = true
         task.cancel()
     }
   }
@@ -69,6 +73,9 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     detailsLabel.text = details
     progressBar.progress = 100
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
+    if (!dontCloseCheckbox.selected.value) {
+       dialog.result = ButtonType.Close
+    }
   }
 
   override def close(): Unit = {
