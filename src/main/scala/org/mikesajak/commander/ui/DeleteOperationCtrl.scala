@@ -97,7 +97,10 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
     override def notifyError(message: String, state: Option[Unit]): Unit = ??? // TODO
 
-    override def notifyAborted(message: String): Unit = ??? // TODO
+    override def notifyAborted(message: String): Unit =
+      Platform.runLater {
+        progressPanelController.updateAborted(message)
+      }
   }
 
   private def askForDecision(targetPath: VPath): Option[ButtonType] = {

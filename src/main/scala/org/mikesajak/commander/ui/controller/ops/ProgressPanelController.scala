@@ -6,7 +6,6 @@ import org.mikesajak.commander.task.CancellableTask
 
 import scala.language.implicitConversions
 import scalafx.Includes._
-import scalafx.application.Platform
 import scalafx.event.ActionEvent
 import scalafx.scene.control._
 import scalafx.scene.image.{Image, ImageView}
@@ -17,11 +16,10 @@ trait ProgressPanelController {
               operationIcon: Image, dialog: Dialog[ButtonType],
               task: CancellableTask)
 
-  def updateIndeterminate(details: String)
-  def update(details: String, progress: Double)
-  def updateFinished(details: String)
-
-  def close(): Unit
+  def updateIndeterminate(details: String): Unit
+  def update(details: String, progress: Double): Unit
+  def updateFinished(details: String): Unit
+  def updateAborted(details: String): Unit
 }
 
 @sfxml
@@ -78,8 +76,10 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     }
   }
 
-  override def close(): Unit = {
-    Platform.runLater {
+  override def updateAborted(details: String): Unit = {
+    detailsLabel.text = details
+    dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
+    if (!dontCloseCheckbox.selected.value) {
       dialog.result = ButtonType.Close
     }
   }
