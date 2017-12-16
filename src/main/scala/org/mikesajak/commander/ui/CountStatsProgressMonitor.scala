@@ -12,6 +12,10 @@ class CountStatsProgressMonitor(contentCtrl: CountStatsPanelController) extends 
     state.foreach(s => contentCtrl.updateStats(s, message))
   }
 
+  override def notifyDetailedProgress(partProgress: Float, totalProgress: Float, message: Option[String], state: Option[DirStats]): Unit = {
+    state.foreach(s => contentCtrl.updateStats(s, message))
+  }
+
   override def notifyFinished(message: Option[String], state: Option[DirStats]): Unit = {
     println(s"Finished: $message, stats=$state")
     state.foreach(s => contentCtrl.updateStats(s, message))

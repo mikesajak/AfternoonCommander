@@ -14,13 +14,13 @@
       <RowConstraints vgrow="SOMETIMES" />
    </rowConstraints>
    <children>
-      <Label text="Subdirectories:" />
-      <Label text="Files:" GridPane.rowIndex="1" />
-      <Label fx:id="dirSubdirsLabel" text="Label" GridPane.columnIndex="1" />
-      <Label fx:id="dirFilesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-      <Label text="Modified:" GridPane.rowIndex="2" />
-      <Label text="Attributes:" GridPane.rowIndex="3" />
-      <Label fx:id="dirModifiedLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-      <Label fx:id="dirAttribsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      <Label text="Subdirectories:" GridPane.rowIndex="2" />
+      <Label text="Files:" GridPane.rowIndex="3" />
+      <Label fx:id="dirSubdirsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <Label fx:id="dirFilesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      <Label text="Modified:" />
+      <Label text="Attributes:" GridPane.rowIndex="1" />
+      <Label fx:id="dirModifiedLabel" text="Label" GridPane.columnIndex="1" />
+      <Label fx:id="dirAttribsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
    </children>
 </GridPane>

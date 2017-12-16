@@ -17,7 +17,8 @@ trait ProgressPanelController {
               task: CancellableTask)
 
   def updateIndeterminate(details: String): Unit
-  def update(details: String, progress: Double): Unit
+  def update(details: String, progress: Float): Unit
+  def update(details: String, partProgress: Float, totalProgress: Float): Unit
   def updateFinished(details: String): Unit
   def updateAborted(details: String): Unit
 }
@@ -62,9 +63,15 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     progressBar.progress = -1
   }
 
-  override def update(details: String, progress: Double): Unit = {
+  override def update(details: String, progress: Float): Unit = {
     detailsLabel.text = details
     progressBar.progress = progress
+  }
+
+  override def update(details: String, partProgress: Float, totalProgress: Float): Unit = {
+    detailsLabel.text = details
+    progressBar.progress = totalProgress
+    // TODO: partial progress
   }
 
   override def updateFinished(details: String): Unit = {

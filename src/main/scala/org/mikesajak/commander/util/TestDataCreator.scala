@@ -1,6 +1,6 @@
 package org.mikesajak.commander.util
 
-import java.io.{BufferedOutputStream, BufferedWriter, Writer}
+import java.io.BufferedOutputStream
 import java.nio.file._
 
 object TestDataCreator {
@@ -9,7 +9,7 @@ object TestDataCreator {
   val NumTestFiles = 5
   val TestFileSize = 1024 * 100
 
-  val Depth = 3
+  val Depth = 5
 
   def main(args: Array[String]): Unit = {
         val rootPath = Paths.get("./test/test")
@@ -39,8 +39,6 @@ object TestDataCreator {
 
       val data = for (j <- 0 to numBytesToWrite) yield 0xff.toByte
       data.sliding(1024, 1024).foreach(frag => stream.write(frag.toArray))
-
-      stream.flush()
       stream.close()
     }
 

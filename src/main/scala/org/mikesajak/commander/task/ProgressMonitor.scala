@@ -3,6 +3,7 @@ package org.mikesajak.commander.task
 trait ProgressMonitor[A] {
   def notifyProgressIndeterminate(message: Option[String], state: Option[A])
   def notifyProgress(progress: Float, message: Option[String], state: Option[A])
+  def notifyDetailedProgress(partProgress: Float, totalProgress: Float, message: Option[String], state: Option[A])
 
   def notifyFinished(message: Option[String], state: Option[A])
   def notifyError(message: String, state: Option[A])
@@ -33,6 +34,9 @@ class ConsoleProgressMonitor[A] extends ProgressMonitor[A] {
   override def notifyProgress(progress: Float, message: Option[String], state: Option[A]): Unit =
     println(s"$progress% - $message, state=$state")
 
+  override def notifyDetailedProgress(partProgress: Float, totalProgress: Float, message: Option[String], state: Option[A]): Unit =
+    println(s"$partProgress% / $totalProgress% - $message, state=$state")
+
   override def notifyFinished(message: Option[String], state: Option[A]): Unit = println(s"Finished task: $message, state=$state")
 
   override def notifyError(message: String, state: Option[A]): Unit = println(s"Error executing task: $message, state=$state")
@@ -46,6 +50,9 @@ class MultiProgressMonitor[A](childMonitors: Seq[ProgressMonitor[A]]) extends Pr
 
   override def notifyProgress(progress: Float, message: Option[String], state: Option[A]): Unit =
     childMonitors.foreach(_.notifyProgress(progress, message, state))
+
+  override def notifyDetailedProgress(partProgress: Float, totalProgress: Float, message: Option[String], state: Option[A]): Unit =
+    childMonitors.foreach(_.notifyDetailedProgress(partProgress, totalProgress, message, state))
 
   override def notifyFinished(message: Option[String], state: Option[A]): Unit =
     childMonitors.foreach(_.notifyFinished(message, state))

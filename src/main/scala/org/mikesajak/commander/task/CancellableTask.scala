@@ -18,7 +18,7 @@ trait CancellableTask//[A]
 }
 
 object CancellableTask {
-  implicit def withAbort[A](code: () => A)(implicit progressMonitor: ProgressMonitor[A]): Option[A] = {
+  implicit def withAbort[A](progressMonitor: ProgressMonitor[A])(code: () => A): Option[A] = {
     try {
       Some(code())
     } catch {

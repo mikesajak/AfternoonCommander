@@ -55,6 +55,11 @@ class OperationMgr(statusMgr: StatusMgr,
     appController.exitApplication()
   }
 
+  def handleRefreshAction(): Unit = {
+    logger.debug(s"Refreshing ${statusMgr.selectedPanel}, ${statusMgr.selectedTabManager.selectedTab.dir}")
+    statusMgr.selectedTabManager.selectedTab.controller.reload()
+  }
+
   def handleSettingsAction(): Unit = {
     val settingsLayout = "/layout/settings-panel-layout.fxml"
 

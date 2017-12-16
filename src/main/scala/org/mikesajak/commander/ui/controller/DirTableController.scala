@@ -121,11 +121,11 @@ class DirTableController(dirTableView: TableView[FileRow],
       }
     }
 
-    initTable(path)
+    initTable(path, None)
   }
 
   override def reload(): Unit = {
-    initTable(curDir)
+    initTable(curDir, Some(selectedPath))
   }
 
   override def select(target: String): Unit = {
@@ -134,8 +134,7 @@ class DirTableController(dirTableView: TableView[FileRow],
       if (idx > 0) idx else 0
     }
 
-    dirTableView.getSelectionModel.select(selIndex)
-    dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
+    selectIndex(selIndex)
   }
 
   private def handleAction(path: VPath): Unit = {
@@ -151,7 +150,11 @@ class DirTableController(dirTableView: TableView[FileRow],
   private def changeDir(directory: VDirectory): Unit = {
     curDir = directory
     updateParentTab(directory)
-    initTable(directory)
+    val selection = directory match {
+      case p: PathToParent => Some(p.targetDir)
+      case _ => None
+    }
+    initTable(directory, selection)
   }
 
   private def updateParentTab(directory: VDirectory): Unit = {
@@ -162,7 +165,7 @@ class DirTableController(dirTableView: TableView[FileRow],
     panelController.updateCurTab(targetDir)
   }
 
-  private def initTable(directory: VDirectory) {
+  private def initTable(directory: VDirectory, selection: Option[VPath]) {
     val (dirs0, files0) = directory.children.partition(p => p.isDirectory)
 
     val showHidden= config.boolProperty("filePanels", "showHiddenFiles").getOrElse(true)
@@ -179,17 +182,25 @@ class DirTableController(dirTableView: TableView[FileRow],
 
     dirTableView.items = ObservableBuffer(fileRows)
 
-    val fromDir = directory match {
-      case p: PathToParent => Some(p.curDir)
-      case _ => None
-    }
+//    val fromDir = directory match {
+//      case p: PathToParent => Some(p.curDir)
+//      case _ => None
+//    }
+    val fromDir = selection
 
     val selIndex = fromDir.map { prevDir =>
       val idx = dirs.map(_.name).indexOf(prevDir.name)
       if (idx > 0) idx else 0
     }.getOrElse(0)
 
-    dirTableView.getSelectionModel.select(selIndex)
-    dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
+    selectIndex(selIndex)
+  }
+
+  private def selectIndex(selIndex: Int): Unit = {
+    val prevSelection = dirTableView.getSelectionModel.getSelectedIndex
+    if (prevSelection != selIndex) {
+      dirTableView.getSelectionModel.select(selIndex)
+      dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
+    }
   }
 }

@@ -3,78 +3,81 @@ package org.mikesajak.commander.task
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import org.mikesajak.commander.task.CancellableTask._
-import org.mikesajak.commander.task.ProgressMonitor._
 import org.mikesajak.commander.util.Utils._
 
 import scala.util.{Failure, Success}
 
-class RecursiveDeleteTask(path: VPath) extends Task[IOTaskSummary] with CancellableTask {
+class RecursiveDeleteTask(targetPath: VPath, targetStats: Option[DirStats]) extends Task[IOTaskSummary] with CancellableTask {
   private implicit val logger: Logger = Logger[RecursiveDeleteTask]
 
-  private implicit var progressMonitor: ProgressMonitor[IOTaskSummary] = _
+  private var progressMonitor: ProgressMonitor[IOTaskSummary] = _
 
   override def run(progressMonitor: ProgressMonitor[IOTaskSummary]): Option[IOTaskSummary] = {
     this.progressMonitor = progressMonitor
 
-    implicit val pm: ProgressMonitor[IOTaskSummary] = progressMonitor
-
-    withAbort { () =>
-      val result = runWithTimer(s"Recursive task : delete $path") { () =>
-        progressMonitor.notifyProgress(0, Some(s"Starning recursive delete of $path"), None)
-        deletePath(path)(progressMonitor)
+    withAbort(progressMonitor) { () =>
+      val result = runWithTimer(s"Recursive task : delete $targetPath") { () =>
+        progressMonitor.notifyProgress(0, Some(s"Starting recursive delete of $targetPath"), None)
+        deletePath(targetPath, IOTaskSummary.empty)
       }
 
       if (result.errors.isEmpty) progressMonitor.notifyFinished(Some("Finished delete of $path"), Some(result))
-      else progressMonitor.notifyError(s"Delete of $path finished with errors: ${result.errors}", Some(result))
+      else progressMonitor.notifyError(s"Delete of $targetPath finished with errors: ${result.errors}", Some(result))
 
       result
     }
   }
 
-  private def deletePath(path: VPath)(implicit progressMonitor: ProgressMonitor[IOTaskSummary]): IOTaskSummary = {
+  private def deletePath(path: VPath, curSummary: IOTaskSummary): IOTaskSummary = {
     abortIfNeeded()
 
-    progressMonitor.notifyProgressIndeterminate(Some(s"Start deleting directory $path"), None)
+    val result = if (path.isDirectory) deleteDir(path.asInstanceOf[VDirectory], curSummary)
+                 else deleteFile(path.asInstanceOf[VFile], curSummary)
 
-    val result = if (path.isDirectory) deleteDir(path.asInstanceOf[VDirectory])
-                 else deleteFile(path.asInstanceOf[VFile])
-
-    progressMonitor.notifyProgressIndeterminate(Some(s"Finish: Deleting directory $path"), None)
+    updateProgress(s"$path", result, progressMonitor)
     result
   }
 
-  private def deleteFile(file: VFile)(implicit progressMonitor: ProgressMonitor[IOTaskSummary]): IOTaskSummary =
-    runWithProgress(s"Deleting file $file") { () =>
-      val fs = file.fileSystem
+  private def deleteFile(file: VFile, curSummary: IOTaskSummary): IOTaskSummary = {
+    val fs = file.fileSystem
+    val result =
       fs.delete(file) match {
         case Success(deleted) => if (deleted) IOTaskSummary.success(file)
                                  else IOTaskSummary.empty
 
         case Failure(exception) => IOTaskSummary.failed(file, s"Delete of file $file failed with error: $exception")
       }
-    }
+    result merge curSummary
+  }
 
-  private def deleteDir(dir: VDirectory)(implicit progressMonitor: ProgressMonitor[IOTaskSummary]): IOTaskSummary =
-    runWithProgress("Deleting directory $dir") { () =>
-      val results =
-        for (child <- dir.children) yield deletePath(child)
+  private def deleteDir(dir: VDirectory, curSummary: IOTaskSummary): IOTaskSummary = {
+    val childSummaryResult = (dir.children foldLeft curSummary) { (accSummary, child) => deletePath(child, accSummary) }
 
-      val childSummaryResult = (dir.children foldLeft IOTaskSummary(0, 0, 0, List())) { (curResult, child) =>
-        val childRes = deletePath(child)
-        curResult merge childRes
+    val result = if (childSummaryResult.isSuccessful) {
+      val fs = dir.fileSystem
+      fs.delete(dir) match {
+        case Success(deleted) => if (deleted) IOTaskSummary.success(dir)
+                                 else IOTaskSummary.empty
+
+        case Failure(exception) => IOTaskSummary.failed(dir, s"Delete of directory $dir failed with error: $exception")
       }
+    } else IOTaskSummary.failed(dir, s"Can't delete directory $dir because of previous errors")
 
-      val result = if (childSummaryResult.isSuccessful) {
-        val fs = dir.fileSystem
-        fs.delete(dir) match {
-          case Success(deleted) => if (deleted) IOTaskSummary.success(dir)
-                                   else IOTaskSummary.empty
+    result merge childSummaryResult
+  }
 
-          case Failure(exception) => IOTaskSummary.failed(dir, s"Delete of directory $dir failed with error: $exception")
-        }
-      } else IOTaskSummary.failed(dir, s"Can't delete directory $dir because of previous errors")
-
-
-      result merge childSummaryResult
+  private def updateProgress(message: String, summary: IOTaskSummary, progressMonitor: ProgressMonitor[IOTaskSummary]): Unit = {
+    targetStats match {
+      case Some(stats) => progressMonitor.notifyProgress(countProgress(stats, summary), Some(message), Some(summary))
+      case None => progressMonitor.notifyProgressIndeterminate(Some(message), Some(summary))
     }
+  }
+
+  private def countProgress(target: DirStats, current: IOTaskSummary) = {
+    val targetCount = target.numFiles + target.numDirs
+    val curCount = current.numFiles + current.numDirs
+    val progress = curCount / targetCount.toFloat
+    Math.min(progress, 100.0f)
+  }
+
 }

@@ -47,6 +47,7 @@ class MainPanelController(dirsSplitPane: SplitPane,
 
       case KeyCode.Tab => // todo
 
+      case KeyCode.R if ke.controlDown => operationMgr.handleRefreshAction()
       case _ => // do nothing
     }
   }

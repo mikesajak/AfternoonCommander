@@ -15,8 +15,7 @@ case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
 class DirStatsTask(rootDir: VDirectory) extends Task[DirStats] with CancellableTask {
 
   override def run(progressMonitor: ProgressMonitor[DirStats]): Option[DirStats] = {
-    implicit val pm: ProgressMonitor[DirStats] = progressMonitor
-    withAbort { () =>
+    withAbort(progressMonitor) { () =>
       val total = countStats(rootDir, progressMonitor, DirStats(0, 0, 0, 0), 0)
       progressMonitor.notifyFinished(None, Some(total))
       total
