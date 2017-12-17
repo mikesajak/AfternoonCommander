@@ -27,9 +27,10 @@ class LocalFS(rootFile: File) extends FS {
   override def exists(path: VPath): Boolean = new jio.File(path.name).exists
 
   override def delete(path: VPath): Try[Boolean] = Try {
-      val fsPath = Paths.get(new URI(s"file://${path.absolutePath}"))
-      Files.deleteIfExists(fsPath)
-    }
+    val normalizedPath = path.absolutePath.replace('\\', '/')
+    val fsPath = Paths.get(new URI(s"file:///$normalizedPath"))
+    Files.deleteIfExists(fsPath)
+  }
 
   override def create(path: VPath): Try[Boolean] = Try {
     val f = new jio.File(path.name)
