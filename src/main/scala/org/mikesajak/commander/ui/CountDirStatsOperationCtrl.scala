@@ -42,6 +42,7 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
       dirStatsResult.foreach(stats => Platform.runLater { dialog.result = ButtonType.OK })
 
     val dialogResult = dialog.showAndWait()
+    // FIXME: change Try[Option[DirStats]] type maybe to just Option or something - it's too complicated
     dialogResult match {
       case Some(ButtonType.OK) => dirStatsResult.value.get // wtf: this is ugly!
       case Some(ButtonType.Yes) => dirStatsResult.value.get
