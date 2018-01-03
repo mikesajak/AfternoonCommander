@@ -2,6 +2,9 @@ package org.mikesajak.commander.util
 
 import java.io.BufferedOutputStream
 import java.nio.file._
+import java.util.concurrent.{ForkJoinPool, RecursiveAction}
+
+import com.google.common.base.Stopwatch
 
 object TestDataCreator {
 
@@ -20,8 +23,13 @@ object TestDataCreator {
     val randomNumber = false
     val randomFileSize = false
     println(s"Generating test $NumTestDirs(random=$randomNumber) dirs(, $NumTestFiles(random=$randomNumber) files with $TestFileSize(random=$randomFileSize) bytes each. Depth=$Depth")
-    createDirTree(rootPath, NumTestDirs, NumTestFiles, false, TestFileSize, false, Depth, "")
-    println("Done")
+
+    val stopwatch = Stopwatch.createStarted()
+
+//    createDirTree(rootPath, NumTestDirs, NumTestFiles, false, TestFileSize, false, Depth, "")
+    ForkJoinPool.commonPool().invoke(new CreateDirTreeRTask(rootPath, false, NumTestDirs, NumTestFiles, false, TestFileSize, false, Depth, ""))
+
+    println(s"Done in $stopwatch")
   }
 
   def createDirTree(path: Path, numDirs: Int, numFiles: Int, random: Boolean, fileSize: Int, randomSize: Boolean, numLevels: Int, indent: String): Unit = {
@@ -52,4 +60,43 @@ object TestDataCreator {
       }
     }
   }
+
+
+  class CreateDirTreeRTask(path: Path, createDir: Boolean, numDirs: Int, numFiles: Int, random: Boolean,
+                           fileSize: Int, randomSize: Boolean, numLevels: Int, indent: String) extends RecursiveAction {
+    override def compute(): Unit = {
+      println(s"${indent}Processing $path")
+
+      val dirPath = if (createDir) Files.createTempDirectory(path, "dir") else path
+
+      if (numLevels > 0) {
+        val numDirsToCreate = if (random) (math.random() * numDirs).toInt else numDirs
+
+        println(s"${indent} Creating $numDirsToCreate dirs")
+        val childTasks =
+          for (i <- 0 to numDirs) yield
+            new CreateDirTreeRTask(dirPath, true, numDirs, numFiles, random,
+              fileSize, randomSize, numLevels-1, indent+"    ").fork()
+
+        childTasks.foreach(_.join())
+      }
+
+      val numFilesToCreate = if (random) (math.random() * numFiles).toInt else numFiles
+
+      println(s"${indent} Creating $numFilesToCreate files with ${if (randomSize) "up to " else ""} bytes each.")
+
+      for (i <- 0 to numFilesToCreate) {
+        val filePath = Files.createTempFile(dirPath, "file", "")
+        val stream = new BufferedOutputStream(Files.newOutputStream(filePath, StandardOpenOption.WRITE))
+
+        val numBytesToWrite = if (randomSize) (math.random() * fileSize).toInt + 1 else fileSize
+        //      println(s"${indent}  Creating file with size ${numBytesToWrite}B")
+
+        val data = for (j <- 0 to numBytesToWrite) yield 0xff.toByte
+        data.sliding(1024, 1024).foreach(frag => stream.write(frag.toArray))
+        stream.close()
+      }
+    }
+  }
+
 }
