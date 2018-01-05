@@ -15,7 +15,8 @@ object TestDataCreator {
   val Depth = 5
 
   def main(args: Array[String]): Unit = {
-        val rootPath = Paths.get("./test/test")
+    val rootPath = Paths.get("./test/test")
+
     if (!Files.exists(rootPath)) {
       Files.createDirectory(rootPath)
     }
@@ -40,14 +41,8 @@ object TestDataCreator {
 
     for (i <- 0 to numFilesToCreate) {
       val filePath = Files.createTempFile(path, "file", "")
-      val stream = new BufferedOutputStream(Files.newOutputStream(filePath, StandardOpenOption.WRITE))
-
       val numBytesToWrite = if (randomSize) (math.random() * fileSize).toInt + 1 else fileSize
-//      println(s"${indent}  Creating file with size ${numBytesToWrite}B")
-
-      val data = for (j <- 0 to numBytesToWrite) yield 0xff.toByte
-      data.sliding(1024, 1024).foreach(frag => stream.write(frag.toArray))
-      stream.close()
+      mkFile(filePath, numBytesToWrite)
     }
 
     if (numLevels > 0) {
@@ -59,8 +54,17 @@ object TestDataCreator {
         createDirTree(dirPath, numDirs, numFiles, random, fileSize, randomSize, numLevels - 1, indent + "   ")
       }
     }
+
   }
 
+  def mkFile(filePath: Path, numBytesToWrite: Int) = {
+    val stream = new BufferedOutputStream(Files.newOutputStream(filePath, StandardOpenOption.WRITE))
+    //      println(s"${indent}  Creating file with size ${numBytesToWrite}B")
+
+    val data = Stream.tabulate(numBytesToWrite)(i => 0xff.toByte)
+    data.sliding(1024, 1024).foreach(frag => stream.write(frag.toArray))
+    stream.close()
+  }
 
   class CreateDirTreeRTask(path: Path, createDir: Boolean, numDirs: Int, numFiles: Int, random: Boolean,
                            fileSize: Int, randomSize: Boolean, numLevels: Int, indent: String) extends RecursiveAction {
@@ -87,14 +91,8 @@ object TestDataCreator {
 
       for (i <- 0 to numFilesToCreate) {
         val filePath = Files.createTempFile(dirPath, "file", "")
-        val stream = new BufferedOutputStream(Files.newOutputStream(filePath, StandardOpenOption.WRITE))
-
         val numBytesToWrite = if (randomSize) (math.random() * fileSize).toInt + 1 else fileSize
-        //      println(s"${indent}  Creating file with size ${numBytesToWrite}B")
-
-        val data = for (j <- 0 to numBytesToWrite) yield 0xff.toByte
-        data.sliding(1024, 1024).foreach(frag => stream.write(frag.toArray))
-        stream.close()
+        mkFile(filePath, numBytesToWrite)
       }
     }
   }
