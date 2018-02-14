@@ -7,9 +7,9 @@ import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
-import org.mikesajak.commander.ui.{CountDirStatsOperationCtrl, DeleteOperationCtrl, MkDirOperationCtrl, ResourceManager}
 
 /**
   * Created by mike on 09.04.17.
@@ -77,10 +77,12 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
                               fsMgr: FilesystemsManager, taskManager: TaskManager,
                               appController: ApplicationController,
+                              copyOperationCtrl: CopyOperationCtrl,
                               mkDirOperationCtrl: MkDirOperationCtrl,
                               deleteOperationCtrl: DeleteOperationCtrl,
                               countDirStatsOperationCtrl: CountDirStatsOperationCtrl): OperationMgr = {
-    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, appController, mkDirOperationCtrl, deleteOperationCtrl, countDirStatsOperationCtrl)
+    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, appController,
+      copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl, countDirStatsOperationCtrl)
   }
 }
 
@@ -103,6 +105,13 @@ class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
 
 class UIOperationControllersContext extends AbstractModule with ScalaModule {
   override def configure(): Unit = {}
+
+  @Provides
+  @Singleton
+  def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
+                               countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager,
+                               taskManager: TaskManager) =
+    new CopyOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceManager, taskManager)
 
   @Provides
   @Singleton

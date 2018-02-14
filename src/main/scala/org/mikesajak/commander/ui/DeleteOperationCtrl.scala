@@ -3,16 +3,17 @@ package org.mikesajak.commander.ui
 import javafx.scene.control
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
+import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.{DirStats, IOTaskSummary, ProgressMonitor, RecursiveDeleteTask}
+import org.mikesajak.commander.task.{DirStats, RecursiveDeleteTask}
 import org.mikesajak.commander.ui.controller.TabData
 import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
 import org.mikesajak.commander.{ApplicationController, TaskManager}
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 import scalafx.Includes._
-import scalafx.application.Platform
 import scalafx.scene.control.ButtonType
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
@@ -27,24 +28,23 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     logger.warn(s"handleDelete - Not fully implemented yet!")
 
     val selectedTab = statusMgr.selectedTabManager.selectedTab
-    val targetPath = selectedTab.controller.selectedPath
+    val targetPaths = selectedTab.controller.selectedPaths
+      .filter(p => !p.isInstanceOf[PathToParent])
 
-    if (!targetPath.isInstanceOf[PathToParent]) {
-      var statsResult = countPathStats(targetPath)
-
-      val result = askForDecision(targetPath, statsResult)
+    if (targetPaths.nonEmpty) {
+      val result = askForDecision(targetPaths)
 
       println(s"Delete confirm decision: $result")
 
       result match {
-        case Some(ButtonType.Yes) =>
-          executeDelete(targetPath, selectedTab, statsResult.getOrElse(None))
+        case Some((ButtonType.Yes, stats)) =>
+          executeDelete(targetPaths, selectedTab, stats)
         case _ => // operation cancelled
       }
     }
   }
 
-  private def executeDelete(targetPath: VPath, selectedTab: TabData, stats: Option[DirStats]): Unit = {
+  private def executeDelete(targetPath: Seq[VPath], selectedTab: TabData, stats: Option[DirStats]): Unit = {
     logger.debug(s"Deleting: $targetPath")
 
     val deleteResult = runDeleteOperation(targetPath, stats)
@@ -64,16 +64,21 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     selectedTab.controller.reload()
   }
 
-  private def runDeleteOperation(path: VPath, stats: Option[DirStats]): Try[Boolean] = {
+  private def runDeleteOperation(paths: Seq[VPath], stats: Option[DirStats]): Try[Boolean] = {
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
     val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
-    val pathType = if (path.isDirectory) "directory and all its contents" else "file"
+    val (pathType, pathName) =
+      paths match {
+        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", "${p.head")
+        case p if p.size == 1 => ("file", "${p.head")
+        case p @ _ => (s"paths", s"{$p.size} elements")
+      }
 
-    val deleteTask = new RecursiveDeleteTask(path, stats)
+    val deleteTask = new RecursiveDeleteTask(paths, stats)
 
-    ctrl.init(s"Delete", s"Delete selected $pathType\n$path",
-              s"Deleting $path", s"$path", resourceMgr.getIcon("delete-circle-48.png"),
+    ctrl.init(s"Delete", s"Delete selected $pathType\n$pathName",
+              s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle-48.png"),
               progressDialog, deleteTask)
 
     taskManager.runTaskAsync(deleteTask, new ProgressMonitorWithGUIPanel(ctrl))
@@ -82,55 +87,22 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     Success(false) // FIXME: evaluate the result of operation and return proper value
   }
 
-  class ProgressMonitorWithGUIPanel(progressPanelController: ProgressPanelController) extends ProgressMonitor[IOTaskSummary] {
-    override def notifyProgressIndeterminate(message: Option[String], state: Option[IOTaskSummary]): Unit =
-      Platform.runLater {
-        progressPanelController.updateIndeterminate(message.getOrElse(""))
-      }
-
-    override def notifyProgress(progress: Float, message: Option[String], state: Option[IOTaskSummary]): Unit =
-      Platform.runLater {
-        progressPanelController.update(message.getOrElse(""), progress)
-      }
-
-    override def notifyDetailedProgress(partProgress: Float, totalProgress: Float, message: Option[String], state: Option[IOTaskSummary]): Unit =
-      Platform.runLater {
-        progressPanelController.update(message.getOrElse(""), partProgress, totalProgress)
-      }
-
-    override def notifyFinished(message: Option[String], state: Option[IOTaskSummary]): Unit =
-      Platform.runLater {
-        progressPanelController.updateFinished(message.getOrElse(""))
-      }
-
-    override def notifyError(message: String, state: Option[IOTaskSummary]): Unit = ???
-      // TODO: ask if continue or abort?
-
-    override def notifyAborted(message: String): Unit =
-      Platform.runLater {
-        progressPanelController.updateAborted(message)
-      }
-  }
-
-  private def countPathStats(path: VPath): Try[Option[DirStats]] =
-    path match {
-      case d: VDirectory => countStatsOpCtrl.runCountDirStats(d, autoClose = true)
-      case f: VFile => Success(Some(DirStats(1, 0, f.size, 0)))
-    }
-
-  private def askForDecision(targetPath: VPath, stats: Try[Option[DirStats]]): Option[ButtonType] = {
+  private def askForDecision(targetPaths: Seq[VPath]): Option[(ButtonType, Option[DirStats])] = {
     val (contentPane, contentCtrl) = UILoader.loadScene[DeletePanelController](deleteLayout)
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
 
-    targetPath match {
-      case d: VDirectory =>
-        contentCtrl.init(d, stats, dialog)
+    val statsCountOp = countStatsOpCtrl.runCountDirStats(targetPaths, contentCtrl)
 
-      case _: VFile =>
-        contentCtrl.init(targetPath, Success(None), dialog)
-    }
+    contentCtrl.init(targetPaths, DirStats.Empty, dialog)
 
     val result = dialog.showAndWait()
-    result.map(jfxbt => new ButtonType(jfxbt.asInstanceOf[control.ButtonType]))
+    statsCountOp.requestAbort()
+    val stats =
+      if (statsCountOp.finalStatus.isCompleted) Await.result(statsCountOp.finalStatus, Duration.Zero)
+      else None
+
+    result
+      .map(jfxbt => new ButtonType(jfxbt.asInstanceOf[control.ButtonType]))
+      .map(bt => (bt, stats))
   }
 }

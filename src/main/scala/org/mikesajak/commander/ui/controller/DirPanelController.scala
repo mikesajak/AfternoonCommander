@@ -23,6 +23,11 @@ sealed trait PanelId
 object PanelId {
   case object LeftPanel extends PanelId
   case object RightPanel extends PanelId
+
+  def oppositePanel(panelId: PanelId): PanelId = panelId match {
+    case LeftPanel => RightPanel
+    case _ => LeftPanel
+  }
 }
 
 trait DirPanelControllerIntf {

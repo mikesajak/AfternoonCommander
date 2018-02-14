@@ -19,6 +19,7 @@ class OperationMgr(statusMgr: StatusMgr,
                    fsMgr: FilesystemsManager,
                    taskManager: TaskManager,
                    appController: ApplicationController,
+                   copyOperationCtrl: CopyOperationCtrl,
                    mkDirOperationCtrl: MkDirOperationCtrl,
                    deleteOperationCtrl: DeleteOperationCtrl,
                    countDirStatsCtrl: CountDirStatsOperationCtrl) {
@@ -32,9 +33,7 @@ class OperationMgr(statusMgr: StatusMgr,
     logger.warn(s"handleEdit - Not implemented yet!")
   }
 
-  def handleCopy(): Unit = {
-    logger.warn(s"handleCopy - Not implemented yet!")
-  }
+  def handleCopy(): Unit = copyOperationCtrl.handleCopy()
 
   def handleMove(): Unit = {
     logger.warn(s"handleMove - Not implemented yet!")

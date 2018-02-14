@@ -1,35 +1,34 @@
 package org.mikesajak.commander.ui
 
 import org.mikesajak.commander.task.{DirStats, ProgressMonitor}
-import org.mikesajak.commander.ui.controller.ops.CountStatsPanelController
 
-class CountStatsProgressMonitor(contentCtrl: CountStatsPanelController) extends ProgressMonitor[DirStats] {
+trait StatsUpdateListener {
+  def updateStats(stats: DirStats, message: Option[String])
+  def updateMessage(message: String)
+  def notifyFinished(stats: DirStats, message: Option[String])
+  def notifyError(stats: Option[DirStats], message: String)
+}
+
+class CountStatsProgressMonitor(statsListener: StatsUpdateListener) extends ProgressMonitor[DirStats] {
   override def notifyProgressIndeterminate(message: Option[String], state: Option[DirStats]): Unit = {
-    state.foreach(s => contentCtrl.updateStats(s, message))
+    state.foreach(s => statsListener.updateStats(s, message))
   }
 
   override def notifyProgress(progress: Float, message: Option[String], state: Option[DirStats]): Unit = {
-    state.foreach(s => contentCtrl.updateStats(s, message))
+    state.foreach(s => statsListener.updateStats(s, message))
   }
 
   override def notifyDetailedProgress(partProgress: Float, totalProgress: Float, message: Option[String], state: Option[DirStats]): Unit = {
-    state.foreach(s => contentCtrl.updateStats(s, message))
+    state.foreach(s => statsListener.updateStats(s, message))
   }
 
   override def notifyFinished(message: Option[String], state: Option[DirStats]): Unit = {
     println(s"Finished: $message, stats=$state")
-    state.foreach(s => contentCtrl.updateStats(s, message))
-    //        contentCtrl.showButtons(true, )
-    contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
+    statsListener.notifyFinished(state.get, message)
   }
 
   override def notifyError(message: String, state: Option[DirStats]): Unit = {
-    state match {
-      case Some(stats) => contentCtrl.updateStats(stats, Some(message))
-      case _ => contentCtrl.updateMsg(message)
-    }
-    //        contentCtrl.showButtons(showClose = true, showCancel = false, showSkip = false)
-    contentCtrl.updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
+    statsListener.notifyError(state, message)
   }
 
   override def notifyAborted(message: String): Unit = {

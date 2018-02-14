@@ -27,6 +27,9 @@ class StatusMgr(val leftDirTabMgr: DirTabManager, val rightDirTabMgr: DirTabMana
       selectedPanelListeners.foreach(_.apply(oldSelectedPanel, selectedPanel0))
 //    }
   }
+
+  def unselectedPanel: PanelId = PanelId.oppositePanel(selectedPanel)
+
   def addPanelSelectionListener(listener: PanelSelectionListener): Unit =
     selectedPanelListeners ::= listener
   def removePanelSelectionListener(listener: PanelSelectionListener): Unit =
@@ -37,6 +40,7 @@ class StatusMgr(val leftDirTabMgr: DirTabManager, val rightDirTabMgr: DirTabMana
     if (panelId == LeftPanel) leftDirTabMgr else rightDirTabMgr
 
   def selectedTabManager: DirTabManager = tabManager(selectedPanel)
+  def unselectedTabManager: DirTabManager = tabManager(unselectedPanel)
 
   trait PanelSelectionListener extends Function2[PanelId, PanelId, Unit] {
     def apply(oldPanelId: PanelId, newPanelId: PanelId): Unit

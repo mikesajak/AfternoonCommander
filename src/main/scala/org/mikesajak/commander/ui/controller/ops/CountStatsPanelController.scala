@@ -1,8 +1,8 @@
 package org.mikesajak.commander.ui.controller.ops
 
-import org.mikesajak.commander.fs.VDirectory
+import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.task.DirStats
-import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.ui.{ResourceManager, StatsUpdateListener}
 import org.mikesajak.commander.util.Utils.MyRichBoolean
 
 import scalafx.Includes._
@@ -12,12 +12,15 @@ import scalafx.scene.image.ImageView
 import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
 
-trait CountStatsPanelController {
-  def init(path: VDirectory, parentDialog: Dialog[ButtonType], showClose: Boolean, showCancel: Boolean, showSkip: Boolean): Unit
-  def updateStats(stats: DirStats, message: Option[String])
-  def updateMsg(message: String)
+trait CountStatsPanelController extends StatsUpdateListener {
+  def init(path: Seq[VPath], parentDialog: Dialog[ButtonType], showClose: Boolean, showCancel: Boolean, showSkip: Boolean): Unit
   def showButtons(showClose: Boolean, showCancel: Boolean, showSkip: Boolean)
   def updateButtons(enableClose: Boolean, enableCancel: Boolean, enableSkip: Boolean)
+
+  override def updateStats(stats: DirStats, message: Option[String])
+  override def updateMessage(message: String)
+  override def notifyFinished(stats: DirStats, message: Option[String])
+  override def notifyError(stats: Option[DirStats], message: String)
 }
 
 @sfxml
@@ -34,13 +37,14 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
 
   headerImageView.image = resourceMgr.getIcon("counter-48.png")
 
-  override def init(path: VDirectory, parentDialog: Dialog[ButtonType],
+  override def init(paths: Seq[VPath], parentDialog: Dialog[ButtonType],
                     showClose: Boolean, showCancel: Boolean, showSkip: Boolean): Unit = {
     this.dialog = parentDialog
-    dirLabel.text = path.absolutePath
+    dirLabel.text = if (paths.size == 1) paths.head.absolutePath
+                    else s"${paths.size} paths"
     dirLabel.graphic = new ImageView(resourceMgr.getIcon("folder-24.png"))
 
-    dirStatsPanelController.init(path, None)
+    dirStatsPanelController.init(paths, None)
 
     dialog.dialogPane().buttonTypes =
       List(showClose.option(ButtonType.Close),
@@ -54,10 +58,23 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
       message.foreach(msg => messageLabel.text = msg)
     }
 
-  override def updateMsg(message: String): Unit =
+  override def updateMessage(message: String): Unit =
     Platform.runLater {
       messageLabel.text = message
     }
+
+  override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
+    updateStats(stats, message)
+    updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
+  }
+
+  override def notifyError(stats: Option[DirStats], message: String): Unit = {
+      stats match {
+        case Some(s) => updateStats(s, Some(message))
+        case _ => updateMessage(message)
+      }
+      updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
+  }
 
   override def updateButtons(enableClose: Boolean, enableCancel: Boolean, enableSkip: Boolean): Unit = {
     Option(dialog.dialogPane().lookupButton(ButtonType.Close)).foreach(_.disable = !enableClose)

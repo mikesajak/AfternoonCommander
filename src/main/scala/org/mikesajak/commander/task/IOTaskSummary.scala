@@ -9,7 +9,7 @@ case class IOTaskSummary(numDirs: Int, numFiles: Int, totalSize: Long,
   def isSuccessful: Boolean = errors.isEmpty
   def isFailed: Boolean = hasErrors
 
-  def merge(that: IOTaskSummary): IOTaskSummary =
+  def +(that: IOTaskSummary): IOTaskSummary =
     IOTaskSummary(numDirs + that.numDirs,
                   numFiles + that.numFiles,
                   totalSize + that.totalSize,

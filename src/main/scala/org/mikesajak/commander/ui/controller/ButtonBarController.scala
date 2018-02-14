@@ -21,7 +21,7 @@ class ButtonBarController(viewButton: Button,
   // Disable not implemented buttons...
   viewButton.disable = true
   editButton.disable = true
-  copyButton.disable = true
+  copyButton.disable = false
   moveButton.disable = true
   mkdirButton.disable = false
   deleteButton.disable = true

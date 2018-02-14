@@ -39,5 +39,10 @@
          </padding>
       </VBox>
       <Label fx:id="statsMessageLabel" text="Directory statistics:" />
+      <Label fx:id="summaryMessageLabel" text="Progress is not available until directory statistics counting is finished">
+         <VBox.margin>
+            <Insets left="10.0" top="10.0" />
+         </VBox.margin>
+      </Label>
    </children>
 </VBox>

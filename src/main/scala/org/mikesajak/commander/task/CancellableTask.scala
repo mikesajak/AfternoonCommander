@@ -14,7 +14,7 @@ trait CancellableTask//[A]
 //  override val cancelSupported = true
   override def cancel(): Unit = abort = true
 
-  protected def abortIfNeeded(): Unit = if (abort) throw new AbortTaskException
+  protected def abortIfNeeded(): Unit = if (abort) throw new AbortOperationException
 }
 
 object CancellableTask {
@@ -22,7 +22,7 @@ object CancellableTask {
     try {
       Some(code())
     } catch {
-      case e: AbortTaskException =>
+      case e: AbortOperationException =>
         progressMonitor.notifyAborted(e.getLocalizedMessage)
         None
     }

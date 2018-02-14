@@ -38,8 +38,10 @@ class FileRow(val path: VPath) {
 
 trait DirTableControllerIntf {
   def init(panelController: DirPanelControllerIntf, path: VDirectory)
-  def selectedRow: FileRow
-  def selectedPath: VPath
+  def focusedRow: FileRow
+  def focusedPath: VPath = focusedRow.path
+  def selectedRows: Seq[FileRow]
+  def selectedPaths: Seq[VPath] = selectedRows.map(_.path)
   def reload(): Unit
   def select(fileName: String): Unit
 }
@@ -65,9 +67,9 @@ class DirTableController(dirTableView: TableView[FileRow],
   private var curDir: VDirectory = _
   private var panelController: DirPanelControllerIntf = _
 
-  override def selectedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
+  override def focusedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
 
-  override def selectedPath: VPath = selectedRow.path
+  override def selectedRows: Seq[FileRow] = dirTableView.selectionModel.value.getSelectedItems.toList
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
     curDir = path
@@ -125,7 +127,7 @@ class DirTableController(dirTableView: TableView[FileRow],
   }
 
   override def reload(): Unit = {
-    initTable(curDir, Some(selectedPath))
+    initTable(curDir, Some(focusedPath))
   }
 
   override def select(target: String): Unit = {

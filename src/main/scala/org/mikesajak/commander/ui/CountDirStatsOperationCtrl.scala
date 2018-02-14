@@ -1,42 +1,60 @@
 package org.mikesajak.commander.ui
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.fs.{PathToParent, VDirectory}
+import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.{DirStats, DirStatsTask}
 import org.mikesajak.commander.ui.controller.ops.CountStatsPanelController
 import org.mikesajak.commander.{ApplicationController, TaskManager}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.{Success, Try}
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control.ButtonType
 
+trait OperationController[A] {
+  //    def status: A
+  def finalStatus: Future[Option[A]]
+  def requestAbort(): Unit // Future
+}
+
 class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager, appController: ApplicationController) {
   private val logger = Logger[CountDirStatsOperationCtrl]
 
   def handleCountDirStats(): Unit = {
-    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.selectedPath
+    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.focusedPath
     selectedPath match {
       case sp if !sp.isDirectory => logger.debug(s"Cannot run count stats on file: $selectedPath")
       case sp if sp.isInstanceOf[PathToParent] => logger.debug(s"Cannot run count stats on PathToParent: $sp")
-      case _ => runCountDirStats(selectedPath.directory, autoClose = false)
+      case _ => runCountDirStats(List(selectedPath.directory), autoClose = false)
     }
   }
 
-  def runCountDirStats(selectedDir: VDirectory, autoClose: Boolean): Try[Option[DirStats]] = {
+  def runCountDirStats(selectedPaths: Seq[VPath], statsListener: StatsUpdateListener): OperationController[DirStats] = {
+    val progressMonitor = new CountStatsProgressMonitor(statsListener)
+    val task = new DirStatsTask(selectedPaths)
+    val dirStatsResult = taskManager.runTaskAsync(task, progressMonitor)
+
+    new OperationController[DirStats] {
+      override def finalStatus: Future[Option[DirStats]] = dirStatsResult
+      override def requestAbort(): Unit = task.cancel()
+    }
+  }
+
+  def runCountDirStats(selectedDirs: Seq[VPath], autoClose: Boolean): Try[Option[DirStats]] = {
     val contentLayout = "/layout/ops/count-stats-dialog.fxml"
     val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
 
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
     dialog.title = "Afternoon commander"
 
-    contentCtrl.init(selectedDir, dialog, showClose = true, showCancel = true, showSkip = false)
+    contentCtrl.init(selectedDirs, dialog, showClose = true, showCancel = true, showSkip = false)
     contentCtrl.updateButtons(enableClose = false, enableCancel = true, enableSkip = false)
 
     val progressMonitor = new CountStatsProgressMonitor(contentCtrl)
-    val dirStatsResult = taskManager.runTaskAsync(new DirStatsTask(selectedDir), progressMonitor)
+    val dirStatsResult = taskManager.runTaskAsync(new DirStatsTask(selectedDirs), progressMonitor)
 
     if (autoClose)
       dirStatsResult.foreach(stats => Platform.runLater { dialog.result = ButtonType.OK })
@@ -46,7 +64,7 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
     dialogResult match {
       case Some(ButtonType.OK) => dirStatsResult.value.get // wtf: this is ugly!
       case Some(ButtonType.Yes) => dirStatsResult.value.get
-      case Some(ButtonType.Next) => dirStatsResult.value.get
+      case Some(ButtonType.Next) => Success(None)//dirStatsResult.value.get
       case _ => Success(None)
     }
   }
