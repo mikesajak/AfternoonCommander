@@ -40,7 +40,7 @@ class IOConsoleProgressMonitor extends ProgressMonitor[IOTaskSummary] {override 
       val timeDiffInSeconds = (report2.timestamp - report1.timestamp) / 1000.0
       val sizeDiff = report2.summary.totalSize - report1.summary.totalSize
 
-      val unit = UnitFormatter.findNearestUnit(sizeDiff, 10000)
+      val unit = UnitFormatter.findDataSizeUnit(sizeDiff, 10000)
       s"${unit.format(sizeDiff)}/${timeDiffInSeconds}s"
     }
   }

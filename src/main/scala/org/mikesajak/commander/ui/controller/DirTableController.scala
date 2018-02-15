@@ -30,7 +30,7 @@ class FileRow(val path: VPath) {
     path match {
       case p: PathToParent => "PARENT"
       case p: VDirectory => UnitFormatter.formatNumElements(path.directory.children.size)
-      case p: VFile => UnitFormatter.formatUnit(path.size, false)
+      case p: VFile => UnitFormatter.formatDataSize(path.size)
     }
 
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifiyDate, $attributes)"

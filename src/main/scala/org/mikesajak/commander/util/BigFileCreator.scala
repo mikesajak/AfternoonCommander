@@ -3,6 +3,8 @@ package org.mikesajak.commander.util
 import java.io.BufferedOutputStream
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
+import org.mikesajak.commander.util.UnitFormatter.DataSizeUnit
+
 sealed abstract class SizeUnit(val multiplier: Long)
 object SizeUnit {
   case object B extends SizeUnit(1)
@@ -29,7 +31,7 @@ object BigFileCreator {
   def mkFile(filePath: Path, numBytesToWrite: Int) = {
     val stream = new BufferedOutputStream(Files.newOutputStream(filePath, StandardOpenOption.WRITE))
 
-    println(s"Creating file with size ${UnitFormatter.byteUnit(numBytesToWrite)}...")
+    println(s"Creating file with size ${DataSizeUnit.Byte.format(numBytesToWrite)}...")
 
     val data = Iterator.iterate(0xff.toByte)(p => 0xff.toByte)
 //    def data = Stream.tabulate(numBytesToWrite)(i => 0xff.toByte)
@@ -52,7 +54,7 @@ object BigFileCreator {
       current += value
       val percent = (current * 100) / target
       if (last != percent) {
-        println(s"$percent% (${UnitFormatter.formatUnit(current)} written)")
+        println(s"$percent% (${UnitFormatter.formatDataSize(current)} written)")
         last = percent
       }
     }

@@ -40,7 +40,7 @@ class DirStatsPanelControllerImpl(dirSubdirsLabel: Label,
   override def updateStats(stats: DirStats): Unit = {
     Platform.runLater {
       dirSubdirsLabel.text = s"${stats.numDirs} (depth: ${stats.depth} levels)"
-      dirFilesLabel.text = s"${stats.numFiles} (size: ${UnitFormatter.formatUnit(stats.size)})"
+      dirFilesLabel.text = s"${stats.numFiles} (size: ${UnitFormatter.formatDataSize(stats.size)})"
     }
   }
 
