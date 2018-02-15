@@ -78,36 +78,6 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       summaryMessageLabel.tooltip = "Directory statistics counting is still in progress. If you start delete operation now\n" +
         "the progress will not be available. Wait until statistics counting is finished for progress."
     }
-
-//    if (pathType != SingleFile) {
-//      dirStats match {
-//        case Success(Some(stats)) =>
-//          dirStatsPanel.visible = true
-//          fileStatsPanel.visible = false
-//          statsMessageLabel.visible = false
-//          dirStatsPanelController.init(targetPaths, Some(stats))
-//          summaryMessageLabel.text = "Counting..."
-//          summaryMessageLabel.tooltip = "Delete progress is not available until directory statiscics counting isn't finished."
-//
-//        case Failure(reason) =>
-//          statsMessageLabel.visible = true
-//          statsMessageLabel.text = s"Couldn't get directory statistics because of: $reason"
-//          dirStatsPanel.visible = false
-//          fileStatsPanel.visible = false
-//
-//        case Success(None) =>
-//          statsMessageLabel.visible = true
-//          statsMessageLabel.text = s"Statistics count skipped. Operation progress won't be available."
-//          dirStatsPanel.visible = false
-//          fileStatsPanel.visible = false
-//      }
-//    } else {
-//        dirStatsPanel.visible = false
-//        statsMessageLabel.visible = false
-//        fileStatsPanel.visible = true
-//
-//        fileStatsPanelController.init(targetPaths.head)
-//    }
   }
 
   private def pathTypeOf(targetPaths: Seq[VPath]): PathType =
@@ -132,13 +102,20 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
   }
 
   override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
+    dirStatsPanelController.updateStats(stats)
     Platform.runLater {
       summaryMessageLabel.text = "Delete progress available"
       summaryMessageLabel.graphic = null
+      summaryMessageLabel.tooltip = "Counting directory statistics finished successfully. Delete operation progress will be available."
     }
   }
 
   override def notifyError(stats: Option[DirStats], message: String): Unit = {
-    println(s"TODO: notifyError: stats=$stats, message=$message")
+    stats.foreach(st => dirStatsPanelController.updateStats(st))
+    Platform.runLater {
+      summaryMessageLabel.text = message
+      summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
+      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle-24.png"))
+    }
   }
 }

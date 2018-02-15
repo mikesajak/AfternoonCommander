@@ -78,30 +78,16 @@ class DirTableController(dirTableView: TableView[FileRow],
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
     idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
       new TableCell[FileRow, VPath]() {
-        item.onChange { (observable, oldValue, newValue) =>
-          val fileType = fileTypeManager.detectFileType(newValue)
-          val typeIcon = fileTypeManager.getIcon(fileType)
-          val imageView = typeIcon.map { icon =>
-            val imageView = new ImageView(resourceManager.getIcon(icon, 18, 18))
-            imageView.preserveRatio = true
-            imageView
-          }.orNull
-          graphic = imageView
+        item.onChange { (_, _, newValue) =>
+          graphic = if (newValue == null) null
+                    else findIconFor(newValue)
         }
       }
     }
-    nameColumn.cellValueFactory = {
-      _.value.name
-    }
-    sizeColumn.cellValueFactory = {
-      _.value.size
-    }
-    dateColumn.cellValueFactory = {
-      _.value.modifiyDate
-    }
-    attribsColumn.cellValueFactory = {
-      _.value.attributes
-    }
+    nameColumn.cellValueFactory = { _.value.name }
+    sizeColumn.cellValueFactory = { _.value.size }
+    dateColumn.cellValueFactory = { _.value.modifiyDate }
+    attribsColumn.cellValueFactory = { _.value.attributes }
 
     dirTableView.rowFactory = { tableView =>
       val row = new TableRow[FileRow]()
@@ -110,18 +96,10 @@ class DirTableController(dirTableView: TableView[FileRow],
           handleAction(row.item.value.path)
         }
       }
-
       row
     }
 
-    dirTableView.handleEvent(KeyEvent.KeyTyped) { event: KeyEvent =>
-      if (event.character.contains("\n") || event.character.contains("\r")) {
-        val items = dirTableView.selectionModel.value.selectedItems
-        if (items.nonEmpty) {
-          handleAction(items.head.path)
-        }
-      }
-    }
+    dirTableView.handleEvent(KeyEvent.KeyTyped) { event: KeyEvent => handleKeyEvent(event) }
 
     initTable(path, None)
   }
@@ -137,6 +115,24 @@ class DirTableController(dirTableView: TableView[FileRow],
     }
 
     selectIndex(selIndex)
+  }
+
+  private def findIconFor(path: VPath): ImageView = {
+    val fileType = fileTypeManager.detectFileType(path)
+    fileType.mediumIcon.map { iconFile =>
+      val imageView = new ImageView(resourceManager.getIcon(iconFile, 18, 18))
+      imageView.preserveRatio = true
+      imageView
+    }.orNull
+  }
+
+  private def handleKeyEvent(event: KeyEvent) {
+    if (event.character.contains("\n") || event.character.contains("\r")) {
+      val items = dirTableView.selectionModel.value.selectedItems
+      if (items.nonEmpty) {
+        handleAction(items.head.path)
+      }
+    }
   }
 
   private def handleAction(path: VPath): Unit = {

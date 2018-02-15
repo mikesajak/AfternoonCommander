@@ -5,7 +5,7 @@ import java.time.Instant
 import java.util.zip.{ZipEntry => jZipEntry, ZipFile => jZipFile}
 
 import org.mikesajak.commander.fs.{FS, VDirectory, VFile, VPath}
-import org.mikesajak.commander.{ArchiveFile, ArchiveHandler}
+import org.mikesajak.commander.{ArchiveHandler, ArchiveType}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -14,10 +14,10 @@ import scala.util.Try
   * Created by mike on 03.05.17.
   */
 
-case object ZipFile extends ArchiveFile
+case object ZipArchive extends ArchiveType
 
 class ZipArchiveHandler extends ArchiveHandler {
-  override val archiveType: ArchiveFile = ZipFile
+  override val archiveType: ArchiveType = ZipArchive
 
   override def isArchive(file: VFile): Boolean = {
     val ext = file.extension

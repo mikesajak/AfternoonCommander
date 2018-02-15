@@ -190,7 +190,7 @@ class DirPanelController(tabPane: TabPane,
     new Tab {
       closable = false
 //      disable = true
-      graphic = new ImageView(resourceManager.getIcon("ic_add_box_black_24dp_1x.png"))
+      graphic = new ImageView(resourceManager.getIcon("plus-box-24.png"))
       text = ""
     }
   }

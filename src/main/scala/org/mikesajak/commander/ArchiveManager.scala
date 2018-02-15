@@ -4,8 +4,10 @@ import java.util.zip.{ZipEntry => jZipEntry, ZipFile => jZipFile}
 
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 
+trait ArchiveType
+
 trait ArchiveHandler {
-  def archiveType: ArchiveFile
+  def archiveType: ArchiveType
   def isArchive(file: VFile): Boolean
   def getArchiveFS(file: VFile): VDirectory
 }
@@ -32,12 +34,15 @@ class ArchiveManager extends FileTypeDetector {
     throw new IllegalArgumentException(s"Not an archive: $file")
   }
 
-  override def detect(path: VPath): Option[FileType] =
-    path match {
-      case file: VFile =>
-        val hdl = archiveHandlers.find(h => h.isArchive(file))
-        val r = hdl.map(h => h.archiveType)
-        r
-      case _ => None
-    }
+  override def detect(path: VPath): Option[FileType] = {
+    val archiveType =
+      path match {
+        case file: VFile =>
+          val hdl = archiveHandlers.find(h => h.isArchive(file))
+          val r = hdl.map(h => h.archiveType)
+          r
+        case _ => None
+      }
+    archiveType.map(_ => ArchiveFile)
+  }
 }
