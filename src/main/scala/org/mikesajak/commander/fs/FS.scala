@@ -14,3 +14,16 @@ trait FS {
 
   def freeSpace: Long
 }
+
+object FS {
+  def rootDirOf(path: VPath): VDirectory = {
+    var curDir = path.directory
+    var parent= curDir.parent
+
+    while (parent.isDefined) {
+      curDir = parent.get
+      parent= curDir.parent
+    }
+    curDir
+  }
+}

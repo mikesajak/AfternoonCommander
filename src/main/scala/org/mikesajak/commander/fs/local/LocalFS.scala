@@ -51,4 +51,7 @@ class LocalFS(rootFile: File) extends FS {
         else new LocalFile(file, this)
       case _ => throw new IllegalArgumentException(s"Provided path parameter is invalid (path=$path). LocalFS supports only local paths.")
     }
+
+
+  override def toString = s"LocalFS($id, $rootDirectory)"
 }

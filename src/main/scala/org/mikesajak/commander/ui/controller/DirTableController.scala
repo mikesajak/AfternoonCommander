@@ -38,6 +38,7 @@ class FileRow(val path: VPath) {
 
 trait DirTableControllerIntf {
   def init(panelController: DirPanelControllerIntf, path: VDirectory)
+  def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None)
   def focusedRow: FileRow
   def focusedPath: VPath = focusedRow.path
   def selectedRows: Seq[FileRow]
@@ -72,7 +73,6 @@ class DirTableController(dirTableView: TableView[FileRow],
   override def selectedRows: Seq[FileRow] = dirTableView.selectionModel.value.getSelectedItems.toList
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
-    curDir = path
     this.panelController = dirPanelController
 
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
@@ -101,11 +101,16 @@ class DirTableController(dirTableView: TableView[FileRow],
 
     dirTableView.handleEvent(KeyEvent.KeyTyped) { event: KeyEvent => handleKeyEvent(event) }
 
-    initTable(path, None)
+    setCurrentDirectory(path)
+  }
+
+  override def setCurrentDirectory(dir: VDirectory, focusedPath: Option[VPath] = None): Unit = {
+    curDir = dir
+    initTable(dir, focusedPath)
   }
 
   override def reload(): Unit = {
-    initTable(curDir, Some(focusedPath))
+    setCurrentDirectory(curDir, Some(focusedPath))
   }
 
   override def select(target: String): Unit = {

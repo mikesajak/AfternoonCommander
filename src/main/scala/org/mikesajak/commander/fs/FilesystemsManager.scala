@@ -27,17 +27,21 @@ class FilesystemsManager {
   private val PathPattern = raw"(\S+)://(.+)".r
 
   def resolvePath(path: String): Option[VPath] = {
-      path match {
-        case PathPattern(fsId, fsPath) =>
-          filesystems.find(fs => fs.id == fsId)
-            .map(fs => fs.resolvePath(path))
-        case _ => None
+    val (fsId, fsPath) = path match {
+        case PathPattern(id, _) => (id, path)
+        case _ => ("local", s"local://$path")
       }
+
+      filesystems.find(fs => fs.id == fsId)
+        .map(fs => fs.resolvePath(fsPath))
   }
 
   def homePath: String = {
     //    val fsv = FileSystemView.getFileSystemView
     //    LocalFS.mkLocalPathName(fsv.getHomeDirectory.getAbsolutePath)
-    LocalFS.mkLocalPathName(System.getProperty("user.dir"))
+    LocalFS.mkLocalPathName(System.getProperty("user.home"))
   }
+
+  def homeDir: VDirectory = resolvePath(homePath).get.directory
+
 }

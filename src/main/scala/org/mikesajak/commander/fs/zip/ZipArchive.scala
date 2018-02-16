@@ -132,4 +132,7 @@ class ZipFS extends FS {
   override def delete(path: VPath): Try[Boolean] = ???
 
   override def freeSpace: Long = ???
+
+
+  override def toString = s"ZipFS($id, $rootDirectory)"
 }

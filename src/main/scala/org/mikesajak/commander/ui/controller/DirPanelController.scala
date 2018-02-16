@@ -5,11 +5,11 @@ import javafx.scene.{Parent, control}
 import com.google.inject.Key
 import com.google.inject.name.Names
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.ApplicationContext
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
+import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
+import org.mikesajak.commander.{ApplicationContext, ApplicationController}
 
 import scalafx.Includes._
 import scalafx.scene.Node
@@ -41,8 +41,9 @@ trait DirPanelControllerIntf {
 class DirPanelController(tabPane: TabPane,
                          curDirField: TextField,
                          favDirsButton: Button,
-                         backDirButton: Button,
+                         prevDirButton: Button,
                          topDirButton: Button,
+                         homeDirButton: Button,
                          drivesCombo: ComboBox[String],
                          freeSpaceLabel: Label,
                          showHiddenToggleButton: ToggleButton,
@@ -51,11 +52,12 @@ class DirPanelController(tabPane: TabPane,
                          config: Configuration,
                          fsMgr: FilesystemsManager,
                          statusMgr: StatusMgr,
-                         resourceManager: ResourceManager)
+                         resourceManager: ResourceManager,
+                         appController: ApplicationController)
     extends DirPanelControllerIntf {
 
   private var dirTabManager: DirTabManager = _
-  private var currentTab: Tab = _
+//  private var currentTab: Tab = _
 
   private val logger = Logger[DirPanelController]
 
@@ -63,10 +65,6 @@ class DirPanelController(tabPane: TabPane,
     // TODO: better way of getting dependency - use injection!!
     dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
                                                                           Names.named(panelId.toString)))
-
-    favDirsButton.disable = true
-    backDirButton.disable = true
-    topDirButton.disable = true
 
     topUIPane.setStyle("-fx-border-color: Transparent")
 
@@ -114,6 +112,36 @@ class DirPanelController(tabPane: TabPane,
 
     registerListeners(panelId)
   }
+
+  def handleFavDirsButton(): Unit = {
+    logger.warn("Fav dirs button action not yet implemented...")
+    val ctxMenu = new ContextMenu() {
+      this.items.addAll(
+        new MenuItem(s"Add bookmark (current directory) -> ${dirTabManager.selectedTab.dir}"),
+//        new SeparatorMenuItem()
+      )
+    }
+    val favButtonBounds = favDirsButton.localToScreen(favDirsButton.boundsInLocal.value)
+    ctxMenu.show(appController.mainStage, favButtonBounds.getMinX, favButtonBounds.getMaxY)
+  }
+
+  def handlePrevDirButton(): Unit = {
+    dirTabManager.selectedTab.dir.parent
+      .foreach(dir => setCurrentTabDir(dir))
+  }
+
+  def handleTopDirButton(): Unit = {
+    val rootDir = FS.rootDirOf(dirTabManager.selectedTab.dir)
+    setCurrentTabDir(rootDir)
+  }
+
+  def handleHomeDirButton(): Unit = {
+    val homeDir = fsMgr.homeDir
+    setCurrentTabDir(homeDir)
+  }
+
+  private def setCurrentTabDir(dir: VDirectory) =
+    dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
 
   private def registerListeners(panelId: PanelId): Unit = {
     var tabSelectionPending = false

@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<VBox fx:id="topUIPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirPanelController">
+<VBox fx:id="topUIPane" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirPanelController">
    <children>
       <BorderPane>
          <left>
@@ -28,7 +27,7 @@
       <HBox>
          <children>
             <TextField fx:id="curDirField" editable="false" prefHeight="25.0" prefWidth="623.0" promptText="Current directory" />
-            <Button fx:id="favDirsButton" alignment="CENTER" contentDisplay="CENTER" graphicTextGap="0.0" mnemonicParsing="false" textOverrun="CLIP">
+            <Button fx:id="favDirsButton" alignment="CENTER" contentDisplay="CENTER" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleFavDirsButton" textOverrun="CLIP">
               <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                      <image>
@@ -40,7 +39,7 @@
                   <Tooltip text="Favorities" />
                </tooltip>
             </Button>
-            <Button fx:id="backDirButton" graphicTextGap="0.0" mnemonicParsing="false">
+            <Button fx:id="prevDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handlePrevDirButton">
               <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                    <image>
@@ -52,7 +51,7 @@
                   <Tooltip text="Bo back" />
                </tooltip>
             </Button>
-            <Button fx:id="topDirButton" graphicTextGap="0.0" mnemonicParsing="false">
+            <Button fx:id="topDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleTopDirButton">
               <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                    <image>
@@ -62,6 +61,18 @@
               </graphic>
                <tooltip>
                   <Tooltip text="Go to top directory" />
+               </tooltip>
+            </Button>
+            <Button fx:id="homeDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleHomeDirButton">
+               <graphic>
+                  <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/home-24.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Go to home directory" />
                </tooltip>
             </Button>
          </children>
