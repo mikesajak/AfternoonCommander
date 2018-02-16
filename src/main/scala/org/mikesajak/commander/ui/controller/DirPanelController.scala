@@ -9,7 +9,7 @@ import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
-import org.mikesajak.commander.{ApplicationContext, ApplicationController}
+import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr}
 
 import scalafx.Includes._
 import scalafx.scene.Node
@@ -52,14 +52,13 @@ class DirPanelController(tabPane: TabPane,
                          config: Configuration,
                          fsMgr: FilesystemsManager,
                          statusMgr: StatusMgr,
+                         bookmarkMgr: BookmarkMgr,
                          resourceManager: ResourceManager,
                          appController: ApplicationController)
     extends DirPanelControllerIntf {
 
-  private var dirTabManager: DirTabManager = _
-//  private var currentTab: Tab = _
-
   private val logger = Logger[DirPanelController]
+  private var dirTabManager: DirTabManager = _
 
   def init(panelId: PanelId) {
     // TODO: better way of getting dependency - use injection!!
@@ -114,12 +113,26 @@ class DirPanelController(tabPane: TabPane,
   }
 
   def handleFavDirsButton(): Unit = {
-    logger.warn("Fav dirs button action not yet implemented...")
+    val addBookmarkItem = new MenuItem() {
+      text = s"Add bookmark (current directory) -> ${dirTabManager.selectedTab.dir}"
+      onAction = ae => bookmarkMgr.addBookmark(dirTabManager.selectedTab.dir)
+    }
+    val bookmarks = bookmarkMgr.bookmarks.map(b => new MenuItem() {
+      text = b.toString
+      onAction = ae => {
+        val maybePath = fsMgr.resolvePath(b.toString).map(_.directory)
+        maybePath.foreach(dir => setCurrentTabDir(dir))
+
+        if (maybePath.isEmpty)
+          logger.warn(s"Bookmark path is cannot be found/resolved. Skipping. $b")
+      }
+    })
     val ctxMenu = new ContextMenu() {
-      this.items.addAll(
-        new MenuItem(s"Add bookmark (current directory) -> ${dirTabManager.selectedTab.dir}"),
-//        new SeparatorMenuItem()
-      )
+      items.add(addBookmarkItem)
+      if (bookmarks.nonEmpty) {
+        items.add(new SeparatorMenuItem())
+        bookmarks.foreach(b => items.add(b))
+      }
     }
     val favButtonBounds = favDirsButton.localToScreen(favDirsButton.boundsInLocal.value)
     ctxMenu.show(appController.mainStage, favButtonBounds.getMinX, favButtonBounds.getMaxY)
@@ -140,7 +153,7 @@ class DirPanelController(tabPane: TabPane,
     setCurrentTabDir(homeDir)
   }
 
-  private def setCurrentTabDir(dir: VDirectory) =
+  private def setCurrentTabDir(dir: VDirectory): Unit =
     dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
 
   private def registerListeners(panelId: PanelId): Unit = {

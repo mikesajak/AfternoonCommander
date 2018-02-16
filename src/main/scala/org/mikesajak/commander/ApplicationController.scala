@@ -62,6 +62,6 @@ class ApplicationController(config: Configuration) {
 }
 
 object ApplicationController {
-  val configPath = s"${System.getProperty("user.dir")}/.." // fixme: for debug purposes, change this to dir in user home, e.g. .afternooncommander/ or something
+  val configPath = s"${System.getProperty("user.dir")}" // fixme: for debug purposes, change this to dir in user home, e.g. .afternooncommander/ or something
   val configFile = "afternooncommander.conf"
 }

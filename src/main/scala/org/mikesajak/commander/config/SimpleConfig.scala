@@ -9,7 +9,7 @@ class SimpleConfig extends Configuration {
   private val logger = Logger[SimpleConfig]
   private var settingsMap = Map[String, String]()
 
-  private def updateValue(category: String, name: String, value: String) = {
+  private def updateValue(category: String, name: String, value: String): Unit = {
     val path = s"$category.$name"
     settingsMap += name -> value
 
@@ -28,14 +28,14 @@ class SimpleConfig extends Configuration {
 
   override def stringProperty(category: String, name: String): Option[String] =
     settingsMap.get(s"$category.$name")
-  override def setProperty(category: String, name: String, value: String): Unit =
+  override def setStringProperty(category: String, name: String, value: String): Unit =
     updateValue(category, name, value)
 
   override def stringSeqProperty(category: String, name: String): Option[Seq[String]] =
 //    settingsMap.get(s"$category.$name")
     throw new UnsupportedOperationException
 
-  override def setProperty(category: String, name: String, value: Seq[String]): Unit =
+  override def setStringSeqProperty(category: String, name: String, value: Seq[String]): Unit =
     throw new UnsupportedOperationException
 
   override def load(): Unit = {

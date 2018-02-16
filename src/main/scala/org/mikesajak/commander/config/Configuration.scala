@@ -15,11 +15,10 @@ trait Configuration {
   def setProperty(category: String, name: String, value: Int): Unit
 
   def stringProperty(category: String, name: String): Option[String]
-  def setProperty(category: String, name: String, value: String): Unit
+  def setStringProperty(category: String, name: String, value: String): Unit
 
   def stringSeqProperty(category: String, name: String): Option[Seq[String]]
-  def setProperty(category: String, name: String, value: Seq[String])
-
+  def setStringSeqProperty(category: String, name: String, value: Seq[String])
 
   def registerObserver(category: String, name: String, observer: ConfigObserver): Unit = {
     if (category == "*" && name != "*" || category != "*" && name == "*")

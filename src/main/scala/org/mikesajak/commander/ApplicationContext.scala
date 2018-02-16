@@ -84,6 +84,15 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, appController,
       copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl, countDirStatsOperationCtrl)
   }
+
+  @Provides
+  @Singleton
+  def provideBookmarkManager(filesystemsManager: FilesystemsManager,
+                             configuration: Configuration): BookmarkMgr = {
+    val bookmarkMgr = new BookmarkMgr(configuration)
+    bookmarkMgr.init(filesystemsManager)
+    bookmarkMgr
+  }
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {

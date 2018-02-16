@@ -65,7 +65,7 @@ class TypesafeConfig(filename: String) extends Configuration {
     if (config.hasPath(path)) Some(config.getString(path)) else None
   }
 
-  override def setProperty(category: String, name: String, value: String): Unit = {
+  override def setStringProperty(category: String, name: String, value: String): Unit = {
     config = config.withValue(s"$appName.$category.$name", ConfigValueFactory.fromAnyRef(value))
     notifyObservers(category, name)
   }
@@ -75,7 +75,7 @@ class TypesafeConfig(filename: String) extends Configuration {
     if (config.hasPath(path)) Some(config.getStringList(path).asScala) else None
   }
 
-  def setProperty(category: String, name: String, value: Seq[String]): Unit = {
+  def setStringSeqProperty(category: String, name: String, value: Seq[String]): Unit = {
     config = config.withValue(s"$appName.$category.$name", ConfigValueFactory.fromIterable(value.asJava))
     notifyObservers(category, name)
   }
