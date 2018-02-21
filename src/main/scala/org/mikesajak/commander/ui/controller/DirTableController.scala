@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
-import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.UnitFormatter
 
 import scalafx.Includes._
@@ -48,7 +48,8 @@ trait DirTableControllerIntf {
 }
 
 @sfxml
-class DirTableController(dirTableView: TableView[FileRow],
+class DirTableController(curDirField: TextField,
+                         dirTableView: TableView[FileRow],
                          idColumn: TableColumn[FileRow, VPath],
                          nameColumn: TableColumn[FileRow, String],
                          extensionColumn: TableColumn[FileRow, String],
@@ -74,6 +75,8 @@ class DirTableController(dirTableView: TableView[FileRow],
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
     this.panelController = dirPanelController
+
+    registerCurDirFieldUpdater()
 
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
     idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
@@ -106,6 +109,7 @@ class DirTableController(dirTableView: TableView[FileRow],
 
   override def setCurrentDirectory(dir: VDirectory, focusedPath: Option[VPath] = None): Unit = {
     curDir = dir
+    curDirField.text = curDir.absolutePath
     initTable(dir, focusedPath)
   }
 
@@ -157,7 +161,7 @@ class DirTableController(dirTableView: TableView[FileRow],
       case p: PathToParent => Some(p.targetDir)
       case _ => None
     }
-    initTable(directory, selection)
+    setCurrentDirectory(directory, selection)
   }
 
   private def updateParentTab(directory: VDirectory): Unit = {
@@ -205,5 +209,32 @@ class DirTableController(dirTableView: TableView[FileRow],
       dirTableView.getSelectionModel.select(selIndex)
       dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
     }
+  }
+
+  private def registerCurDirFieldUpdater(): Unit = {
+
+    var pending = false
+    curDirField.text.onChange { (observable, oldVal, newVal) =>
+      try {
+        println(s"Text change $oldVal -> $newVal")
+        if (!pending) {
+          pending = true
+          var textWidth = UIUtils.calcTextBounds(curDirField).getWidth
+          val componentWidth = curDirField.getBoundsInLocal.getWidth
+          while (textWidth > componentWidth) {
+            println(s"text width=$textWidth, textField width=$componentWidth")
+            curDirField.text = shortenDirText(curDirField.text.value)
+            textWidth = UIUtils.calcTextBounds(curDirField).getWidth
+            curDirField.insets
+          }
+        }
+      } finally {
+        pending = false
+      }
+    }
+  }
+
+  private def shortenDirText(text: String): String = {
+    text.substring(1)
   }
 }

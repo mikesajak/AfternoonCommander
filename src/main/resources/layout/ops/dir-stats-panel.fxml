@@ -14,12 +14,12 @@
       <RowConstraints vgrow="SOMETIMES" />
    </rowConstraints>
    <children>
-      <Label text="Subdirectories:" GridPane.rowIndex="2" />
-      <Label text="Files:" GridPane.rowIndex="3" />
+      <Label text="%dir_stats_panel.directories" GridPane.rowIndex="2" />
+      <Label text="%dir_stats_panel.files" GridPane.rowIndex="3" />
       <Label fx:id="dirSubdirsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
       <Label fx:id="dirFilesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-      <Label text="Modified:" />
-      <Label text="Attributes:" GridPane.rowIndex="1" />
+      <Label text="%dir_stats_panel.modified" />
+      <Label text="%dir_stats_panel.attributes" GridPane.rowIndex="1" />
       <Label fx:id="dirModifiedLabel" text="Label" GridPane.columnIndex="1" />
       <Label fx:id="dirAttribsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
    </children>

@@ -2,6 +2,7 @@ package org.mikesajak.commander.ui.controller.ops
 
 import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.task.DirStats
+import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.util.UnitFormatter
 
 import scalafx.application.Platform
@@ -17,7 +18,9 @@ trait DirStatsPanelController {
 class DirStatsPanelControllerImpl(dirSubdirsLabel: Label,
                                   dirFilesLabel: Label,
                                   dirModifiedLabel: Label,
-                                  dirAttribsLabel: Label)
+                                  dirAttribsLabel: Label,
+
+                                  resourceMgr: ResourceManager)
     extends DirStatsPanelController {
   println(s"DirStatsPanelControllerImpl constructor")
 
@@ -39,8 +42,11 @@ class DirStatsPanelControllerImpl(dirSubdirsLabel: Label,
 
   override def updateStats(stats: DirStats): Unit = {
     Platform.runLater {
-      dirSubdirsLabel.text = s"${stats.numDirs} (depth: ${stats.depth} levels)"
-      dirFilesLabel.text = s"${stats.numFiles} (size: ${UnitFormatter.formatDataSize(stats.size)})"
+      dirSubdirsLabel.text = resourceMgr.getMessageWithArgs("count_stats.num_directories",
+                                                            Array(stats.numDirs, stats.depth))
+      val unit = UnitFormatter.findDataSizeUnit(stats.size)
+      dirFilesLabel.text = resourceMgr.getMessageWithArgs("count_stats.num_files",
+                                                         Array(stats.numFiles, unit.convert(stats.size), unit.symbol))
     }
   }
 

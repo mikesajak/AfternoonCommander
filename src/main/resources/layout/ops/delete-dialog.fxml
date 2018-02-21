@@ -6,16 +6,7 @@
 <?import javafx.scene.text.Font?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.DeletePanelControllerImpl">
    <children>
-      <HBox alignment="BASELINE_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
-         <children>
-            <Label fx:id="pathTypeLabel" text="Directory" HBox.hgrow="NEVER">
-               <HBox.margin>
-                  <Insets right="5.0" />
-               </HBox.margin>
-            </Label>
-            <Label maxWidth="1.7976931348623157E308" text="to delete:" />
-         </children>
-      </HBox>
+      <Label fx:id="pathTypeLabel" text="Directory" />
       <HBox alignment="BASELINE_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
          <children>
             <Label fx:id="pathToTargetLabel" graphicTextGap="0.0" text="full/path/to/" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="ALWAYS" />

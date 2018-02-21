@@ -39,14 +39,12 @@ trait DirPanelControllerIntf {
   */
 @sfxml
 class DirPanelController(tabPane: TabPane,
-                         curDirField: TextField,
                          favDirsButton: Button,
                          prevDirButton: Button,
                          topDirButton: Button,
                          homeDirButton: Button,
                          drivesCombo: ComboBox[String],
                          freeSpaceLabel: Label,
-                         showHiddenToggleButton: ToggleButton,
                          topUIPane: Pane,
 
                          config: Configuration,
@@ -78,9 +76,6 @@ class DirPanelController(tabPane: TabPane,
       (me: MouseEvent) => statusMgr.selectedPanel = panelId
     }
 
-    showHiddenToggleButton.onAction = a => config.setProperty("filePanel", "showHiddenFiles",
-                                                              showHiddenToggleButton.selected.value)
-
     tabPane.tabs.clear()
     dirTabManager.clearTabs()
 
@@ -105,8 +100,7 @@ class DirPanelController(tabPane: TabPane,
     tabPane += createNewTabTab()
 
     val selectedPath = tabPaths.head
-    // todo - selection
-    curDirField.text = selectedPath.absolutePath
+
     tabPane.getSelectionModel.selectFirst()
 
     registerListeners(panelId)
@@ -153,8 +147,10 @@ class DirPanelController(tabPane: TabPane,
     setCurrentTabDir(homeDir)
   }
 
-  private def setCurrentTabDir(dir: VDirectory): Unit =
+  private def setCurrentTabDir(dir: VDirectory): Unit = {
     dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
+    updateCurTab(dir)
+  }
 
   private def registerListeners(panelId: PanelId): Unit = {
     var tabSelectionPending = false

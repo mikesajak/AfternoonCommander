@@ -2,7 +2,7 @@ package org.mikesajak.commander.util
 
 object UnitFormatter {
   object DataSizeUnit extends Enumeration {
-    sealed abstract class DataSizeUnit(multiplier: Long, symbol: String) {
+    sealed abstract class DataSizeUnit(multiplier: Long, val symbol: String) {
       def convert(value: Double): Double = value / multiplier.toDouble
       def format(value: Double, unitSep: String = " ") = //s"${convert(value)}$symbol"
           f"${convert(value)}%.2f$unitSep$symbol"

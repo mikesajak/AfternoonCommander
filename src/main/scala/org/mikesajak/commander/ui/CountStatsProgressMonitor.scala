@@ -23,7 +23,6 @@ class CountStatsProgressMonitor(statsListener: StatsUpdateListener) extends Prog
   }
 
   override def notifyFinished(message: Option[String], state: Option[DirStats]): Unit = {
-    println(s"Finished: $message, stats=$state")
     statsListener.notifyFinished(state.get, message)
   }
 

@@ -1,16 +1,20 @@
 package org.mikesajak.commander.ui
 
+import javafx.geometry.{BoundingBox, Bounds}
 import javafx.scene.control.IndexedCell
+import javafx.scene.text.Text
 
 import com.sun.javafx.scene.control.skin.{TableViewSkin, VirtualFlow}
 import org.mikesajak.commander.util.Utils
 
 import scala.language.implicitConversions
 import scalafx.Includes._
+import scalafx.geometry.Insets
 import scalafx.scene.Parent
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.layout.{GridPane, Region}
+import scalafx.scene.text.Font
 import scalafx.stage.{Modality, Stage, StageStyle}
 
 object UIParams {
@@ -67,4 +71,19 @@ object UIUtils {
   }
 
   implicit def jfxButton2SfxButton(button: javafx.scene.control.Button): Button = new Button(button)
+
+  def calcTextBounds(control: TextInputControl): Bounds =
+    calcTextBounds(control.text.value, control.font.value, Option(control.insets))
+
+  def calcTextBounds(text: String, font: Font, padding: Option[Insets] = None): Bounds = {
+    val textElement = new Text(text)
+    textElement.font = font
+    textElement.applyCss()
+    val textBounds = textElement.getLayoutBounds
+
+    padding.map(p => new BoundingBox(textBounds.getMinX - p.left, textBounds.getMinY - p.top,
+                                     textBounds.getWidth + p.left + p.right,
+                                     textBounds.getHeight + p.top + p.bottom))
+      .getOrElse(textBounds)
+  }
 }

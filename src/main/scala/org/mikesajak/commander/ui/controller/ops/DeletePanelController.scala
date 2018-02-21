@@ -39,11 +39,11 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
   def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Unit = {
     val pathType = pathTypeOf(targetPaths)
-    dialog.title = s"Afternoon Commander - delete ${pathType.name}"
-    dialog.headerText = s"Delete selected ${pathType.name}?"
+    dialog.title = s"${resourceMgr.getMessage("app.name")} - ${resourceMgr.getMessage(s"delete_dialog.title")}"
+    dialog.headerText = resourceMgr.getMessage(s"delete_dialog.header.${pathType.name}")
     dialog.graphic = new ImageView(resourceMgr.getIcon("delete-circle-48.png"))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
-    pathTypeLabel.text = startWithUpper(pathType.name)
+    pathTypeLabel.text = resourceMgr.getMessage(s"delete_dialog.to_delete.${pathType.name}")
 
     if (pathType != MultiPaths) {
       val targetPath = targetPaths.head
@@ -52,7 +52,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       targetNameLabel.text = targetPath.name
     } else {
       pathToTargetLabel.text = ""
-      targetNameLabel.text = s"${targetPaths.size} ${pathType.name}"
+      targetNameLabel.text = resourceMgr.getMessageWithArgs("delete_dialog.num_elements", Array(targetPaths.size))
     }
 
     pathToTargetLabel.graphic = new ImageView(resourceMgr.getIcon(pathType.icon))
@@ -73,10 +73,9 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       fileStatsPanel.visible = false
       statsMessageLabel.visible = false
       dirStatsPanelController.init(targetPaths, Some(stats))
-      summaryMessageLabel.text = "Delete wil not be available until counting is finished."
+      summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
       summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline-24.png"))
-      summaryMessageLabel.tooltip = "Directory statistics counting is still in progress. If you start delete operation now\n" +
-        "the progress will not be available. Wait until statistics counting is finished for progress."
+      summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_not_available.tooltip")
     }
   }
 
@@ -104,9 +103,9 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
   override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
     dirStatsPanelController.updateStats(stats)
     Platform.runLater {
-      summaryMessageLabel.text = "Delete progress available"
+      summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_available.label")
       summaryMessageLabel.graphic = null
-      summaryMessageLabel.tooltip = "Counting directory statistics finished successfully. Delete operation progress will be available."
+      summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_available.tooltip")
     }
   }
 

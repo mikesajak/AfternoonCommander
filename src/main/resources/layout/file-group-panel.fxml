@@ -5,28 +5,11 @@
 <?import javafx.scene.layout.*?>
 <VBox fx:id="topUIPane" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirPanelController">
    <children>
-      <BorderPane>
-         <left>
-            <HBox BorderPane.alignment="CENTER">
-               <children>
-                  <ComboBox fx:id="drivesCombo" prefWidth="150.0" promptText="Home" />
-               </children>
-            </HBox>
-         </left>
-         <right>
-            <ToggleButton fx:id="showHiddenToggleButton" mnemonicParsing="false" text="H" BorderPane.alignment="CENTER" />
-         </right>
-         <center>
-            <AnchorPane BorderPane.alignment="CENTER">
-               <children>
-                  <Label fx:id="freeSizeLabel" text="1234 MB" AnchorPane.rightAnchor="16.0" />
-               </children>
-            </AnchorPane>
-         </center>
-      </BorderPane>
-      <HBox>
+      <HBox alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308">
          <children>
-            <TextField fx:id="curDirField" editable="false" prefHeight="25.0" prefWidth="623.0" promptText="Current directory" />
+            <ComboBox fx:id="drivesCombo" prefWidth="150.0" promptText="Home" />
+            <Pane maxWidth="1.7976931348623157E308" minWidth="100.0" HBox.hgrow="ALWAYS" />
+            <Label fx:id="freeSizeLabel" alignment="BASELINE_RIGHT" text="1234 MB" HBox.hgrow="ALWAYS" />
             <Button fx:id="favDirsButton" alignment="CENTER" contentDisplay="CENTER" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleFavDirsButton" textOverrun="CLIP">
               <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">

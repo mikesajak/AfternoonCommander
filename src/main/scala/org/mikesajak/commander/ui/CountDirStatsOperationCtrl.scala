@@ -20,7 +20,10 @@ trait OperationController[A] {
   def requestAbort(): Unit // Future
 }
 
-class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager, appController: ApplicationController) {
+class CountDirStatsOperationCtrl(statusMgr: StatusMgr,
+                                 taskMgr: TaskManager,
+                                 appController: ApplicationController,
+                                 resourceMgr: ResourceManager) {
   private val logger = Logger[CountDirStatsOperationCtrl]
 
   def handleCountDirStats(): Unit = {
@@ -35,7 +38,7 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
   def runCountDirStats(selectedPaths: Seq[VPath], statsListener: StatsUpdateListener): OperationController[DirStats] = {
     val progressMonitor = new CountStatsProgressMonitor(statsListener)
     val task = new DirStatsTask(selectedPaths)
-    val dirStatsResult = taskManager.runTaskAsync(task, progressMonitor)
+    val dirStatsResult = taskMgr.runTaskAsync(task, progressMonitor)
 
     new OperationController[DirStats] {
       override def finalStatus: Future[Option[DirStats]] = dirStatsResult
@@ -48,13 +51,13 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
     val (contentPane, contentCtrl) = UILoader.loadScene[CountStatsPanelController](contentLayout)
 
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
-    dialog.title = "Afternoon commander"
+    dialog.title = resourceMgr.getMessage("app.name")
 
     contentCtrl.init(selectedDirs, dialog, showClose = true, showCancel = true, showSkip = false)
     contentCtrl.updateButtons(enableClose = false, enableCancel = true, enableSkip = false)
 
     val progressMonitor = new CountStatsProgressMonitor(contentCtrl)
-    val dirStatsResult = taskManager.runTaskAsync(new DirStatsTask(selectedDirs), progressMonitor)
+    val dirStatsResult = taskMgr.runTaskAsync(new DirStatsTask(selectedDirs), progressMonitor)
 
     if (autoClose)
       dirStatsResult.foreach(stats => Platform.runLater { dialog.result = ButtonType.OK })

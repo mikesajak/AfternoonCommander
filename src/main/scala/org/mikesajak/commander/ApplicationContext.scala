@@ -136,8 +136,9 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideCountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager, appController: ApplicationController) =
-    new CountDirStatsOperationCtrl(statusMgr, taskManager, appController)
+  def provideCountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
+                                        appController: ApplicationController, resourceMgr: ResourceManager) =
+    new CountDirStatsOperationCtrl(statusMgr, taskManager, appController, resourceMgr)
 }
 
 object ApplicationContext {

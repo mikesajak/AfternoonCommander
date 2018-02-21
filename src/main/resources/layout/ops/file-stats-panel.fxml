@@ -13,10 +13,10 @@
     <RowConstraints vgrow="NEVER" />
   </rowConstraints>
    <children>
-      <Label text="Size:" />
+      <Label text="%file_stats_panel.size" />
       <Label fx:id="fileSizeLabel" text="Label" GridPane.columnIndex="1" />
-      <Label text="Modified:" GridPane.rowIndex="1" />
-      <Label text="Attributes:" GridPane.rowIndex="2" />
+      <Label text="%file_stats_panel.modified" GridPane.rowIndex="1" />
+      <Label text="%file_stats_panel.attributes" GridPane.rowIndex="2" />
       <Label fx:id="fileModifiedLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
       <Label fx:id="fileAttribsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
    </children>
