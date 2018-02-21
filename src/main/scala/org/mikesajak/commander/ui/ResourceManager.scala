@@ -1,8 +1,8 @@
 package org.mikesajak.commander.ui
 
-import java.text.MessageFormat
 import java.util.{Locale, ResourceBundle}
 
+import com.ibm.icu.text.MessageFormat
 import com.typesafe.scalalogging.Logger
 
 import scalafx.scene.image.Image

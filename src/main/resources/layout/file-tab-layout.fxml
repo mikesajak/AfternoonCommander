@@ -16,11 +16,11 @@
       <TableView fx:id="dirTableView" editable="true" prefHeight="402.0" prefWidth="599.0" BorderPane.alignment="CENTER">
         <columns>
           <TableColumn fx:id="idColumn" editable="false" prefWidth="27.0" sortable="false" />
-          <TableColumn fx:id="nameColumn" prefWidth="123.0" text="Name" />
-            <TableColumn fx:id="extColumn" prefWidth="75.0" text="Ext" />
-            <TableColumn fx:id="sizeColumn" editable="false" prefWidth="75.0" text="Size" />
-            <TableColumn fx:id="dateColumn" editable="false" prefWidth="75.0" text="Date" />
-            <TableColumn fx:id="attribsColumn" editable="false" prefWidth="75.0" text="Attribs" />
+          <TableColumn fx:id="nameColumn" prefWidth="123.0" text="%file_table_panel.name_column" />
+            <TableColumn fx:id="extColumn" prefWidth="75.0" text="%file_table_panel.ext_column" />
+            <TableColumn fx:id="sizeColumn" editable="false" prefWidth="75.0" text="%file_table_panel.size_column" />
+            <TableColumn fx:id="dateColumn" editable="false" prefWidth="75.0" text="%file_table_panel.modified_column" />
+            <TableColumn fx:id="attribsColumn" editable="false" prefWidth="75.0" text="%file_table_panel.attribs_column" />
         </columns>
       </TableView>
    </center>

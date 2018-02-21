@@ -17,7 +17,7 @@ import scalafxml.core.macros.sfxml
 /**
   * Created by mike on 14.04.17.
   */
-class FileRow(val path: VPath) {
+class FileRow(val path: VPath, resourceMgr: ResourceManager) {
   val name = new StringProperty(mkName(path))
   val extension = new StringProperty("")
   val size = new StringProperty(formatSize(path))
@@ -28,8 +28,9 @@ class FileRow(val path: VPath) {
 
   def formatSize(vFile: VPath): String =
     path match {
-      case p: PathToParent => "PARENT"
-      case p: VDirectory => UnitFormatter.formatNumElements(path.directory.children.size)
+      case p: PathToParent => resourceMgr.getMessage("file_row.parent")
+      case p: VDirectory => resourceMgr.getMessageWithArgs("file_row.num_elements",
+                                                           Array(path.directory.children.size))
       case p: VFile => UnitFormatter.formatDataSize(path.size)
     }
 
@@ -59,8 +60,8 @@ class DirTableController(curDirField: TextField,
                          statusLabel1: Label,
                          statusLabel2: Label,
 
-                         fileTypeManager: FileTypeManager,
-                         resourceManager: ResourceManager,
+                         fileTypeMgr: FileTypeManager,
+                         resourceMgr: ResourceManager,
                          config: Configuration)
     extends DirTableControllerIntf {
 
@@ -127,9 +128,9 @@ class DirTableController(curDirField: TextField,
   }
 
   private def findIconFor(path: VPath): ImageView = {
-    val fileType = fileTypeManager.detectFileType(path)
+    val fileType = fileTypeMgr.detectFileType(path)
     fileType.mediumIcon.map { iconFile =>
-      val imageView = new ImageView(resourceManager.getIcon(iconFile, 18, 18))
+      val imageView = new ImageView(resourceMgr.getIcon(iconFile, 18, 18))
       imageView.preserveRatio = true
       imageView
     }.orNull
@@ -148,8 +149,8 @@ class DirTableController(curDirField: TextField,
     if (path.isDirectory)
       changeDir(path.directory)
     else {
-      val fileType = fileTypeManager.detectFileType(path)
-      val fileTypeActionHandler = fileTypeManager.fileTypeHandler(path)
+      val fileType = fileTypeMgr.detectFileType(path)
+      val fileTypeActionHandler = fileTypeMgr.fileTypeHandler(path)
       println(s"TODO: file action $path, fileType=$fileType, fileTypeActionHandler=$fileTypeActionHandler")
     }
   }
@@ -184,7 +185,7 @@ class DirTableController(curDirField: TextField,
 
     val fileRows = (dirs ++ files).view
       .filter(f => showHidden || f.attribs.contains('h'))
-      .map(f => new FileRow(f))
+      .map(f => new FileRow(f, resourceMgr))
       .toList
 
     dirTableView.items = ObservableBuffer(fileRows)

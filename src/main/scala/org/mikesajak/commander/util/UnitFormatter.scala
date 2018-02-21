@@ -23,9 +23,4 @@ object UnitFormatter {
     DataSizeUnit.Units.find(u => u.convert(value) < threshold)
                       .getOrElse(DataSizeUnit.Units.last)
   }
-
-  def formatNumElements(numElems: Int): String = {
-    val unit = if (numElems == 1) "element" else "elements"
-    s"$numElems $unit"
-  }
 }
