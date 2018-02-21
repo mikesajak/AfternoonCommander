@@ -2,15 +2,36 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.Pane?>
-<ToolBar xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ButtonBarController">
+<ToolBar xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ButtonBarController">
   <items>
-    <Button fx:id="viewButton" mnemonicParsing="false" onAction="#handleView" text="F3 View" />
-      <Button fx:id="editButton" mnemonicParsing="false" onAction="#handleEdit" text="F4 Edit" />
-      <Button fx:id="copyButton" mnemonicParsing="false" onAction="#handleCopy" text="F5 Copy" />
-      <Button fx:id="moveButton" mnemonicParsing="false" onAction="#handleMove" text="F6 Move" />
-      <Button fx:id="mkdirButton" mnemonicParsing="false" onAction="#handleMkDir" text="F7 MkDir" />
-      <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#handleDelete" text="F8 Delete" />
-      <Pane minWidth="20.0" />
-      <Button fx:id="exitButton" mnemonicParsing="false" onAction="#handleExit" text="F10 Exit" />
+    <Button fx:id="viewButton" mnemonicParsing="false" onAction="#handleView" text="%button_bar.view.label">
+         <tooltip>
+            <Tooltip text="%button_bar.view.tooltip" />
+         </tooltip></Button>
+      <Button fx:id="editButton" mnemonicParsing="false" onAction="#handleEdit" text="%button_bar.edit.label">
+         <tooltip>
+            <Tooltip text="%button_bar.edit.tooltip" />
+         </tooltip></Button>
+      <Button fx:id="copyButton" mnemonicParsing="false" onAction="#handleCopy" text="%button_bar.copy.label">
+         <tooltip>
+            <Tooltip text="%button_bar.copy.tooltip" />
+         </tooltip></Button>
+      <Button fx:id="moveButton" mnemonicParsing="false" onAction="#handleMove" text="%button_bar.move.label">
+         <tooltip>
+            <Tooltip text="%button_bar.move.tooltip" />
+         </tooltip></Button>
+      <Button fx:id="mkdirButton" mnemonicParsing="false" onAction="#handleMkDir" text="%button_bar.mkdir.label">
+         <tooltip>
+            <Tooltip text="%button_bar.mkdir.tooltip" />
+         </tooltip></Button>
+      <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#handleDelete" text="%button_bar.delete.label">
+         <tooltip>
+            <Tooltip text="%button_bar.delete.tooltip" />
+         </tooltip></Button>
+      <Pane maxWidth="1.7976931348623157E308" minWidth="20.0" />
+      <Button fx:id="exitButton" mnemonicParsing="false" onAction="#handleExit" text="%button_bar.exit.label">
+         <tooltip>
+            <Tooltip text="%button_bar.exit.tooltip" />
+         </tooltip></Button>
   </items>
 </ToolBar>
