@@ -21,7 +21,7 @@ object LocalFS {
   def mkLocalPathName(path: String) = s"$id://$path"
 }
 
-class LocalFS(rootFile: File) extends FS {
+class LocalFS(private val rootFile: File) extends FS {
   override val id: String = LocalFS.id
 
   override def exists(path: VPath): Boolean = new jio.File(path.name).exists
@@ -52,6 +52,19 @@ class LocalFS(rootFile: File) extends FS {
       case _ => throw new IllegalArgumentException(s"Provided path parameter is invalid (path=$path). LocalFS supports only local paths.")
     }
 
-
   override def toString = s"LocalFS($id, $rootDirectory)"
+
+  def canEqual(other: Any): Boolean = other.isInstanceOf[LocalFS]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: LocalFS =>
+      (that canEqual this) &&
+        rootFile == that.rootFile
+    case _ => false
+  }
+
+  override def hashCode(): Int = {
+    val state = Seq(rootFile)
+    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
+  }
 }

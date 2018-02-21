@@ -9,6 +9,7 @@ import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
+import org.mikesajak.commander.util.TextUtils
 import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr}
 
 import scalafx.Includes._
@@ -51,7 +52,7 @@ class DirPanelController(tabPane: TabPane,
                          fsMgr: FilesystemsManager,
                          statusMgr: StatusMgr,
                          bookmarkMgr: BookmarkMgr,
-                         resourceManager: ResourceManager,
+                         resourceMgr: ResourceManager,
                          appController: ApplicationController)
     extends DirPanelControllerIntf {
 
@@ -108,8 +109,13 @@ class DirPanelController(tabPane: TabPane,
 
   def handleFavDirsButton(): Unit = {
     val addBookmarkItem = new MenuItem() {
-      text = s"Add bookmark (current directory) -> ${dirTabManager.selectedTab.dir}"
-      onAction = ae => bookmarkMgr.addBookmark(dirTabManager.selectedTab.dir)
+      val selectedDir = dirTabManager.selectedTab.dir
+      val selectedDirRep = if (fsMgr.isLocal(selectedDir)) selectedDir.absolutePath
+                           else selectedDir.toString
+      val selectedDirText = TextUtils.shortenPathTo(selectedDirRep, 50)
+
+      text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
+      onAction = ae => bookmarkMgr.addBookmark(selectedDir)
     }
     val bookmarks = bookmarkMgr.bookmarks.map(b => new MenuItem() {
       text = b.toString
@@ -227,7 +233,7 @@ class DirPanelController(tabPane: TabPane,
     new Tab {
       closable = false
 //      disable = true
-      graphic = new ImageView(resourceManager.getIcon("plus-box-24.png"))
+      graphic = new ImageView(resourceMgr.getIcon("plus-box-24.png"))
       text = ""
     }
   }

@@ -19,7 +19,7 @@
                   </ImageView>
               </graphic>
                <tooltip>
-                  <Tooltip text="Favorities" />
+                  <Tooltip text="%file_group_panel.favorites.tooltip" />
                </tooltip>
             </Button>
             <Button fx:id="prevDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handlePrevDirButton">
@@ -31,7 +31,7 @@
                 </ImageView>
               </graphic>
                <tooltip>
-                  <Tooltip text="Bo back" />
+                  <Tooltip text="%file_group_panel.parent_dir.tooltip" />
                </tooltip>
             </Button>
             <Button fx:id="topDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleTopDirButton">
@@ -43,7 +43,7 @@
                 </ImageView>
               </graphic>
                <tooltip>
-                  <Tooltip text="Go to top directory" />
+                  <Tooltip text="%file_group_panel.top_dir.tooltip" />
                </tooltip>
             </Button>
             <Button fx:id="homeDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleHomeDirButton">
@@ -55,7 +55,7 @@
                   </ImageView>
                </graphic>
                <tooltip>
-                  <Tooltip text="Go to home directory" />
+                  <Tooltip text="%file_group_panel.home_dir.tooltip" />
                </tooltip>
             </Button>
          </children>

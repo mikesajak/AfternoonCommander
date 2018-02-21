@@ -19,10 +19,13 @@ class FilesystemsManager {
       .foreach(registerFilesystem)
   }
 
-  def discoverLocalFilesystems(): List[LocalFS] = {
-    val rootFiles = File.listRoots().toList
+  def discoverLocalFilesystems(): Seq[LocalFS] = {
+    val rootFiles = File.listRoots().toSeq
     rootFiles.map(new LocalFS(_))
   }
+
+  def isLocal(path: VPath): Boolean =
+    discoverLocalFilesystems().contains(path.fileSystem)
 
   private val PathPattern = raw"(\S+)://(.+)".r
 
