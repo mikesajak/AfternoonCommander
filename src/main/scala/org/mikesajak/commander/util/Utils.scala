@@ -5,7 +5,7 @@ import java.io.{PrintWriter, StringWriter}
 import com.google.common.base.Stopwatch
 import com.typesafe.scalalogging.Logger
 
-import scala.language.reflectiveCalls
+import scala.language.{implicitConversions, reflectiveCalls}
 
 /**
   * Created by mike on 07.05.17.
@@ -75,5 +75,9 @@ object Utils {
 
   implicit class MyRichBoolean(val b: Boolean) extends AnyVal {
     final def option[A](a: => A): Option[A] = if (b) Some(a) else None
+  }
+
+  implicit def toRunnableConversion(f: () => Unit) = new Runnable() {
+    override def run(): Unit = f()
   }
 }

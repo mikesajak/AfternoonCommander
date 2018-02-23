@@ -133,6 +133,9 @@ class ZipFS extends FS {
 
   override def freeSpace: Long = ???
 
+  override def totalSpace: Long = ???
+
+  override def usableSpace: Long = ???
 
   override def toString = s"ZipFS($id, $rootDirectory)"
 }

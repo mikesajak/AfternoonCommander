@@ -1,8 +1,11 @@
 package org.mikesajak.commander.fs
 
 import java.io.File
+import java.nio.file.FileSystems
 
 import org.mikesajak.commander.fs.local.LocalFS
+
+import scala.collection.JavaConverters._
 
 /**
 *  Created by mike on 25.10.14.
@@ -22,6 +25,18 @@ class FilesystemsManager {
   def discoverLocalFilesystems(): Seq[LocalFS] = {
     val rootFiles = File.listRoots().toSeq
     rootFiles.map(new LocalFS(_))
+  }
+
+  // TODO: find proper way to filter out unwanted filesystems (TODO2: what about windows??)
+  private val internalFilesystems = List("cgroup.*".r, "systemd.*".r,
+    "udev".r, "devpts".r, "proc".r, "(tmp|sys|security|config|debug|hugetlb|squash|auto|ns)fs".r,
+    "pstore".r, "mqueue".r)
+
+  def discoverFilesystems() = {
+    var fss =FileSystems.getDefault.getFileStores.asScala
+      .filter(fs => !internalFilesystems.exists(r => r.findFirstMatchIn(fs.`type`()).isDefined))
+      .toSeq
+    fss
   }
 
   def isLocal(path: VPath): Boolean =

@@ -8,6 +8,7 @@
       <HBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <children>
             <Label fx:id="statusLabel1" text="Test" />
+            <Pane maxHeight="0.0" minHeight="0.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
             <Label fx:id="statusLabel2" text="Label" />
          </children>
       </HBox>

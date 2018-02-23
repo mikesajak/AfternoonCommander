@@ -38,7 +38,9 @@ class LocalFS(private val rootFile: File) extends FS {
     else f.createNewFile()
   }
 
-  override def freeSpace: Long = ???
+  override def freeSpace: Long = rootFile.getFreeSpace
+  override def totalSpace: Long = rootFile.getTotalSpace
+  override def usableSpace: Long = rootFile.getUsableSpace
 
   override def rootDirectory: VDirectory = new LocalDirectory(rootFile, this)
 

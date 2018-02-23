@@ -112,6 +112,18 @@ class DirTableController(curDirField: TextField,
     curDir = dir
     curDirField.text = curDir.absolutePath
     initTable(dir, focusedPath)
+    updateStatusBar(dir)
+  }
+
+  private def updateStatusBar(directory: VDirectory): Unit = {
+    val numDirs = directory.childDirs.size
+    val childFiles = directory.childFiles
+    val totalSize = childFiles.map(_.size).sum
+    val sizeUnit = UnitFormatter.findDataSizeUnit(totalSize)
+    statusLabel1.text = resourceMgr.getMessageWithArgs("file_table_panel.status.message",
+                                                       Array(numDirs, childFiles.size,
+                                                             sizeUnit.convert(totalSize),
+                                                             sizeUnit.symbol))
   }
 
   override def reload(): Unit = {
@@ -217,13 +229,11 @@ class DirTableController(curDirField: TextField,
     var pending = false
     curDirField.text.onChange { (observable, oldVal, newVal) =>
       try {
-        println(s"Text change $oldVal -> $newVal")
         if (!pending) {
           pending = true
           var textWidth = UIUtils.calcTextBounds(curDirField).getWidth
           val componentWidth = curDirField.getBoundsInLocal.getWidth
           while (textWidth > componentWidth) {
-            println(s"text width=$textWidth, textField width=$componentWidth")
             curDirField.text = shortenDirText(curDirField.text.value)
             textWidth = UIUtils.calcTextBounds(curDirField).getWidth
             curDirField.insets
@@ -233,9 +243,14 @@ class DirTableController(curDirField: TextField,
         pending = false
       }
     }
+
+    curDirField.width.onChange { (_, oldVal, newVal) =>
+      curDirField.text = curDir.absolutePath
+    }
   }
 
   private def shortenDirText(text: String): String = {
+    // TODO: smarter shortening - e.g. cut the middle of the path, leave the beginning and ending etc. /root/directory/.../lastDir
     text.substring(1)
   }
 }

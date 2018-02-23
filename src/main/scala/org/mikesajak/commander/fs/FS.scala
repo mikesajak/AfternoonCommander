@@ -13,6 +13,8 @@ trait FS {
   def delete(path: VPath): Try[Boolean]
 
   def freeSpace: Long
+  def totalSpace: Long
+  def usableSpace: Long
 }
 
 object FS {

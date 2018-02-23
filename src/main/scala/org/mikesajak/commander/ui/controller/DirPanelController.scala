@@ -1,18 +1,23 @@
 package org.mikesajak.commander.ui.controller
 
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 import javafx.scene.{Parent, control}
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.inject.Key
 import com.google.inject.name.Names
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
-import org.mikesajak.commander.util.TextUtils
+import org.mikesajak.commander.util.Utils._
+import org.mikesajak.commander.util.{TextUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr}
 
 import scalafx.Includes._
+import scalafx.application.Platform
 import scalafx.scene.Node
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
@@ -44,7 +49,7 @@ class DirPanelController(tabPane: TabPane,
                          prevDirButton: Button,
                          topDirButton: Button,
                          homeDirButton: Button,
-                         drivesCombo: ComboBox[String],
+                         driveSelectionButton: Button,
                          freeSpaceLabel: Label,
                          topUIPane: Pane,
 
@@ -105,6 +110,21 @@ class DirPanelController(tabPane: TabPane,
     tabPane.getSelectionModel.selectFirst()
 
     registerListeners(panelId)
+
+    startPeriodicTasks(panelId)
+  }
+
+  def handleDriveSelectionButton() = {
+    logger.warn(s"Drive selection not yet implemented1!!")
+
+    val fsItems =
+      fsMgr.discoverFilesystems().map(fs => new MenuItem() {
+        text = s"$fs [${fs.`type`()}]"
+        onAction = ae => println("Selection of FS not implemented!")
+      })
+
+    val ctxMenu = new ContextMenu(fsItems: _*)
+    showButtonCtxMenu(driveSelectionButton, ctxMenu, appController.mainStage)
   }
 
   def handleFavDirsButton(): Unit = {
@@ -134,8 +154,8 @@ class DirPanelController(tabPane: TabPane,
         bookmarks.foreach(b => items.add(b))
       }
     }
-    val favButtonBounds = favDirsButton.localToScreen(favDirsButton.boundsInLocal.value)
-    ctxMenu.show(appController.mainStage, favButtonBounds.getMinX, favButtonBounds.getMaxY)
+
+    showButtonCtxMenu(favDirsButton, ctxMenu, appController.mainStage)
   }
 
   def handlePrevDirButton(): Unit = {
@@ -193,11 +213,6 @@ class DirPanelController(tabPane: TabPane,
     })
   }
 
-  private def pathForNewTab() = {
-    val newTabPathName = fsMgr.homePath
-    fsMgr.resolvePath(newTabPathName).map(_.directory)
-  }
-
   private def isNewTabButton(tabIdx: Int) =
     tabIdx == tabPane.tabs.size - 1 && tabPane.tabs.size > 1
 
@@ -215,6 +230,11 @@ class DirPanelController(tabPane: TabPane,
       val lastDirTab = tabPane.tabs.size - 2
       tabPane.selectionModel.value.select(lastDirTab)
     }
+  }
+
+  private def pathForNewTab() = {
+    val newTabPathName = fsMgr.homePath
+    fsMgr.resolvePath(newTabPathName).map(_.directory)
   }
 
   private def createTab(path: VDirectory) = {
@@ -235,6 +255,30 @@ class DirPanelController(tabPane: TabPane,
 //      disable = true
       graphic = new ImageView(resourceMgr.getIcon("plus-box-24.png"))
       text = ""
+    }
+  }
+
+  val scheduler = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).build())
+  private def startPeriodicTasks(panelId: PanelId): Unit = {
+    val task = { () =>
+//      logger.debug(s"$panelId - reloading tab: ${dirTabManager.selectedTab.dir}")
+//      dirTabManager.selectedTab.controller.reload()
+      updateFreeSpace()
+    }
+    val f = scheduler.scheduleAtFixedRate(task, 1, 5, TimeUnit.SECONDS)
+
+  }
+
+  private def updateFreeSpace(): Unit = {
+    val curFs = dirTabManager.selectedTab.dir.fileSystem
+    val free = curFs.freeSpace
+    val total = curFs.totalSpace
+    val freeUnit = UnitFormatter.findDataSizeUnit(free)
+    val totalUnit = UnitFormatter.findDataSizeUnit(total)
+
+    Platform.runLater {
+      freeSpaceLabel.text = resourceMgr.getMessageWithArgs("file_group_panel.free_space.message",
+        Array(freeUnit.convert(free), freeUnit.symbol, totalUnit.convert(total), totalUnit.symbol))
     }
   }
 }
