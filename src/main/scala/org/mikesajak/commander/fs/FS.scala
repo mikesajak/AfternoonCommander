@@ -5,6 +5,7 @@ import scala.util.Try
 trait FS {
   def id: String
   def rootDirectory: VDirectory
+  def attributes: Map[String, String]
 
   def resolvePath(path: String): VPath
 

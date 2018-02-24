@@ -24,3 +24,6 @@ libraryDependencies += "com.typesafe" % "config" % "1.3.1"
 // ICU4J https://mvnrepository.com/artifact/com.ibm.icu/icu4j
 libraryDependencies += "com.ibm.icu" % "icu4j" % "60.2"
 
+// detecting usb drives
+libraryDependencies += "net.samuelcampos" % "usbdrivedetector" % "2.0.2"
+

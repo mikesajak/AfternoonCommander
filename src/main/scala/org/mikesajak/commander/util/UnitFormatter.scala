@@ -1,5 +1,7 @@
 package org.mikesajak.commander.util
 
+import org.mikesajak.commander.util.UnitFormatter.DataSizeUnit.DataSizeUnit
+
 object UnitFormatter {
   object DataSizeUnit extends Enumeration {
     sealed abstract class DataSizeUnit(multiplier: Long, val symbol: String) {
@@ -16,6 +18,10 @@ object UnitFormatter {
     val Units = IndexedSeq(Byte, KiloByte, MegaByte, GigaByte, TerraByte)
   }
 
+  case class DataSize(value: Double, unit: DataSizeUnit) {
+    override def toString: String = unit.format(value)
+  }
+
   def formatDataSize(value: Double): String = findDataSizeUnit(value).format(value)
 
   def findDataSizeUnit(value: Double, threshold: Double = 10000): DataSizeUnit.DataSizeUnit = {
@@ -23,4 +29,7 @@ object UnitFormatter {
     DataSizeUnit.Units.find(u => u.convert(value) < threshold)
                       .getOrElse(DataSizeUnit.Units.last)
   }
+
+  def mkDataSize(value: Double, threshold: Double = 10000) =
+    DataSize(value, findDataSizeUnit(value, threshold))
 }

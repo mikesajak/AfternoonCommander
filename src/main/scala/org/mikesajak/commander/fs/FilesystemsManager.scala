@@ -3,6 +3,7 @@ package org.mikesajak.commander.fs
 import java.io.File
 import java.nio.file.FileSystems
 
+import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager
 import org.mikesajak.commander.fs.local.LocalFS
 
 import scala.collection.JavaConverters._
@@ -13,18 +14,15 @@ import scala.collection.JavaConverters._
 class FilesystemsManager {
   private var filesystems = Seq[FS]()
 
+  private val driveDetector = new USBDeviceDetectorManager()
+
   def rootFilesystems: Seq[FS] = filesystems
 
   def registerFilesystem(fs: FS): Unit = filesystems :+= fs
 
   def init(): Unit = {
-    discoverLocalFilesystems()
+    discoverFilesystems()
       .foreach(registerFilesystem)
-  }
-
-  def discoverLocalFilesystems(): Seq[LocalFS] = {
-    val rootFiles = File.listRoots().toSeq
-    rootFiles.map(new LocalFS(_))
   }
 
   // TODO: find proper way to filter out unwanted filesystems (TODO2: what about windows??)
@@ -32,15 +30,38 @@ class FilesystemsManager {
     "udev".r, "devpts".r, "proc".r, "(tmp|sys|security|config|debug|hugetlb|squash|auto|ns)fs".r,
     "pstore".r, "mqueue".r)
 
-  def discoverFilesystems() = {
-    var fss =FileSystems.getDefault.getFileStores.asScala
+  private val FileStorePattern = raw"(?:(.+) )?\((.+)\)".r
+
+  def discoverFilesystems(): Seq[FS] = {
+
+    val usbDevices = driveDetector.getRemovableDevices.asScala
+      .map(dev => (dev.getRootDirectory.getAbsolutePath, dev)).toMap
+
+    val fss =
+    FileSystems.getDefault.getFileStores.asScala
       .filter(fs => !internalFilesystems.exists(r => r.findFirstMatchIn(fs.`type`()).isDefined))
+      .flatMap{ fs0 =>
+        fs0.toString match {
+          case FileStorePattern(mountPoint, drive) =>
+            val rootDir = new File(mountPoint)
+            val usbDev = usbDevices.get(rootDir.getAbsolutePath)
+            val attributes = List(Some("type" -> fs0.`type`()),
+                                  Option(drive).map(d => "drive" -> drive),
+                                  usbDev.map(d => "label" -> d.getSystemDisplayName),
+                                  usbDev.map(d => "usb" -> "true"),
+                                  usbDev.map(d => "removable" -> "true"))
+              .flatten
+              .toMap
+            Some(new LocalFS(rootDir, attributes))
+          case _ => None
+        }
+      }
       .toSeq
     fss
   }
 
   def isLocal(path: VPath): Boolean =
-    discoverLocalFilesystems().contains(path.fileSystem)
+    discoverFilesystems().contains(path.fileSystem)
 
   private val PathPattern = raw"(\S+)://(.+)".r
 

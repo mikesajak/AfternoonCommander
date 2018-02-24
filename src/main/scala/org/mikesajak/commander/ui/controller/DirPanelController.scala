@@ -11,7 +11,7 @@ import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
-import org.mikesajak.commander.ui.{ResourceManager, UILoader}
+import org.mikesajak.commander.ui.{FSUIHelper, ResourceManager, UILoader}
 import org.mikesajak.commander.util.Utils._
 import org.mikesajak.commander.util.{TextUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr}
@@ -119,7 +119,13 @@ class DirPanelController(tabPane: TabPane,
 
     val fsItems =
       fsMgr.discoverFilesystems().map(fs => new MenuItem() {
-        text = s"$fs [${fs.`type`()}]"
+        private val freeSpace = UnitFormatter.mkDataSize(fs.freeSpace)
+        private val totalSpace = UnitFormatter.mkDataSize(fs.totalSpace)
+        text = s"${fs.rootDirectory.absolutePath} (${fs.attributes("type")}" +
+          s"${fs.attributes.get("label").map(a => s", $a").getOrElse("")})" +
+          s"${fs.attributes.get("drive").map(a => s", $a").getOrElse("")})" +
+          s" [$freeSpace / $totalSpace}]"
+        graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs, 24)))
         onAction = ae => println("Selection of FS not implemented!")
       })
 

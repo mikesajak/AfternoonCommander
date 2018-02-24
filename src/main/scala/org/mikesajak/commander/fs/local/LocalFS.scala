@@ -9,6 +9,7 @@ import java.{io => jio}
 import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
 
 import scala.util.Try
+import scala.util.matching.Regex
 
 /**
  * Created by mike on 25.10.14.
@@ -16,12 +17,14 @@ import scala.util.Try
 object LocalFS {
   val id = "local"
 
-  val PathPattern = "local://(.+)".r
+  val PathPattern: Regex = "local://(.+)".r
 
   def mkLocalPathName(path: String) = s"$id://$path"
 }
 
-class LocalFS(private val rootFile: File) extends FS {
+class LocalFS(private val rootFile: File, override val attributes: Map[String, String]) extends FS {
+  def this(rootFile: File, attribs: Seq[(String, String)]) = this(rootFile, attribs.toMap)
+
   override val id: String = LocalFS.id
 
   override def exists(path: VPath): Boolean = new jio.File(path.name).exists
@@ -44,17 +47,16 @@ class LocalFS(private val rootFile: File) extends FS {
 
   override def rootDirectory: VDirectory = new LocalDirectory(rootFile, this)
 
-
   override def resolvePath(path: String): VPath =
     path match {
-      case LocalFS.PathPattern(path) =>
-        val file = new File(path)
+      case LocalFS.PathPattern(p) =>
+        val file = new File(p)
         if (file.isDirectory) new LocalDirectory(file, this)
         else new LocalFile(file, this)
       case _ => throw new IllegalArgumentException(s"Provided path parameter is invalid (path=$path). LocalFS supports only local paths.")
     }
 
-  override def toString = s"LocalFS($id, $rootDirectory)"
+  override def toString = s"LocalFS($id, $rootDirectory, $attributes)"
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[LocalFS]
 

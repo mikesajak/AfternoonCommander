@@ -118,7 +118,9 @@ object ZipFS {
   val id = "zip"
 }
 
-class ZipFS extends FS {
+class ZipFS(zipFile: VFile) extends FS {
+  override val attributes = Map("type" -> "zip", "label" -> zipFile.absolutePath)
+
   override def id: String = ZipFS.id
 
   override def rootDirectory: VDirectory = ???
