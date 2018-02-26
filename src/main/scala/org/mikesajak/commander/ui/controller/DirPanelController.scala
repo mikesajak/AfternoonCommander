@@ -114,17 +114,21 @@ class DirPanelController(tabPane: TabPane,
     startPeriodicTasks(panelId)
   }
 
-  def handleDriveSelectionButton() = {
+  def handleDriveSelectionButton(): Unit = {
     logger.warn(s"Drive selection not yet implemented1!!")
 
     val fsItems =
       fsMgr.discoverFilesystems().map(fs => new MenuItem() {
         private val freeSpace = UnitFormatter.mkDataSize(fs.freeSpace)
         private val totalSpace = UnitFormatter.mkDataSize(fs.totalSpace)
-        text = s"${fs.rootDirectory.absolutePath} (${fs.attributes("type")}" +
-          s"${fs.attributes.get("label").map(a => s", $a").getOrElse("")})" +
-          s"${fs.attributes.get("drive").map(a => s", $a").getOrElse("")})" +
-          s" [$freeSpace / $totalSpace}]"
+
+        text = s"${fs.rootDirectory.absolutePath} " +
+          List(fs.attributes.get("info"),
+               fs.attributes.get("label"),
+               fs.attributes.get("type"))
+            .flatten
+            .reduce((a,b) => s"$a, $b") +
+          s" [$freeSpace / $totalSpace]"
         graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs, 24)))
         onAction = ae => println("Selection of FS not implemented!")
       })
@@ -135,10 +139,10 @@ class DirPanelController(tabPane: TabPane,
 
   def handleFavDirsButton(): Unit = {
     val addBookmarkItem = new MenuItem() {
-      val selectedDir = dirTabManager.selectedTab.dir
-      val selectedDirRep = if (fsMgr.isLocal(selectedDir)) selectedDir.absolutePath
-                           else selectedDir.toString
-      val selectedDirText = TextUtils.shortenPathTo(selectedDirRep, 50)
+      private val selectedDir = dirTabManager.selectedTab.dir
+      private val selectedDirRep = if (fsMgr.isLocal(selectedDir)) selectedDir.absolutePath
+                                   else selectedDir.toString
+      private val selectedDirText = TextUtils.shortenPathTo(selectedDirRep, 50)
 
       text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
       onAction = ae => bookmarkMgr.addBookmark(selectedDir)

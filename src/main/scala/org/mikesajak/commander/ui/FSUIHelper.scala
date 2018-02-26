@@ -7,7 +7,7 @@ object FSUIHelper {
     val basename = fs.attributes.get("usb").map(_ => "usb")
       .orElse(fs.attributes.get("removable").map(_ => "usb"))
       .getOrElse {
-        fs.attributes("type") match {
+        fs.attributes.get("type").orNull match {
           case "vfat" | "fat" | "fat16" | "fat32" | "fat64" | "exfat" => "usb"
           case "iso9660" => "disk"
           case "ext2" | "ext3" | "ext4" | "btrfs" | "reiserfs" | "zfs" | "xfs" | "jfs"

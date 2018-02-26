@@ -73,11 +73,22 @@ object Utils {
     sw.toString
   }
 
+  def merge[K, V](maps: Map[K, V]*)(f: (K, V, V) => V): Map[K, V] = {
+    maps.foldLeft(Map.empty[K, V]) { case (merged, m) =>
+      m.foldLeft(merged) { case (acc, (k, v)) =>
+        acc.get(k) match {
+          case Some(existing) => acc.updated(k, f(k, existing, v))
+          case None => acc.updated(k, v)
+        }
+      }
+    }
+  }
+
   implicit class MyRichBoolean(val b: Boolean) extends AnyVal {
     final def option[A](a: => A): Option[A] = if (b) Some(a) else None
   }
 
-  implicit def toRunnableConversion(f: () => Unit) = new Runnable() {
+  implicit def toRunnableConversion(f: () => Unit): Runnable = new Runnable() {
     override def run(): Unit = f()
   }
 }
