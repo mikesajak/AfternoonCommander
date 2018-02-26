@@ -1,5 +1,6 @@
 package org.mikesajak.commander.ui.controller
 
+import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
@@ -35,15 +36,27 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
     }
 
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifiyDate, $attributes)"
+
+  def canEqual(other: Any): Boolean = other.isInstanceOf[FileRow]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: FileRow =>
+      (that canEqual this) &&
+        path == that.path
+    case _ => false
+  }
+
+  override def hashCode(): Int = {
+    val state = Seq(path)
+    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
+  }
 }
 
 trait DirTableControllerIntf {
   def init(panelController: DirPanelControllerIntf, path: VDirectory)
   def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None)
-  def focusedRow: FileRow
-  def focusedPath: VPath = focusedRow.path
-  def selectedRows: Seq[FileRow]
-  def selectedPaths: Seq[VPath] = selectedRows.map(_.path)
+  def focusedPath: VPath
+  def selectedPaths: Seq[VPath]
   def reload(): Unit
   def select(fileName: String): Unit
 }
@@ -67,17 +80,29 @@ class DirTableController(curDirField: TextField,
 
   import org.mikesajak.commander.ui.UIParams._
 
+  private val logger = Logger[DirTableController]
+
   private var curDir: VDirectory = _
   private var panelController: DirPanelControllerIntf = _
 
-  override def focusedRow: FileRow = dirTableView.selectionModel.value.getSelectedItem
+  override def focusedPath: VPath = dirTableView.selectionModel.value.getSelectedItem.path
 
-  override def selectedRows: Seq[FileRow] = dirTableView.selectionModel.value.getSelectedItems.toList
+  override def selectedPaths = dirTableView.selectionModel.value.getSelectedItems.map(_.path)
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
     this.panelController = dirPanelController
 
+    statusLabel1.styleClass += "file_panel_status"
+    statusLabel2.styleClass += "file_panel_status"
+
+    dirTableView.selectionModel.value.selectionMode = SelectionMode.Multiple
+
     registerCurDirFieldUpdater()
+
+    dirTableView.selectionModel.value.selectedItems.onChange {
+      val selectedPaths = dirTableView.selectionModel.value.selectedItems.map(_.path)
+      updateSelectionBar(selectedPaths)
+    }
 
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
     idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
@@ -88,16 +113,24 @@ class DirTableController(curDirField: TextField,
         }
       }
     }
+
     nameColumn.cellValueFactory = { _.value.name }
     sizeColumn.cellValueFactory = { _.value.size }
     dateColumn.cellValueFactory = { _.value.modifiyDate }
     attribsColumn.cellValueFactory = { _.value.attributes }
-
     dirTableView.rowFactory = { tableView =>
       val row = new TableRow[FileRow]()
+
       row.handleEvent(MouseEvent.MouseClicked) { event: MouseEvent =>
-        if (!row.isEmpty && event.button == MouseButton.Primary && event.clickCount == 2) {
-          handleAction(row.item.value.path)
+        if (!row.isEmpty) {
+          val rowPath = row.item.value.path
+          event.button match {
+            case MouseButton.Primary if event.clickCount == 2 =>
+              handleAction(rowPath)
+            case MouseButton.Secondary =>
+            case MouseButton.Middle =>
+            case _ =>
+          }
         }
       }
       row
@@ -115,13 +148,20 @@ class DirTableController(curDirField: TextField,
     updateStatusBar(dir)
   }
 
-  private def updateStatusBar(directory: VDirectory): Unit = {
-    val numDirs = directory.childDirs.size
-    val childFiles = directory.childFiles
-    val totalSize = childFiles.map(_.size).sum
+  private def updateStatusBar(directory: VDirectory): Unit =
+    statusLabel1.text = prepareSummary(directory.childDirs, directory.childFiles)
+
+  private def updateSelectionBar(selectedPaths: Seq[VPath]): Unit = {
+    val (dirs, files) = selectedPaths.partition(_.isDirectory)
+    statusLabel2.text = prepareSummary(dirs.map(_.asInstanceOf[VDirectory]), files.map(_.asInstanceOf[VFile]))
+  }
+
+  private def prepareSummary(dirs: Seq[VDirectory], files: Seq[VFile]): String = {
+    val numDirs = dirs.size
+    val totalSize = files.map(_.size).sum
     val sizeUnit = UnitFormatter.findDataSizeUnit(totalSize)
-    statusLabel1.text = resourceMgr.getMessageWithArgs("file_table_panel.status.message",
-                                                       Array(numDirs, childFiles.size,
+    resourceMgr.getMessageWithArgs("file_table_panel.status.message",
+                                                       Array(numDirs, files.size,
                                                              sizeUnit.convert(totalSize),
                                                              sizeUnit.symbol))
   }
@@ -202,10 +242,6 @@ class DirTableController(curDirField: TextField,
 
     dirTableView.items = ObservableBuffer(fileRows)
 
-//    val fromDir = directory match {
-//      case p: PathToParent => Some(p.curDir)
-//      case _ => None
-//    }
     val fromDir = selection
 
     val selIndex = fromDir.map { prevDir =>
@@ -225,7 +261,6 @@ class DirTableController(curDirField: TextField,
   }
 
   private def registerCurDirFieldUpdater(): Unit = {
-
     var pending = false
     curDirField.text.onChange { (observable, oldVal, newVal) =>
       try {
