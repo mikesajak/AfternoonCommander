@@ -11,6 +11,7 @@ class FileTypeManager(archiveManager: ArchiveManager) {
   private var handlersMap = Map[FileType, FileHandler]()
 
   registerFileTypeDetector(new SimpleByExtensionFileDetector(List("jpg", "jpeg", "png", "gif"), GraphicFile))
+  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("avi", "mkv", "mov", "mpg", "mpv"), VideoFile))
   registerFileTypeDetector(new SimpleByExtensionFileDetector("txt", TextFile))
   registerFileTypeDetector(new SimpleByExtensionFileDetector("pdf", PdfFile))
 
@@ -59,9 +60,10 @@ sealed abstract class FileType(icon: Option[IconDef]) {
 case class IconDef(name: String, ext: String = "png", small: Boolean = true, medium: Boolean = true, big: Boolean = true)
 
 case object ExecutableFile extends FileType("open-in-app")
+case object SymbolicLinkFile extends FileType("link-variant")
 case object TextFile extends FileType("note-text")
-case object GraphicFile extends FileType("image")
-case object VideoFile extends FileType()
+case object GraphicFile extends FileType("file-image")
+case object VideoFile extends FileType("file-video")
 case object ArchiveFile extends FileType("archive")
 case object DirectoryType extends FileType("folder")
 case object ParentDirectoryType extends FileType("arrow-left-thick")
@@ -76,7 +78,7 @@ class DefaultFileTypeDetector extends FileTypeDetector {
   override def detect(path: VPath): Option[FileType] = path match {
     case d: PathToParent => Some(ParentDirectoryType)
     case d: VDirectory=> Some(DirectoryType)
-    case f: VFile if f.attribs contains 'x' => Some(ExecutableFile)
+//    case f: VFile if f.attribs contains 'x' => Some(ExecutableFile)
     case _ => None
   }
 }
