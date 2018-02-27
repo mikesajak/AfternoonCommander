@@ -52,8 +52,10 @@ class FilesystemsManager {
         .filter { case (rootDir, attribs) => new File(rootDir).exists }
         .map { case (rootDir, attribs) =>
           val rootDirFile = new File(rootDir)
-          val attribs2 = Map("label" ->  fsView.getSystemDisplayName(rootDirFile),
-                             "info" -> fsView.getSystemTypeDescription(rootDirFile))
+          val attribs2 = List(Option(fsView.getSystemDisplayName(rootDirFile)).map(l => "label" -> l),
+                              Option(fsView.getSystemTypeDescription(rootDirFile)).map(i => "info" -> i))
+                            .flatten
+                            .toMap
 
           val attribs3 = Utils.merge(attribs, attribs2) { case (k, v1, v2) => v1 }
           new LocalFS(rootDirFile, attribs3)
@@ -66,7 +68,7 @@ class FilesystemsManager {
   // TODO: find proper way to filter out unwanted filesystems (TODO2: what about windows??)
   private val internalFilesystems = List("cgroup.*".r, "systemd.*".r,
     "udev".r, "devpts".r, "proc".r, "(tmp|sys|security|config|debug|hugetlb|squash|auto|ns)fs".r,
-    "pstore".r, "mqueue".r)
+    "pstore".r, "mqueue".r, "fusectl".r)
 
   private def isInternalFs(fsType: String): Boolean =
     !internalFilesystems.exists(r => r.findFirstMatchIn(fsType).isDefined)

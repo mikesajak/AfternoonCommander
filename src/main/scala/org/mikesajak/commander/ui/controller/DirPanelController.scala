@@ -124,8 +124,9 @@ class DirPanelController(tabPane: TabPane,
 
         text = s"${fs.rootDirectory.absolutePath} " +
           List(fs.attributes.get("info"),
+               fs.attributes.get("drive"),
                fs.attributes.get("label"),
-               fs.attributes.get("type"))
+               fs.attributes.get("type").map(t => s"[$t]"))
             .flatten
             .reduce((a,b) => s"$a, $b") +
           s" [$freeSpace / $totalSpace]"

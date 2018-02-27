@@ -1,5 +1,6 @@
 .cur_dir_field {
   -fx-control-inner-background: orange;
+  -fx-font-size: 8pt;
 }
 
 .selected_file_row {
