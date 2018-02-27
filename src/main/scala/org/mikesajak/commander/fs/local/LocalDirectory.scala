@@ -1,6 +1,7 @@
 package org.mikesajak.commander.fs.local
 
 import java.io.File
+import java.nio.file.Files
 
 import org.mikesajak.commander.fs.VDirectory
 
@@ -19,17 +20,26 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
   override def childFiles: Seq[LocalFile] = {
     val files = file.listFiles()
     if (files != null)
-      files.filter(f => !f.isDirectory)
-        .map(f => new LocalFile(f, fileSystem))
+      files.filter(f => !f.isDirectory).map(resolveFile)
     else Seq()
+  }
+
+  private def resolveFile(file: File) = {
+    if (Files.isSymbolicLink(file.toPath)) new SymlinkFile(file, fileSystem)
+    else new LocalFile(file, fileSystem)
   }
 
   override def childDirs: Seq[LocalDirectory] ={
     val files = file.listFiles()
     if (files != null)
-      files.filter(f => f.isDirectory)
-          .map(d => new LocalDirectory(d, fileSystem))
+      files.filter(f => f.isDirectory).map(resolveDir)
     else Seq()
+  }
+
+
+  private def resolveDir(file: File) = {
+    if (Files.isSymbolicLink(file.toPath)) new SymlinkDir(file, fileSystem)
+    else new LocalDirectory(file, fileSystem)
   }
 
   override def mkChildDir(child: String): LocalDirectory = {
