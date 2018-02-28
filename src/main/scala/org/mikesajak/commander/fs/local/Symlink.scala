@@ -3,7 +3,7 @@ import java.io.File
 import java.nio.file.Files
 
 class SymlinkFile(file: File, fileSystem: LocalFS) extends LocalFile(file, fileSystem) {
-  if (!file.isDirectory)
+  if (file.isDirectory)
     throw new IllegalStateException(s"Cannot create SymlinkFile for directory target. file=$file")
 
   def target: LocalPath = {
