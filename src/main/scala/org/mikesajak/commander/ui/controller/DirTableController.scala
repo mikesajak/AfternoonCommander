@@ -7,14 +7,15 @@ import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.UnitFormatter
 
+import scala.collection.JavaConverters._
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
+import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyEvent, MouseButton, MouseEvent}
 import scalafxml.core.macros.sfxml
-
 /**
   * Created by mike on 14.04.17.
   */
@@ -85,9 +86,13 @@ class DirTableController(curDirField: TextField,
   private var curDir: VDirectory = _
   private var panelController: DirPanelControllerIntf = _
 
+  private val tableRows = ObservableBuffer[FileRow]()
+  private val filteredRows = new FilteredBuffer(tableRows)
+  private val sortedRows = new SortedBuffer(filteredRows)
+
   override def focusedPath: VPath = dirTableView.selectionModel.value.getSelectedItem.path
 
-  override def selectedPaths = dirTableView.selectionModel.value.getSelectedItems.map(_.path)
+  override def selectedPaths: ObservableBuffer[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path)
 
   override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
     this.panelController = dirPanelController
@@ -137,6 +142,11 @@ class DirTableController(curDirField: TextField,
     }
 
     dirTableView.handleEvent(KeyEvent.KeyTyped) { event: KeyEvent => handleKeyEvent(event) }
+
+    filteredRows.predicate = (row) =>
+      !row.path.attribs.contains('h') || config.boolProperty("file_panel", "show_hidden").getOrElse(false)
+
+    dirTableView.items = sortedRows
 
     setCurrentDirectory(path)
   }
@@ -240,7 +250,7 @@ class DirTableController(curDirField: TextField,
       .map(f => new FileRow(f, resourceMgr))
       .toList
 
-    dirTableView.items = ObservableBuffer(fileRows)
+    tableRows.setAll(fileRows.asJava)
 
     val fromDir = selection
 

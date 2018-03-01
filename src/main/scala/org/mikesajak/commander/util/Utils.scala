@@ -87,8 +87,4 @@ object Utils {
   implicit class MyRichBoolean(val b: Boolean) extends AnyVal {
     final def option[A](a: => A): Option[A] = if (b) Some(a) else None
   }
-
-  implicit def toRunnableConversion(f: () => Unit): Runnable = new Runnable() {
-    override def run(): Unit = f()
-  }
 }

@@ -12,7 +12,6 @@ import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.{FSUIHelper, ResourceManager, UILoader}
-import org.mikesajak.commander.util.Utils._
 import org.mikesajak.commander.util.{TextUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr}
 
@@ -271,7 +270,7 @@ class DirPanelController(tabPane: TabPane,
 
   val scheduler = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).build())
   private def startPeriodicTasks(panelId: PanelId): Unit = {
-    val task = { () =>
+    val task: Runnable = { () =>
 //      logger.debug(s"$panelId - reloading tab: ${dirTabManager.selectedTab.dir}")
 //      dirTabManager.selectedTab.controller.reload()
       updateFreeSpace()
