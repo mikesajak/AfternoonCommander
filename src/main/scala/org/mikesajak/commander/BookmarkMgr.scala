@@ -9,7 +9,7 @@ class BookmarkMgr(config: Configuration) {
   private var bookmarks0 = Seq[VDirectory]()
 
   def init(fsMgr: FilesystemsManager): Unit = {
-    val savedBookmarks = config.stringSeqProperty("general", "bookmarks")
+    val savedBookmarks = config.stringSeqProperty("general", "bookmarks").value
 
     logger.info(s"Read saved bookmarks: $savedBookmarks")
 
@@ -26,12 +26,13 @@ class BookmarkMgr(config: Configuration) {
       logger.info(s"Bookmark already exists, not adding. Directory=$dir")
     } else {
       bookmarks0 :+= dir
-      config.setStringSeqProperty("general", "bookmarks", bookmarks0.map(_.toString))
+      config.stringSeqProperty("general", "bookmarks") := bookmarks0.map(_.toString)
     }
   }
+
   def clear(): Unit = {
     logger.debug("Clearing all bookmarks")
     bookmarks0 = Seq()
-    config.setStringSeqProperty("general", "bookmarks", Seq())
+    config.stringSeqProperty("general", "bookmarks") := Seq()
   }
 }

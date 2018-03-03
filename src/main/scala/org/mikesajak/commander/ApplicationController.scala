@@ -28,8 +28,8 @@ class ApplicationController(config: Configuration) {
   def exitApplication(): Boolean = {
     if (canExit) {
       // TODO: save config, close connections, etc.
-      config.setProperty("window", "width", mainStage.width.toInt)
-      config.setProperty("window", "height", mainStage.height.toInt)
+      config.intProperty("window", "width") := mainStage.width.toInt
+      config.intProperty("window", "height") := mainStage.height.toInt
       config.save()
 
       Platform.exit()

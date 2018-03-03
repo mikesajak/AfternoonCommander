@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<ToolBar prefHeight="40.0" prefWidth="200.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.141" fx:controller="org.mikesajak.commander.ui.controller.ToolBarController">
+  <items>
+      <ToggleButton fx:id="showHiddenToggleButton" mnemonicParsing="false" onAction="#handleShowHiddenToggle">
+         <graphic>
+            <ImageView pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/visibility_off_black_24x24.png" />
+               </image>
+            </ImageView>
+         </graphic>
+         <tooltip>
+            <Tooltip text="%toolbar.show_hidden.tooltip" />
+         </tooltip>
+      </ToggleButton>
+  </items>
+</ToolBar>

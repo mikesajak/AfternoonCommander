@@ -86,9 +86,7 @@ class DirPanelController(tabPane: TabPane,
 
     val numTabs = config.intProperty("tabs", s"$panelId.numTabs").getOrElse(0)
 
-    val tabPathNames =
-      config.stringSeqProperty("tabs", s"$panelId.tabs")
-        .getOrElse(List(fsMgr.homePath))
+    val tabPathNames = config.stringSeqProperty("tabs", s"$panelId.tabs").getOrElse(List(fsMgr.homePath))
 
     val tabPaths = tabPathNames
       .flatMap(path => fsMgr.resolvePath(path))
@@ -320,4 +318,6 @@ class DirTab(panelController: DirPanelControllerIntf, tabPath: VDirectory) exten
   updateTab(this, tabPath)
 
   controller.init(panelController, tabPath)
+
+  this.onClosed = { _ => controller.dispose() }
 }

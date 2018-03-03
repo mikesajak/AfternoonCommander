@@ -1,11 +1,11 @@
 package org.mikesajak.commander.ui.controller
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.FileTypeManager
-import org.mikesajak.commander.config.Configuration
+import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.UnitFormatter
+import org.mikesajak.commander.{ApplicationController, FileTypeManager}
 
 import scala.collection.JavaConverters._
 import scalafx.Includes._
@@ -14,7 +14,8 @@ import scalafx.collections.ObservableBuffer
 import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
-import scalafx.scene.input.{KeyEvent, MouseButton, MouseEvent}
+import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
+import scalafx.stage.Popup
 import scalafxml.core.macros.sfxml
 /**
   * Created by mike on 14.04.17.
@@ -55,6 +56,7 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
 
 trait DirTableControllerIntf {
   def init(panelController: DirPanelControllerIntf, path: VDirectory)
+  def dispose()
   def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None)
   def focusedPath: VPath
   def selectedPaths: Seq[VPath]
@@ -76,7 +78,8 @@ class DirTableController(curDirField: TextField,
 
                          fileTypeMgr: FileTypeManager,
                          resourceMgr: ResourceManager,
-                         config: Configuration)
+                         config: Configuration,
+                         appController: ApplicationController)
     extends DirTableControllerIntf {
 
   import org.mikesajak.commander.ui.UIParams._
@@ -89,6 +92,20 @@ class DirTableController(curDirField: TextField,
   private val tableRows = ObservableBuffer[FileRow]()
   private val filteredRows = new FilteredBuffer(tableRows)
   private val sortedRows = new SortedBuffer(filteredRows)
+
+  private val showHiddenFilesPreditate = {
+    (row: FileRow) =>
+      !row.path.attribs.contains('h') || config.boolProperty("file_panel", "show_hidden").getOrElse(false)
+  }
+
+  private val showHiddenConfigObserver = new ConfigObserver {
+    override val observedKey = ConfigKey("file_panel", "show_hidden")
+    override def configChanged(key: ConfigKey): Unit = key match {
+      case ConfigKey("file_panel", "show_hidden") =>
+        filteredRows.predicate = showHiddenFilesPreditate
+      case _ => logger.info(s"Unexpected config change delivered to this observer: $key")
+    }
+  }
 
   override def focusedPath: VPath = dirTableView.selectionModel.value.getSelectedItem.path
 
@@ -141,14 +158,19 @@ class DirTableController(curDirField: TextField,
       row
     }
 
-    dirTableView.handleEvent(KeyEvent.KeyTyped) { event: KeyEvent => handleKeyEvent(event) }
+    dirTableView.handleEvent(KeyEvent.KeyPressed) { event: KeyEvent => handleKeyEvent(event) }
 
-    filteredRows.predicate = (row) =>
-      !row.path.attribs.contains('h') || config.boolProperty("file_panel", "show_hidden").getOrElse(false)
+    filteredRows.predicate = showHiddenFilesPreditate
 
     dirTableView.items = sortedRows
 
+    config.registerObserver(showHiddenConfigObserver)
+
     setCurrentDirectory(path)
+  }
+
+  override def dispose(): Unit = {
+    config.unregisterObserver(showHiddenConfigObserver)
   }
 
   override def setCurrentDirectory(dir: VDirectory, focusedPath: Option[VPath] = None): Unit = {
@@ -199,11 +221,18 @@ class DirTableController(curDirField: TextField,
   }
 
   private def handleKeyEvent(event: KeyEvent) {
-    if (event.character.contains("\n") || event.character.contains("\r")) {
-      val items = dirTableView.selectionModel.value.selectedItems
-      if (items.nonEmpty) {
-        handleAction(items.head.path)
-      }
+    println(s"handleKeyEvent: $event")
+    event.code match {
+      case KeyCode.Enter =>
+        val items = dirTableView.selectionModel.value.selectedItems
+        if (items.nonEmpty) {
+          handleAction(items.head.path)
+        }
+
+      case KeyCode.S if !event.altDown && event.controlDown =>
+        showFilterPopup()
+
+      case _ =>
     }
   }
 
@@ -235,10 +264,43 @@ class DirTableController(curDirField: TextField,
     panelController.updateCurTab(targetDir)
   }
 
+  private def showFilterPopup(): Unit = {
+    val tf = new TextField() {
+      prefWidth = dirTableView.width.value
+    }
+    val popup = new Popup() {
+      content += tf
+      autoHide = true
+      onHiding = e => filteredRows.predicate = showHiddenFilesPreditate
+    }
+    var pending = false
+    tf.handleEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
+      try {
+        if (!pending) {
+          pending = true
+          ke.code match {
+            case KeyCode.Escape =>
+              popup.hide()
+            case KeyCode.Up | KeyCode.Down | KeyCode.Enter =>
+              select(dirTableView.selectionModel.value.getSelectedItem.path.name)
+//              dirTableView.fireEvent(ke)
+              popup.hide()
+            case _ =>
+              filteredRows.predicate = row => {
+                showHiddenFilesPreditate(row) && row.path.name.toLowerCase.contains(tf.text.value.toLowerCase)
+              }
+          }
+        }
+      } finally {
+        pending = false
+      }
+    }
+    val bounds = dirTableView.localToScreen(dirTableView.boundsInLocal.value)
+    popup.show(appController.mainStage, bounds.minX, bounds.maxY)
+  }
+
   private def initTable(directory: VDirectory, selection: Option[VPath]) {
     val (dirs0, files0) = directory.children.partition(p => p.isDirectory)
-
-    val showHidden= config.boolProperty("filePanels", "showHiddenFiles").getOrElse(true)
 
     val dirs =
       (if (directory.parent.isDefined) Seq(new PathToParent(directory)) else Seq()) ++
@@ -246,7 +308,6 @@ class DirTableController(curDirField: TextField,
     val files = files0.sortBy(f => f.name)
 
     val fileRows = (dirs ++ files).view
-      .filter(f => showHidden || f.attribs.contains('h'))
       .map(f => new FileRow(f, resourceMgr))
       .toList
 

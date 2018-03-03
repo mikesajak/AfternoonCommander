@@ -9,33 +9,33 @@ class SimpleConfig extends Configuration {
   private val logger = Logger[SimpleConfig]
   private var settingsMap = Map[String, String]()
 
-  private def updateValue(category: String, name: String, value: String): Unit = {
-    val path = s"$category.$name"
-    settingsMap += name -> value
+  private def updateValue(key: ConfigKey, value: String): Unit = {
+    val path = key.toString
+    settingsMap += path -> value
 
-    notifyObservers(category, name)
+    notifyObservers(key)
   }
 
-  override def boolProperty(category: String, name: String): Option[Boolean] =
-    settingsMap.get(s"$category.$name").map(_.toBoolean)
-  override def setProperty(category: String, name: String, value: Boolean): Unit =
-    updateValue(category, name, value.toString)
+  override def getBoolProperty(key: ConfigKey): Option[Boolean] =
+    settingsMap.get(key.toString).map(_.toBoolean)
+  override def setBoolProperty(key: ConfigKey, value: Boolean): Unit =
+    updateValue(key, value.toString)
 
-  override def intProperty(category: String, name: String): Option[Int] =
-    settingsMap.get(s"$category.$name").map(_.toInt)
-  override def setProperty(category: String, name: String, value: Int): Unit =
-    updateValue(category, name, value.toString)
+  override def getIntProperty(key: ConfigKey): Option[Int] =
+    settingsMap.get(key.toString).map(_.toInt)
+  override def setIntProperty(key: ConfigKey, value: Int): Unit =
+    updateValue(key, value.toString)
 
-  override def stringProperty(category: String, name: String): Option[String] =
-    settingsMap.get(s"$category.$name")
-  override def setStringProperty(category: String, name: String, value: String): Unit =
-    updateValue(category, name, value)
+  override def getStringProperty(key: ConfigKey): Option[String] =
+    settingsMap.get(key.toString)
+  override def setStringProperty(key: ConfigKey, value: String): Unit =
+    updateValue(key, value)
 
-  override def stringSeqProperty(category: String, name: String): Option[Seq[String]] =
-//    settingsMap.get(s"$category.$name")
+  override def getStringSeqProperty(key: ConfigKey): Option[Seq[String]] =
+//    settingsMap.get(key.toString)
     throw new UnsupportedOperationException
 
-  override def setStringSeqProperty(category: String, name: String, value: Seq[String]): Unit =
+  override def setStringSeqProperty(key: ConfigKey, value: Seq[String]): Unit =
     throw new UnsupportedOperationException
 
   override def load(): Unit = {
