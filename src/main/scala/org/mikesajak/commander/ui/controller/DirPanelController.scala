@@ -12,7 +12,7 @@ import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.{FSUIHelper, ResourceManager, UILoader}
-import org.mikesajak.commander.util.{TextUtils, UnitFormatter}
+import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr}
 
 import scalafx.Includes._
@@ -104,6 +104,8 @@ class DirPanelController(tabPane: TabPane,
 
     val selectedPath = tabPaths.head
 
+    updateDriveSelection(selectedPath)
+
     tabPane.getSelectionModel.selectFirst()
 
     registerListeners(panelId)
@@ -128,7 +130,8 @@ class DirPanelController(tabPane: TabPane,
             .reduce((a,b) => s"$a, $b") +
           s" [$freeSpace / $totalSpace]"
         graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs, 24)))
-        onAction = ae => println("Selection of FS not implemented!")
+
+        onAction = ae => setCurrentTabDir(fs.rootDirectory)
       })
 
     val ctxMenu = new ContextMenu(fsItems: _*)
@@ -140,7 +143,7 @@ class DirPanelController(tabPane: TabPane,
       private val selectedDir = dirTabManager.selectedTab.dir
       private val selectedDirRep = if (fsMgr.isLocal(selectedDir)) selectedDir.absolutePath
                                    else selectedDir.toString
-      private val selectedDirText = TextUtils.shortenPathTo(selectedDirRep, 50)
+      private val selectedDirText = PathUtils.shortenPathTo(selectedDirRep, 50)
 
       text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
       onAction = ae => bookmarkMgr.addBookmark(selectedDir)
@@ -255,6 +258,16 @@ class DirPanelController(tabPane: TabPane,
 
     dirTabManager.tab(selectionModel.getSelectedIndex).dir = path
     DirTab.updateTab(curTab, path)
+
+    updateDriveSelection(path)
+  }
+
+  private def updateDriveSelection(dir: VDirectory): Unit = {
+    val matchingFss = fsMgr.discoverFilesystems().filter(fs => PathUtils.findParent(dir, fs.rootDirectory).isDefined)
+    val fs =
+      (matchingFss foldLeft dir.fileSystem)((a,b) => if (a.rootDirectory.segments.size > b.rootDirectory.segments.size) a else b)
+    driveSelectionButton.text = s"${fs.rootDirectory.absolutePath}"
+    driveSelectionButton.graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs, 24)))
   }
 
   private def createNewTabTab() = {

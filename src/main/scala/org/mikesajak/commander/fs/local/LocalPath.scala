@@ -39,4 +39,19 @@ trait LocalPath extends VPath {
   }
 
   override def toString: String = s"${LocalFS.id}://$absolutePath"
+
+  def canEqual(other: Any): Boolean //= other.isInstanceOf[LocalPath]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: LocalPath =>
+      (that canEqual this) &&
+        file == that.file
+    case _ => false
+  }
+
+  override def hashCode(): Int = {
+    val state = Seq(file)
+    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
+  }
+
 }

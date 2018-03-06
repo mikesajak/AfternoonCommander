@@ -1,7 +1,5 @@
 package org.mikesajak.commander.ui.controller
 
-import javafx.scene.{control => jfxctrl}
-
 import org.mikesajak.commander.config.Configuration
 
 import scalafx.event.ActionEvent

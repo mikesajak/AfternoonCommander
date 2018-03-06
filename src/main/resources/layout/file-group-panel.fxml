@@ -7,7 +7,7 @@
    <children>
       <HBox alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308">
          <children>
-            <Button fx:id="driveSelectionButton" mnemonicParsing="false" onAction="#handleDriveSelectionButton" text="Button" />
+            <Button fx:id="driveSelectionButton" mnemonicParsing="false" onAction="#handleDriveSelectionButton" text="Button" textOverrun="LEADING_ELLIPSIS" />
             <Pane maxHeight="0.0" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="20.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
             <Label fx:id="freeSpaceLabel" alignment="BASELINE_RIGHT" text="1234 MB" HBox.hgrow="ALWAYS" />
             <Button fx:id="favDirsButton" alignment="CENTER" contentDisplay="CENTER" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleFavDirsButton" textOverrun="CLIP">

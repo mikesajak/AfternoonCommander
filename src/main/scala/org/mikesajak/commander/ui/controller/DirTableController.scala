@@ -1,5 +1,6 @@
 package org.mikesajak.commander.ui.controller
 
+import com.google.common.io.Files
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
@@ -22,12 +23,13 @@ import scalafxml.core.macros.sfxml
   */
 class FileRow(val path: VPath, resourceMgr: ResourceManager) {
   val name = new StringProperty(mkName(path))
-  val extension = new StringProperty("")
+  val extension = new StringProperty(mkExt(path))
   val size = new StringProperty(formatSize(path))
   val modifiyDate = new StringProperty(path.modificationDate.toString)
   val attributes = new StringProperty(path.attribs)
 
-  def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else p.name
+  private def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else Files.getNameWithoutExtension(p.name)
+  private def mkExt(p: VPath): String = if (p.isDirectory) "" else Files.getFileExtension(p.name)
 
   def formatSize(vFile: VPath): String =
     path match {
@@ -69,7 +71,7 @@ class DirTableController(curDirField: TextField,
                          dirTableView: TableView[FileRow],
                          idColumn: TableColumn[FileRow, VPath],
                          nameColumn: TableColumn[FileRow, String],
-                         extensionColumn: TableColumn[FileRow, String],
+                         extColumn: TableColumn[FileRow, String],
                          sizeColumn: TableColumn[FileRow, String],
                          dateColumn: TableColumn[FileRow, String],
                          attribsColumn: TableColumn[FileRow, String],
@@ -137,6 +139,7 @@ class DirTableController(curDirField: TextField,
     }
 
     nameColumn.cellValueFactory = { _.value.name }
+    extColumn.cellValueFactory = { _.value.extension }
     sizeColumn.cellValueFactory = { _.value.size }
     dateColumn.cellValueFactory = { _.value.modifiyDate }
     attribsColumn.cellValueFactory = { _.value.attributes }

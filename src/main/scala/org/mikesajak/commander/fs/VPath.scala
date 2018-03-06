@@ -3,11 +3,14 @@ package org.mikesajak.commander.fs
 import java.io.{InputStream, OutputStream}
 import java.time.Instant
 
+import org.mikesajak.commander.util.PathUtils
+
 trait VPath {
   def name: String
   def parent: Option[VDirectory]
   def directory: VDirectory
   def absolutePath: String
+  def segments: Seq[String] = PathUtils.collectParents(this)
   def modificationDate: Instant
   def attribs: String
   def isDirectory: Boolean

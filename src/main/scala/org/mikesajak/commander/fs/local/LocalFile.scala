@@ -12,4 +12,6 @@ class LocalFile(override val file: File, override val fileSystem: LocalFS) exten
   override def inStream = new BufferedInputStream(new FileInputStream(file))
 
   override def outStream = new BufferedOutputStream(new FileOutputStream(file))
+
+  override def canEqual(other: Any): Boolean = other.isInstanceOf[LocalFile]
 }
