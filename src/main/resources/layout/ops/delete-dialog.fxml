@@ -20,14 +20,13 @@
             <Insets left="14.0" right="14.0" />
          </padding>
       </HBox>
-      <VBox fx:id="statsPanel" spacing="5.0" VBox.vgrow="ALWAYS">
-         <children>
-            <fx:include fx:id="dirStatsPanel" source="dir-stats-panel.fxml" />
-            <fx:include fx:id="fileStatsPanel" source="file-stats-panel.fxml" />
-         </children>
+      <VBox spacing="5.0" VBox.vgrow="ALWAYS">
          <padding>
             <Insets left="15.0" top="10.0" />
          </padding>
+         <children>
+            <fx:include fx:id="statsPanel" source="stats-panel.fxml" />
+         </children>
       </VBox>
       <Label fx:id="statsMessageLabel" text="Directory statistics:" />
       <Label fx:id="summaryMessageLabel" text="Progress is not available until directory statistics counting is finished">

@@ -20,11 +20,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
                                 pathToTargetLabel: Label,
                                 targetNameLabel: Label,
                                 statsPanel: Pane,
-                                dirStatsPanel: Pane,
-                                @nested[DirStatsPanelControllerImpl] dirStatsPanelController: DirStatsPanelController,
-
-                                fileStatsPanel: Pane,
-                                @nested[FileStatsPanelControllerImpl] fileStatsPanelController: FileStatsPanelController,
+                                @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
 
                                 statsMessageLabel: Label,
                                 summaryMessageLabel: Label,
@@ -59,24 +55,25 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     // create bindings - to resize parent layout on disable/hide
     statsPanel.managed <== statsPanel.visible
-    dirStatsPanel.managed <== dirStatsPanel.visible
-    fileStatsPanel.managed <== fileStatsPanel.visible
     statsMessageLabel.managed <== statsMessageLabel.visible
 
     if (pathType == SingleFile) {
-      dirStatsPanel.visible = false
       statsMessageLabel.visible = false
-      fileStatsPanel.visible = true
-      fileStatsPanelController.init(targetPaths.head)
     } else {
-      dirStatsPanel.visible = true
-      fileStatsPanel.visible = false
       statsMessageLabel.visible = false
-      dirStatsPanelController.init(targetPaths, Some(stats))
       summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
       summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline-24.png"))
       summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_not_available.tooltip")
     }
+
+    statsPanel.height.onChange { (_, oldVal, newVal) =>
+      if (newVal.doubleValue > oldVal.doubleValue) dialog.dialogPane.value.getScene.getWindow.sizeToScene()
+    }
+    statsPanel.width.onChange { (_, oldVal, newVal) =>
+      if (newVal.doubleValue > oldVal.doubleValue) dialog.dialogPane.value.getScene.getWindow.sizeToScene()
+    }
+
+    statsPanelController.init(targetPaths)
   }
 
   private def pathTypeOf(targetPaths: Seq[VPath]): PathType =
@@ -93,7 +90,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
   }
 
   override def updateStats(stats: DirStats, message: Option[String]): Unit = {
-    dirStatsPanelController.updateStats(stats)
+    statsPanelController.updateStats(stats)
   }
 
   override def updateMessage(message: String): Unit = {
@@ -101,7 +98,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
   }
 
   override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
-    dirStatsPanelController.updateStats(stats)
+    statsPanelController.updateStats(stats)
     Platform.runLater {
       summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_available.label")
       summaryMessageLabel.graphic = null
@@ -110,7 +107,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
   }
 
   override def notifyError(stats: Option[DirStats], message: String): Unit = {
-    stats.foreach(st => dirStatsPanelController.updateStats(st))
+    stats.foreach(st => statsPanelController.updateStats(st))
     Platform.runLater {
       summaryMessageLabel.text = message
       summaryMessageLabel.tooltip = "An error occurred while processing IO operation."

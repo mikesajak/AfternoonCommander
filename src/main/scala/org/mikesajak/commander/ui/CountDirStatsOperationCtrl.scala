@@ -1,5 +1,7 @@
 package org.mikesajak.commander.ui
 
+import javafx.scene.control.Button
+
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
@@ -56,8 +58,13 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr,
     contentCtrl.init(selectedDirs, dialog, showClose = true, showCancel = true, showSkip = false)
     contentCtrl.updateButtons(enableClose = false, enableCancel = true, enableSkip = false)
 
-    val progressMonitor = new CountStatsProgressMonitor(contentCtrl)
-    val dirStatsResult = taskMgr.runTaskAsync(new DirStatsTask(selectedDirs), progressMonitor)
+    val statsTask = new DirStatsTask(selectedDirs)
+
+    dialog.dialogPane.value.lookupButton(ButtonType.Cancel).asInstanceOf[Button]
+      .onAction = _ => statsTask.cancel()
+    dialog.onCloseRequest = _ => statsTask.cancel()
+
+    val dirStatsResult = taskMgr.runTaskAsync(statsTask, new CountStatsProgressMonitor(contentCtrl))
 
     if (autoClose)
       dirStatsResult.foreach(stats => Platform.runLater { dialog.result = ButtonType.OK })

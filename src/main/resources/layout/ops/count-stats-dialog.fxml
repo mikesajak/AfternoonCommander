@@ -20,7 +20,7 @@
           </font>
         </Label>
             <Label fx:id="dirLabel" text="/path/to/target/directory" textOverrun="LEADING_ELLIPSIS" />
-            <fx:include fx:id="dirStatsPanel" source="dir-stats-panel.fxml" />
+            <fx:include fx:id="statsPanel" source="stats-panel.fxml" />
             <Label fx:id="messageLabel" text="Message" textOverrun="LEADING_ELLIPSIS" />
       </children>
     </VBox>

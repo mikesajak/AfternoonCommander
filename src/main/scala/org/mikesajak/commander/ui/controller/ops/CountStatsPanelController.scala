@@ -26,9 +26,8 @@ trait CountStatsPanelController extends StatsUpdateListener {
 @sfxml
 class CountStatsPanelControllerImpl(headerImageView: ImageView,
                                     dirLabel: Label,
-                                    dirStatsPanel: Pane,
-                                    @nested[DirStatsPanelControllerImpl] dirStatsPanelController: DirStatsPanelController,
-
+                                    statsPanel: Pane,
+                                    @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
                                     messageLabel: Label,
 
                                     resourceMgr: ResourceManager)
@@ -44,7 +43,13 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
                     else s"${paths.size} paths"
     dirLabel.graphic = new ImageView(resourceMgr.getIcon("folder-24.png"))
 
-    dirStatsPanelController.init(paths, None)
+    statsPanel.height.onChange { (_, oldVal, newVal) =>
+      if (newVal.doubleValue > oldVal.doubleValue) dialog.dialogPane.value.getScene.getWindow.sizeToScene()
+    }
+    statsPanel.width.onChange { (_, oldVal, newVal) =>
+      if (newVal.doubleValue > oldVal.doubleValue) dialog.dialogPane.value.getScene.getWindow.sizeToScene()
+    }
+    statsPanelController.init(paths)
 
     dialog.dialogPane().buttonTypes =
       List(showClose.option(ButtonType.Close),
@@ -52,11 +57,12 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
            showSkip.option(ButtonType.Next)).flatten
   }
 
-  override def updateStats(stats: DirStats, message: Option[String]): Unit =
+  override def updateStats(stats: DirStats, message: Option[String]): Unit = {
     Platform.runLater {
-      dirStatsPanelController.updateStats(stats)
+      statsPanelController.updateStats(stats)
       message.foreach(msg => messageLabel.text = msg)
     }
+  }
 
   override def updateMessage(message: String): Unit =
     Platform.runLater {
