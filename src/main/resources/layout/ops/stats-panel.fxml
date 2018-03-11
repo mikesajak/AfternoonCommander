@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane hgap="8.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.StatsPanelControllerImpl">
+  <columnConstraints>
+    <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="10.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="10.0" />
+  </columnConstraints>
+  <rowConstraints>
+      <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="ALWAYS" />
+    <RowConstraints fx:id="modifiedGridRow" maxHeight="-Infinity" minHeight="0.0" vgrow="ALWAYS" />
+    <RowConstraints fx:id="attribsGridRow" maxHeight="-Infinity" minHeight="0.0" vgrow="ALWAYS" />
+    <RowConstraints fx:id="sizeGridRow" maxHeight="-Infinity" minHeight="0.0" vgrow="ALWAYS" />
+      <RowConstraints fx:id="dirsGridRow" maxHeight="-Infinity" minHeight="10.0" valignment="BOTTOM" vgrow="ALWAYS" />
+      <RowConstraints fx:id="filesGridRow" maxHeight="16.0" minHeight="0.0" prefHeight="16.0" vgrow="ALWAYS" />
+      <RowConstraints maxHeight="16.0" minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
+  </rowConstraints>
+   <children>
+      <Label fx:id="modifiedLabel" text="%stats_panel.modified.label" GridPane.rowIndex="1" />
+      <Label fx:id="attribsLabel" text="%stats_panel.attributes.label" GridPane.rowIndex="2" />
+      <Label fx:id="sizeLabel" text="%stats_panel.size.label" GridPane.rowIndex="3" />
+      <Label fx:id="directoriesLabel" text="%stats_panel.directories.label" GridPane.rowIndex="5" />
+      <Label fx:id="filesLabel" text="%stats_panel.files.label" GridPane.rowIndex="6" />
+      <Label fx:id="modifiedValueLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <Label fx:id="attribsValueLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <Label fx:id="sizeValueLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+      <Label fx:id="directoriesValueLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+      <Label fx:id="filesValueLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+   </children>
+</GridPane>
