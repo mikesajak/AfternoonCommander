@@ -43,6 +43,6 @@ class ArchiveManager extends FileTypeDetector {
           r
         case _ => None
       }
-    archiveType.map(_ => ArchiveFile)
+    archiveType.map(_ => FileType.ArchiveFile)
   }
 }

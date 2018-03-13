@@ -5,6 +5,7 @@ import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
+import org.mikesajak.commander.util.TextUtil._
 import org.mikesajak.commander.util.UnitFormatter
 import org.mikesajak.commander.{ApplicationController, FileTypeManager}
 
@@ -139,6 +140,24 @@ class DirTableController(curDirField: TextField,
     }
 
     nameColumn.cellValueFactory = { _.value.name }
+//    val nameColumnOldCellFactory = nameColumn.cellFactory.value
+    nameColumn.cellFactory = { tc: TableColumn[FileRow, String] =>
+      new TableCell[FileRow, String] {
+        item.onChange { (_, _, newValue) =>
+          text = newValue
+          val fileRow = tableRow.value.item.value.asInstanceOf[FileRow]
+          if (fileRow != null) {
+            val fileType = fileTypeMgr.detectFileType(fileRow.path)
+            val fileTypeName = resourceMgr.getMessage(s"file_type_manager.${camelToSnake(fileType.toString)}")
+            tooltip = new Tooltip() {
+              text  = resourceMgr.getMessageWithArgs("file_table_panel.row_tooltip",
+                List(fileRow.path.absolutePath, fileRow.modifiyDate.value,
+                  fileRow.attributes.value, fileRow.size.value, fileTypeName))
+            }
+          }
+        }
+      }
+    }
     extColumn.cellValueFactory = { _.value.extension }
     sizeColumn.cellValueFactory = { _.value.size }
     dateColumn.cellValueFactory = { _.value.modifiyDate }
