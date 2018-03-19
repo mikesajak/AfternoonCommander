@@ -140,7 +140,6 @@ class DirTableController(curDirField: TextField,
     }
 
     nameColumn.cellValueFactory = { _.value.name }
-//    val nameColumnOldCellFactory = nameColumn.cellFactory.value
     nameColumn.cellFactory = { tc: TableColumn[FileRow, String] =>
       new TableCell[FileRow, String] {
         item.onChange { (_, _, newValue) =>

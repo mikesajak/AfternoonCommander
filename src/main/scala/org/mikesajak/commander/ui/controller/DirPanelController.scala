@@ -13,7 +13,7 @@ import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.{FSUIHelper, ResourceManager, UILoader}
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
-import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr}
+import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr, HistoryMgr}
 
 import scalafx.Includes._
 import scalafx.application.Platform
@@ -46,6 +46,7 @@ trait DirPanelControllerIntf {
 class DirPanelController(tabPane: TabPane,
                          favDirsButton: Button,
                          prevDirButton: Button,
+                         parentDirButton: Button,
                          topDirButton: Button,
                          homeDirButton: Button,
                          driveSelectionButton: Button,
@@ -56,12 +57,15 @@ class DirPanelController(tabPane: TabPane,
                          fsMgr: FilesystemsManager,
                          statusMgr: StatusMgr,
                          bookmarkMgr: BookmarkMgr,
+                         globalHistoryMgr: HistoryMgr,
                          resourceMgr: ResourceManager,
                          appController: ApplicationController)
     extends DirPanelControllerIntf {
 
   private val logger = Logger[DirPanelController]
   private var dirTabManager: DirTabManager = _
+
+  private val localHistoryMgr = new HistoryMgr
 
   def init(panelId: PanelId) {
     // TODO: better way of getting dependency - use injection!!
@@ -111,6 +115,8 @@ class DirPanelController(tabPane: TabPane,
     registerListeners(panelId)
 
     startPeriodicTasks(panelId)
+
+    prevDirButton.disable = true
   }
 
   def handleDriveSelectionButton(): Unit = {
@@ -148,7 +154,7 @@ class DirPanelController(tabPane: TabPane,
       text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
       onAction = ae => bookmarkMgr.addBookmark(selectedDir)
     }
-    val bookmarks = bookmarkMgr.bookmarks.map(b => new MenuItem() {
+    val bookmarks = bookmarkMgr.bookmarks.map(b => new MenuItem {
       text = b.toString
       onAction = ae => {
         val maybePath = fsMgr.resolvePath(b.toString).map(_.directory)
@@ -158,11 +164,50 @@ class DirPanelController(tabPane: TabPane,
           logger.warn(s"Bookmark path is cannot be found/resolved. Skipping. $b")
       }
     })
+    val bookmarksTitleItem = new MenuItem {
+      text = resourceMgr.getMessage("file_group_panel.bookmarks_menu.title")
+      disable = true
+    }
+
+    val localHistoryTitleItem = new MenuItem {
+      text = resourceMgr.getMessage("file_group_panel.local_history_menu.title")
+      disable = true
+    }
+    val localHistoryItems = localHistoryMgr.getAll.take(5).map (item => new MenuItem {
+      text = item.toString
+      disable = true
+    })
+
+    val globalHistoryTitleItem = new MenuItem {
+      text = resourceMgr.getMessage("file_group_panel.global_history_menu.title")
+      disable = true
+    }
+    val globalHistoryItems = globalHistoryMgr.getAll
+      .filter(i => !localHistoryMgr.getAll.contains(i))
+      .take(5)
+      .map(i => new MenuItem {
+        text = i.toString
+        disable = true
+      })
+
     val ctxMenu = new ContextMenu() {
+      items.add(bookmarksTitleItem)
       items.add(addBookmarkItem)
       if (bookmarks.nonEmpty) {
         items.add(new SeparatorMenuItem())
         bookmarks.foreach(b => items.add(b))
+      }
+
+      if (localHistoryItems.nonEmpty) {
+        items.add(new SeparatorMenuItem())
+        items.add(localHistoryTitleItem)
+        localHistoryItems.foreach(i => items.add(i))
+      }
+
+      if (globalHistoryItems.nonEmpty) {
+        items.add(new SeparatorMenuItem())
+        items.add(globalHistoryTitleItem)
+        globalHistoryItems.foreach(i => items.add(i))
       }
     }
 
@@ -170,6 +215,10 @@ class DirPanelController(tabPane: TabPane,
   }
 
   def handlePrevDirButton(): Unit = {
+    logger.warn("Prev dir button action not yet implemented")
+  }
+
+  def handleParentDirButton(): Unit = {
     dirTabManager.selectedTab.dir.parent
       .foreach(dir => setCurrentTabDir(dir))
   }
@@ -260,6 +309,9 @@ class DirPanelController(tabPane: TabPane,
     DirTab.updateTab(curTab, path)
 
     updateDriveSelection(path)
+
+    localHistoryMgr.add(path)
+    globalHistoryMgr.add(path)
   }
 
   private def updateDriveSelection(dir: VDirectory): Unit = {

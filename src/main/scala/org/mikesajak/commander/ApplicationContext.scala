@@ -93,6 +93,10 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     bookmarkMgr.init(filesystemsManager)
     bookmarkMgr
   }
+
+  @Provides
+  @Singleton
+  def provideHistoryMgr() = new HistoryMgr
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {

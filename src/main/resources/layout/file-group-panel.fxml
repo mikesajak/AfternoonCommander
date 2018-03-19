@@ -10,19 +10,19 @@
             <Button fx:id="driveSelectionButton" mnemonicParsing="false" onAction="#handleDriveSelectionButton" text="Button" textOverrun="LEADING_ELLIPSIS" />
             <Pane maxHeight="0.0" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="20.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
             <Label fx:id="freeSpaceLabel" alignment="BASELINE_RIGHT" text="1234 MB" HBox.hgrow="ALWAYS" />
-            <Button fx:id="favDirsButton" alignment="CENTER" contentDisplay="CENTER" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleFavDirsButton" textOverrun="CLIP">
-              <graphic>
-                <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+            <Button fx:id="favDirsButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" layoutX="184.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleFavDirsButton">
+               <graphic>
+                  <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../images/bookmark-outline-24.png" />
                      </image>
                   </ImageView>
-              </graphic>
+               </graphic>
                <tooltip>
-                  <Tooltip text="%file_group_panel.favorites.tooltip" />
+                  <Tooltip text="%file_group_panel.prev_dir.tooltip" />
                </tooltip>
             </Button>
-            <Button fx:id="prevDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handlePrevDirButton">
+            <Button fx:id="prevDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handlePrevDirButton">
               <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                    <image>
@@ -31,14 +31,26 @@
                 </ImageView>
               </graphic>
                <tooltip>
+                  <Tooltip text="%file_group_panel.prev_dir.tooltip" />
+               </tooltip>
+            </Button>
+            <Button fx:id="parentDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleParentDirButton">
+               <graphic>
+                  <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/arrow-up-24.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <tooltip>
                   <Tooltip text="%file_group_panel.parent_dir.tooltip" />
                </tooltip>
             </Button>
-            <Button fx:id="topDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleTopDirButton">
+            <Button fx:id="topDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleTopDirButton">
               <graphic>
                 <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                    <image>
-                      <Image url="@../images/arrow-up-24.png" />
+                      <Image url="@../images/icons8-double-up-24.png" />
                    </image>
                 </ImageView>
               </graphic>
@@ -46,7 +58,7 @@
                   <Tooltip text="%file_group_panel.top_dir.tooltip" />
                </tooltip>
             </Button>
-            <Button fx:id="homeDirButton" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleHomeDirButton">
+            <Button fx:id="homeDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleHomeDirButton">
                <graphic>
                   <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
                      <image>

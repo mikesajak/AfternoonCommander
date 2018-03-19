@@ -11,7 +11,7 @@
          <graphic>
             <ImageView pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../images/visibility_off_black_24x24.png" />
+                  <Image url="@../images/icons8-hide-24.png" />
                </image>
             </ImageView>
          </graphic>
