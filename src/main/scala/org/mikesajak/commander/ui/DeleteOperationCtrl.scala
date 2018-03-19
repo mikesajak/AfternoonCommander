@@ -55,9 +55,9 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
       case Failure(exception) =>
         logger.info(s"Error during deleting $targetPath:\n", exception)
         UIUtils.prepareExceptionAlert(appController.mainStage,
-                                      "Delete error",
-                                      s"An error occurred during delete operation",
-                                      s"$targetPath could not be deleted, because of an error: $exception.",
+                                      "Delete error", // TODO: i18
+                                      s"An error occurred during delete operation", // TODO: i18
+                                      s"$targetPath could not be deleted, because of an error: $exception.", // TODO: i18
                                       exception)
           .showAndWait()
     }
@@ -70,15 +70,15 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
     val (pathType, pathName) =
       paths match {
-        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", "${p.head")
-        case p if p.size == 1 => ("file", "${p.head")
-        case p @ _ => (s"paths", s"{$p.size} elements")
+        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", "${p.head}") // TODO: i18
+        case p if p.size == 1 => ("file", "${p.head") // TODO: i18
+        case p @ _ => (s"paths", s"${p.size} elements") // TODO: i18
       }
 
     val deleteTask = new RecursiveDeleteTask(paths, stats)
 
-    ctrl.init(s"Delete", s"Delete selected $pathType\n$pathName",
-              s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle-48.png"),
+    ctrl.init(s"Delete", s"Delete selected $pathType\n$pathName", // TODO: i18
+              s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle-48.png"), // TODO: i18
               progressDialog, deleteTask)
 
     taskManager.runTaskAsync(deleteTask, new ProgressMonitorWithGUIPanel(ctrl))
