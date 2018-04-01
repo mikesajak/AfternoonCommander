@@ -36,7 +36,7 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
   }
 
   override def create(path: VPath): Try[Boolean] = Try {
-    val f = new jio.File(path.name)
+    val f = new jio.File(path.absolutePath)
     if (f.isDirectory) f.mkdirs()
     else f.createNewFile()
   }
