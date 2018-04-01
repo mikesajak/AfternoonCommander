@@ -8,7 +8,7 @@ import com.google.inject.Key
 import com.google.inject.name.Names
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory}
+import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.{FSUIHelper, ResourceManager, UILoader}
@@ -124,9 +124,6 @@ class DirPanelController(tabPane: TabPane,
 
     val fsItems =
       fsMgr.discoverFilesystems().map(fs => new MenuItem() {
-        private val freeSpace = UnitFormatter.mkDataSize(fs.freeSpace)
-        private val totalSpace = UnitFormatter.mkDataSize(fs.totalSpace)
-
         text = s"${fs.rootDirectory.absolutePath} " +
           List(fs.attributes.get("info"),
                fs.attributes.get("drive"),
@@ -134,7 +131,7 @@ class DirPanelController(tabPane: TabPane,
                fs.attributes.get("type").map(t => s"[$t]"))
             .flatten
             .reduce((a,b) => s"$a, $b") +
-          s" [$freeSpace / $totalSpace]"
+          s" [${UnitFormatter.mkDataSize(fs.freeSpace)} / ${UnitFormatter.mkDataSize(fs.totalSpace)}]"
         graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs, 24)))
 
         onAction = ae => setCurrentTabDir(fs.rootDirectory)
@@ -145,54 +142,43 @@ class DirPanelController(tabPane: TabPane,
   }
 
   def handleFavDirsButton(): Unit = {
-    val addBookmarkItem = new MenuItem() {
-      private val selectedDir = dirTabManager.selectedTab.dir
-      private val selectedDirRep = if (fsMgr.isLocal(selectedDir)) selectedDir.absolutePath
-                                   else selectedDir.toString
-      private val selectedDirText = PathUtils.shortenPathTo(selectedDirRep, 50)
 
-      text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
-      onAction = ae => bookmarkMgr.addBookmark(selectedDir)
-    }
-    val bookmarks = bookmarkMgr.bookmarks.map(b => new MenuItem {
-      text = b.toString
-      onAction = ae => {
-        val maybePath = fsMgr.resolvePath(b.toString).map(_.directory)
-        maybePath.foreach(dir => setCurrentTabDir(dir))
-
-        if (maybePath.isEmpty)
-          logger.warn(s"Bookmark path is cannot be found/resolved. Skipping. $b")
+    def titleMenuItem(messageKey: String): MenuItem =
+      new MenuItem {
+        text = resourceMgr.getMessage(messageKey)
+        disable = true
       }
-    })
-    val bookmarksTitleItem = new MenuItem {
-      text = resourceMgr.getMessage("file_group_panel.bookmarks_menu.title")
-      disable = true
+
+    def mkBookmarkMenuItem(): MenuItem = {
+      val selectedDir = dirTabManager.selectedTab.dir
+      val selectedDirRep = if (fsMgr.isLocal(selectedDir)) selectedDir.absolutePath
+      else selectedDir.toString
+      val selectedDirText = PathUtils.shortenPathTo(selectedDirRep, 50)
+      new MenuItem() {
+        text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
+        onAction = ae => bookmarkMgr.addBookmark(selectedDir)
+      }
     }
 
-    val localHistoryTitleItem = new MenuItem {
-      text = resourceMgr.getMessage("file_group_panel.local_history_menu.title")
-      disable = true
+    def mkPathMenuItem(path: VPath): MenuItem = new MenuItem {
+      text = path.toString
+      onAction = ae => setCurrentTabDir(path.directory)
     }
-    val localHistoryItems = localHistoryMgr.getAll.take(5).map (item => new MenuItem {
-      text = item.toString
-      disable = true
-    })
 
-    val globalHistoryTitleItem = new MenuItem {
-      text = resourceMgr.getMessage("file_group_panel.global_history_menu.title")
-      disable = true
-    }
+    val bookmarks = bookmarkMgr.bookmarks.map(mkPathMenuItem)
+
+    val localHistoryItems = localHistoryMgr.getAll
+      .take(5)
+      .map(mkPathMenuItem)
+
     val globalHistoryItems = globalHistoryMgr.getAll
       .filter(i => !localHistoryMgr.getAll.contains(i))
       .take(5)
-      .map(i => new MenuItem {
-        text = i.toString
-        disable = true
-      })
+      .map(mkPathMenuItem)
 
     val ctxMenu = new ContextMenu() {
-      items.add(bookmarksTitleItem)
-      items.add(addBookmarkItem)
+      items.add(titleMenuItem("file_group_panel.bookmarks_menu.title"))
+      items.add(mkBookmarkMenuItem())
       if (bookmarks.nonEmpty) {
         items.add(new SeparatorMenuItem())
         bookmarks.foreach(b => items.add(b))
@@ -200,13 +186,13 @@ class DirPanelController(tabPane: TabPane,
 
       if (localHistoryItems.nonEmpty) {
         items.add(new SeparatorMenuItem())
-        items.add(localHistoryTitleItem)
+        items.add(titleMenuItem("file_group_panel.local_history_menu.title"))
         localHistoryItems.foreach(i => items.add(i))
       }
 
       if (globalHistoryItems.nonEmpty) {
         items.add(new SeparatorMenuItem())
-        items.add(globalHistoryTitleItem)
+        items.add(titleMenuItem("file_group_panel.global_history_menu.title"))
         globalHistoryItems.foreach(i => items.add(i))
       }
     }
@@ -234,8 +220,12 @@ class DirPanelController(tabPane: TabPane,
   }
 
   private def setCurrentTabDir(dir: VDirectory): Unit = {
-    dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
-    updateCurTab(dir)
+    if (dir.fileSystem.exists(dir)) {
+      dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
+      updateCurTab(dir)
+    } else {
+      logger.info(s"Cannot set current tab directory $dir. The target directory does not exist.")
+    }
   }
 
   private def registerListeners(panelId: PanelId): Unit = {

@@ -28,8 +28,6 @@ class MainPanelController(dirsSplitPane: SplitPane,
 
   statusMgr.selectedPanel = LeftPanel
 
-  mainPane.setStyle("-fx-border-color: Red")
-
   mainPane.filterEvent(KeyEvent.KeyPressed) { (ke: KeyEvent) =>
     ke.code match {
       case KeyCode.F3  => operationMgr.handleView()

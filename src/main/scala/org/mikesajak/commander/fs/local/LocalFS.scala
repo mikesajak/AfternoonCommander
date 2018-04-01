@@ -27,7 +27,7 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
 
   override val id: String = LocalFS.id
 
-  override def exists(path: VPath): Boolean = new jio.File(path.name).exists
+  override def exists(path: VPath): Boolean = new jio.File(path.absolutePath).exists
 
   override def delete(path: VPath): Try[Boolean] = Try {
     val normalizedPath = path.absolutePath.replace('\\', '/')
