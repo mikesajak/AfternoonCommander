@@ -144,16 +144,19 @@ class DirTableController(curDirField: TextField,
       new TableCell[FileRow, String] {
         item.onChange { (_, _, newValue) =>
           text = newValue
-          val fileRow = tableRow.value.item.value.asInstanceOf[FileRow]
-          if (fileRow != null) {
-            val fileType = fileTypeMgr.detectFileType(fileRow.path)
-            val fileTypeName = resourceMgr.getMessage(s"file_type_manager.${camelToSnake(fileType.toString)}")
-            tooltip = new Tooltip() {
-              text  = resourceMgr.getMessageWithArgs("file_table_panel.row_tooltip",
-                List(fileRow.path.absolutePath, fileRow.modifiyDate.value,
-                  fileRow.attributes.value, fileRow.size.value, fileTypeName))
-            }
-          }
+          val curRowIdx = index.value
+          val tableItems = tableView.value.items.value
+          val fileRowOpt = if (curRowIdx >= 0 && curRowIdx < tableItems.size) Option(tableItems.get(curRowIdx))
+                           else None
+          tooltip = fileRowOpt.map { fileRow =>
+              val fileType = fileTypeMgr.detectFileType(fileRow.path)
+              val fileTypeName = resourceMgr.getMessage(s"file_type_manager.${camelToSnake(fileType.toString)}")
+              new Tooltip() {
+                text = resourceMgr.getMessageWithArgs("file_table_panel.row_tooltip",
+                  List(fileRow.path.absolutePath, fileRow.modifiyDate.value,
+                    fileRow.attributes.value, fileRow.size.value, fileTypeName))
+              }
+          }.orNull
         }
       }
     }
@@ -347,7 +350,7 @@ class DirTableController(curDirField: TextField,
   private def selectIndex(selIndex: Int): Unit = {
     val prevSelection = dirTableView.getSelectionModel.getSelectedIndex
     if (prevSelection != selIndex) {
-      dirTableView.getSelectionModel.select(selIndex)
+      dirTableView.getSelectionModel.select(math.max(selIndex, 0))
       dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
     }
   }
