@@ -4,31 +4,35 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.DeletePanelControllerImpl">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="500.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.DeletePanelControllerImpl">
    <children>
       <Label fx:id="pathTypeLabel" text="Directory" />
       <HBox alignment="BASELINE_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
          <children>
-            <Label fx:id="pathToTargetLabel" graphicTextGap="0.0" text="full/path/to/" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="ALWAYS" />
+            <Label fx:id="pathToTargetLabel" text="full/path/to/" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="ALWAYS" />
             <Label fx:id="targetNameLabel" graphicTextGap="0.0" minWidth="200.0" text="TargetDirectory" HBox.hgrow="NEVER">
                <font>
                   <Font name="System Bold" size="13.0" />
                </font>
+               <padding>
+                  <Insets left="4.0" />
+               </padding>
             </Label>
          </children>
          <padding>
             <Insets left="14.0" right="14.0" />
          </padding>
       </HBox>
-      <VBox spacing="5.0" VBox.vgrow="ALWAYS">
+      <ListView fx:id="pathListView" maxHeight="200.0" />
+      <VBox VBox.vgrow="ALWAYS">
          <padding>
-            <Insets left="15.0" top="10.0" />
+            <Insets left="15.0" />
          </padding>
          <children>
             <fx:include fx:id="statsPanel" source="stats-panel.fxml" />
+            <Label fx:id="statsMessageLabel" text="Directory statistics:" />
          </children>
       </VBox>
-      <Label fx:id="statsMessageLabel" text="Directory statistics:" />
       <Label fx:id="summaryMessageLabel" text="Progress is not available until directory statistics counting is finished">
          <VBox.margin>
             <Insets left="10.0" top="10.0" />

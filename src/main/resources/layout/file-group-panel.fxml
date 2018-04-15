@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
@@ -9,7 +10,10 @@
          <children>
             <Button fx:id="driveSelectionButton" mnemonicParsing="false" onAction="#handleDriveSelectionButton" text="Button" textOverrun="LEADING_ELLIPSIS" />
             <Pane maxHeight="0.0" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="20.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
-            <Label fx:id="freeSpaceLabel" alignment="BASELINE_RIGHT" text="1234 MB" HBox.hgrow="ALWAYS" />
+            <Label fx:id="freeSpaceLabel" alignment="BASELINE_RIGHT" text="1234 MB" HBox.hgrow="ALWAYS">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin></Label>
             <Button fx:id="favDirsButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" layoutX="184.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleFavDirsButton">
                <graphic>
                   <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
@@ -19,7 +23,7 @@
                   </ImageView>
                </graphic>
                <tooltip>
-                  <Tooltip text="%file_group_panel.prev_dir.tooltip" />
+                  <Tooltip text="%file_group_panel.favorites.tooltip" />
                </tooltip>
             </Button>
             <Button fx:id="prevDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handlePrevDirButton">

@@ -3,10 +3,12 @@ package org.mikesajak.commander.ui.controller.ops
 import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.{ResourceManager, StatsUpdateListener}
+import org.mikesajak.commander.util.PathUtils
 
 import scalafx.Includes._
 import scalafx.application.Platform
-import scalafx.scene.control.{ButtonType, Dialog, Label}
+import scalafx.collections.ObservableBuffer
+import scalafx.scene.control.{ButtonType, Dialog, Label, ListView}
 import scalafx.scene.image.ImageView
 import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
@@ -19,6 +21,7 @@ trait DeletePanelController extends StatsUpdateListener {
 class DeletePanelControllerImpl(pathTypeLabel: Label,
                                 pathToTargetLabel: Label,
                                 targetNameLabel: Label,
+                                pathListView: ListView[String],
                                 statsPanel: Pane,
                                 @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
 
@@ -41,26 +44,31 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
     pathTypeLabel.text = resourceMgr.getMessage(s"delete_dialog.to_delete.${pathType.name}")
 
-    if (pathType != MultiPaths) {
-      val targetPath = targetPaths.head
-      val targetParentName = targetPath.parent.map(_.absolutePath).getOrElse("")
-      pathToTargetLabel.text = s"$targetParentName/"
-      targetNameLabel.text = targetPath.name
-    } else {
-      pathToTargetLabel.text = ""
-      targetNameLabel.text = resourceMgr.getMessageWithArgs("delete_dialog.num_elements", Array(targetPaths.size))
-    }
-
-    pathToTargetLabel.graphic = new ImageView(resourceMgr.getIcon(pathType.icon))
-
     // create bindings - to resize parent layout on disable/hide
+    pathListView.managed <== pathListView.visible
     statsPanel.managed <== statsPanel.visible
     statsMessageLabel.managed <== statsMessageLabel.visible
+
+    val targetPath = targetPaths.head
+    val targetParentName = targetPath.parent.map(_.absolutePath).getOrElse("")
+    pathToTargetLabel.text = s"${PathUtils.shortenPathTo(targetParentName, 80)}/"
+    pathToTargetLabel.tooltip = s"$targetParentName/"
+    pathToTargetLabel.graphic = new ImageView(resourceMgr.getIcon(pathType.icon))
+
+    if (pathType != MultiPaths) {
+      targetNameLabel.text = targetPath.name
+      pathListView.visible = false
+    } else {
+      targetNameLabel.text = "[" + resourceMgr.getMessageWithArgs("delete_dialog.num_elements", Array(targetPaths.size)) + "]"
+      pathListView.visible = true
+      pathListView.items = ObservableBuffer(targetPaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
+    }
 
     if (pathType == SingleFile) {
       statsMessageLabel.visible = false
     } else {
-      statsMessageLabel.visible = false
+      statsMessageLabel.visible = true
+      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
       summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
       summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline-24.png"))
       summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_not_available.tooltip")
@@ -100,6 +108,9 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
   override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
     statsPanelController.updateStats(stats)
     Platform.runLater {
+      statsMessageLabel.graphic = null
+      statsMessageLabel.text = null
+
       summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_available.label")
       summaryMessageLabel.graphic = null
       summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_available.tooltip")
