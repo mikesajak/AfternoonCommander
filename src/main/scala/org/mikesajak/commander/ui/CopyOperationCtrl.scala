@@ -1,12 +1,16 @@
 package org.mikesajak.commander.ui
 
+import javafx.scene.control
+
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task._
-import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
+import org.mikesajak.commander.ui.controller.ops.{CopyPanelController, DeletePanelController, ProgressPanelController}
 import org.mikesajak.commander.{ApplicationController, TaskManager}
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.util.{Success, Try}
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
@@ -16,7 +20,7 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
                         resourceMgr: ResourceManager, taskManager: TaskManager) {
   private val logger = Logger[DeletePanelController]
 
-  private val deleteLayout = "/layout/ops/delete-dialog.fxml"
+  private val copyLayout = "/layout/ops/copy-dialog.fxml"
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
 
   def handleCopy(): Unit = {
@@ -35,11 +39,14 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
 
     if (sourcePaths.nonEmpty) {
       // TODO: count stats
+      val result = askForDecision(sourcePaths, targetPath)
+
+      println(s"Copy dialog decision: $result")
 
       // TODO: show stats and ask for decision
 
       // TODO: execute copy
-      runCopyOperation(sourcePaths, targetPath, None)
+//      runCopyOperation(sourcePaths, targetPath, None)
     }
 
   }
@@ -74,6 +81,25 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
     val result = progressDialog.showAndWait()
 
     Success(false) // FIXME: evaluate the result of operation and return proper value
+  }
+
+  private def askForDecision(sourcePaths: Seq[VPath], targetDir: VDirectory): Option[(ButtonType, Option[DirStats])] = {
+    val (contentPane, contentCtrl) = UILoader.loadScene[CopyPanelController](copyLayout)
+    val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
+
+    val statsCountOp = countStatsOpCtrl.runCountDirStats(sourcePaths, contentCtrl)
+
+    contentCtrl.init(sourcePaths, targetDir, DirStats.Empty, dialog)
+
+    val result = dialog.showAndWait()
+    statsCountOp.requestAbort()
+    val stats =
+      if (statsCountOp.finalStatus.isCompleted) Await.result(statsCountOp.finalStatus, Duration.Zero)
+      else None
+
+    result
+    .map(jfxbt => new ButtonType(jfxbt.asInstanceOf[control.ButtonType]))
+    .map(bt => (bt, stats))
   }
 
 }

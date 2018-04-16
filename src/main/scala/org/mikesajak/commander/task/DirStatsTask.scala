@@ -39,7 +39,7 @@ class DirStatsTask(paths: Seq[VPath]) extends Task[DirStats] with CancellableTas
 
   private def countStats(path: VPath, progressMonitor: ProgressMonitor[DirStats]): DirStats = {
     path match {
-      case d: VDirectory => countStats(d, progressMonitor, DirStats.Empty, 0)
+      case d: VDirectory => countStats(d, progressMonitor, DirStats(0, 1, 0, 1), 0)
       case f: VFile => DirStats(1, 0, f.size, 0)
     }
   }
