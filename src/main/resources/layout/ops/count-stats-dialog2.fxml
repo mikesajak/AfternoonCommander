@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="400.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CountStatsPanelControllerImpl2">
+   <children>
+      <HBox>
+         <children>
+            <Label fx:id="pathToTargetLabel" text="/full/path/to/">
+               <HBox.margin>
+                  <Insets right="4.0" />
+               </HBox.margin>
+            </Label>
+            <Label fx:id="targetNameLabel" text="targetFileOrDirectory">
+               <font>
+                  <Font name="System Bold" size="12.0" />
+               </font>
+            </Label>
+         </children>
+         <VBox.margin>
+            <Insets left="10.0" />
+         </VBox.margin>
+      </HBox>
+      <ListView fx:id="pathsListView" prefHeight="200.0" prefWidth="200.0" />
+      <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
+         <children>
+            <fx:include source="stats-panel.fxml" />
+            <Label fx:id="statsMessageLabel" text="Counting..." />
+         </children>
+         <VBox.margin>
+            <Insets left="10.0" />
+         </VBox.margin>
+      </VBox>
+   </children>
+</VBox>
