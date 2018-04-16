@@ -1,5 +1,6 @@
 package org.mikesajak.commander.util
 
+import com.google.common.io.Files
 import org.mikesajak.commander.fs.VPath
 
 import scala.annotation.tailrec

@@ -6,7 +6,7 @@ import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
-import org.mikesajak.commander.util.UnitFormatter
+import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationController, FileTypeManager}
 
 import scala.collection.JavaConverters._
@@ -23,14 +23,17 @@ import scalafxml.core.macros.sfxml
   * Created by mike on 14.04.17.
   */
 class FileRow(val path: VPath, resourceMgr: ResourceManager) {
+
+  private val (pname, pext) = PathUtils.splitNameByExt(path.name)
+
   val name = new StringProperty(mkName(path))
   val extension = new StringProperty(mkExt(path))
   val size = new StringProperty(formatSize(path))
-  val modifiyDate = new StringProperty(path.modificationDate.toString)
+  val modifyDate = new StringProperty(path.modificationDate.toString)
   val attributes = new StringProperty(path.attribs)
 
-  private def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else Files.getNameWithoutExtension(p.name)
-  private def mkExt(p: VPath): String = if (p.isDirectory) "" else Files.getFileExtension(p.name)
+  private def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else pname
+  private def mkExt(p: VPath): String = if (p.isDirectory) "" else pext
 
   def formatSize(vFile: VPath): String =
     path match {
@@ -40,7 +43,7 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
       case p: VFile => UnitFormatter.formatDataSize(path.size)
     }
 
-  override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifiyDate, $attributes)"
+  override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifyDate, $attributes)"
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[FileRow]
 
@@ -153,7 +156,7 @@ class DirTableController(curDirField: TextField,
               val fileTypeName = resourceMgr.getMessage(s"file_type_manager.${camelToSnake(fileType.toString)}")
               new Tooltip() {
                 text = resourceMgr.getMessageWithArgs("file_table_panel.row_tooltip",
-                  List(fileRow.path.absolutePath, fileRow.modifiyDate.value,
+                  List(fileRow.path.absolutePath, fileRow.modifyDate.value,
                     fileRow.attributes.value, fileRow.size.value, fileTypeName))
               }
           }.orNull
@@ -162,7 +165,7 @@ class DirTableController(curDirField: TextField,
     }
     extColumn.cellValueFactory = { _.value.extension }
     sizeColumn.cellValueFactory = { _.value.size }
-    dateColumn.cellValueFactory = { _.value.modifiyDate }
+    dateColumn.cellValueFactory = { _.value.modifyDate }
     attribsColumn.cellValueFactory = { _.value.attributes }
     dirTableView.rowFactory = { tableView =>
       val row = new TableRow[FileRow]()
