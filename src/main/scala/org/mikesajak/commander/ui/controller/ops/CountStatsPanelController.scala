@@ -51,6 +51,9 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
     statsPanelController.init(paths)
 
+    messageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
+    messageLabel.text = resourceMgr.getMessage("count_stats_dialog.counting.label")
+
     dialog.dialogPane().buttonTypes =
       List(showClose.option(ButtonType.Close),
            showCancel.option(ButtonType.Cancel),
@@ -71,15 +74,22 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
 
   override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
     updateStats(stats, message)
+    Platform.runLater {
+      messageLabel.graphic = null
+      messageLabel.text = null
+    }
     updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
   }
 
   override def notifyError(stats: Option[DirStats], message: String): Unit = {
-      stats match {
-        case Some(s) => updateStats(s, Some(message))
-        case _ => updateMessage(message)
-      }
-      updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
+    stats match {
+      case Some(s) => updateStats(s, Some(message))
+      case _ => updateMessage(message)
+    }
+    Platform.runLater {
+      messageLabel.graphic = null
+    }
+    updateButtons(enableClose = true, enableCancel = false, enableSkip = false)
   }
 
   override def updateButtons(enableClose: Boolean, enableCancel: Boolean, enableSkip: Boolean): Unit = {

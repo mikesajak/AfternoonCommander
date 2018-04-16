@@ -51,7 +51,7 @@ class DirStatsTask(paths: Seq[VPath]) extends Task[DirStats] with CancellableTas
     val totalCounts = (dir.childDirs foldLeft curCounts) ((accCounts, subDir) =>
       countStats(subDir, progressMonitor, accCounts, level + 1))
 
-    progressMonitor.notifyProgressIndeterminate(Some(s"Current folder: ${dir.absolutePath}"), Some(totalCounts))
+    progressMonitor.notifyProgressIndeterminate(None, Some(totalCounts))
     totalCounts
   }
 }
