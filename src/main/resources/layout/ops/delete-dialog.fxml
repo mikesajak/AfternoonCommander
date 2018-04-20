@@ -23,19 +23,19 @@
             <Insets left="14.0" right="14.0" />
          </padding>
       </HBox>
-      <ListView fx:id="pathListView" maxHeight="200.0" />
-      <VBox VBox.vgrow="ALWAYS">
+      <ListView fx:id="pathsListView" maxHeight="200.0" />
+      <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" VBox.vgrow="ALWAYS">
          <padding>
             <Insets left="15.0" />
          </padding>
          <children>
+            <Label fx:id="statsMessageLabel" text="Counting statistics" />
             <fx:include fx:id="statsPanel" source="stats-panel.fxml" />
-            <Label fx:id="statsMessageLabel" text="Directory statistics:" />
          </children>
       </VBox>
       <Label fx:id="summaryMessageLabel" text="Progress is not available until directory statistics counting is finished">
          <VBox.margin>
-            <Insets left="10.0" top="10.0" />
+            <Insets left="10.0" />
          </VBox.margin>
       </Label>
    </children>

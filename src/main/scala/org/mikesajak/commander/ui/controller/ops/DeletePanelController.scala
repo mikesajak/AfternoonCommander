@@ -10,7 +10,6 @@ import scalafx.application.Platform
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.{ButtonType, Dialog, Label, ListView}
 import scalafx.scene.image.ImageView
-import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
 
 trait DeletePanelController extends StatsUpdateListener {
@@ -21,8 +20,8 @@ trait DeletePanelController extends StatsUpdateListener {
 class DeletePanelControllerImpl(pathTypeLabel: Label,
                                 pathToTargetLabel: Label,
                                 targetNameLabel: Label,
-                                pathListView: ListView[String],
-                                statsPanel: Pane,
+                                pathsListView: ListView[String],
+//                                statsPanel: Pane,
                                 @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
 
                                 statsMessageLabel: Label,
@@ -39,8 +38,8 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     pathTypeLabel.text = resourceMgr.getMessage(s"delete_dialog.to_delete.${pathType.name}")
 
     // create bindings - to resize parent layout on disable/hide
-    pathListView.managed <== pathListView.visible
-    statsPanel.managed <== statsPanel.visible
+    pathsListView.managed <== pathsListView.visible
+//    statsPanel.managed <== statsPanel.visible
     statsMessageLabel.managed <== statsMessageLabel.visible
 
     val targetPath = targetPaths.head
@@ -51,11 +50,11 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     if (pathType != MultiPaths) {
       targetNameLabel.text = targetPath.name
-      pathListView.visible = false
+      pathsListView.visible = false
     } else {
       targetNameLabel.text = "[" + resourceMgr.getMessageWithArgs("delete_dialog.num_elements", Array(targetPaths.size)) + "]"
-      pathListView.visible = true
-      pathListView.items = ObservableBuffer(targetPaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
+      pathsListView.visible = true
+      pathsListView.items = ObservableBuffer(targetPaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
     }
 
     if (pathType == SingleFile) {
