@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller
 
-import com.google.common.io.Files
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
@@ -8,8 +7,6 @@ import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationController, FileTypeManager}
-
-import scala.collection.JavaConverters._
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
@@ -19,6 +16,8 @@ import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
 import scalafx.stage.Popup
 import scalafxml.core.macros.sfxml
+
+import scala.collection.JavaConverters._
 /**
   * Created by mike on 14.04.17.
   */
@@ -274,10 +273,11 @@ class DirTableController(curDirField: TextField,
   }
 
   private def changeDir(directory: VDirectory): Unit = {
+    var prevDir = curDir
     curDir = directory
     updateParentTab(directory)
     val selection = directory match {
-      case p: PathToParent => Some(p.targetDir)
+      case p: PathToParent => Some(prevDir)
       case _ => None
     }
     setCurrentDirectory(directory, selection)
