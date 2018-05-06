@@ -10,6 +10,8 @@ class PathToParent(val currentDir: VDirectory) extends VDirectory {
 
   def targetDir: VDirectory = currentDir.parent.get
 
+  override val directory: VDirectory = currentDir
+
   override def fileSystem: FS = currentDir.fileSystem
 
   override def parent: Option[VDirectory] = currentDir.parent.get.parent

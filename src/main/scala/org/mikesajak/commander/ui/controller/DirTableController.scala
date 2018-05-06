@@ -264,7 +264,7 @@ class DirTableController(curDirField: TextField,
 
   private def handleAction(path: VPath): Unit = {
     if (path.isDirectory)
-      changeDir(path.directory)
+      changeDir(path.asInstanceOf[VDirectory])
     else {
       val fileType = fileTypeMgr.detectFileType(path)
       val fileTypeActionHandler = fileTypeMgr.fileTypeHandler(path)
@@ -343,7 +343,7 @@ class DirTableController(curDirField: TextField,
     val fromDir = selection
 
     val selIndex = fromDir.map { prevDir =>
-      val idx = dirs.map(_.name).indexOf(prevDir.name)
+      val idx = sortedRows.indexWhere(row => row.path.name == prevDir.name)
       if (idx > 0) idx else 0
     }.getOrElse(0)
 
