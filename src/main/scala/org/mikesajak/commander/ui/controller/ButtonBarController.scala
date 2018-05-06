@@ -1,7 +1,6 @@
 package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.OperationMgr
-
 import scalafx.scene.control.Button
 import scalafxml.core.macros.sfxml
 
@@ -21,10 +20,10 @@ class ButtonBarController(viewButton: Button,
   // Disable not implemented buttons...
   viewButton.disable = true
   editButton.disable = true
-  copyButton.disable = false
+//  copyButton.disable = true
   moveButton.disable = true
-  mkdirButton.disable = false
-  deleteButton.disable = true
+//  mkdirButton.disable = true
+//  deleteButton.disable = true
 
   def handleView(): Unit = opsMgr.handleView()
 

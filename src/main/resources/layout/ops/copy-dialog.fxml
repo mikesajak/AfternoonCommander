@@ -37,7 +37,7 @@
             <Insets top="10.0" />
          </VBox.margin>
       </Label>
-      <ComboBox fx:id="targetPathCombo" editable="true" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
+      <ComboBox fx:id="targetDirCombo" editable="true" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity">
          <VBox.margin>
             <Insets left="10.0" />
          </VBox.margin>
