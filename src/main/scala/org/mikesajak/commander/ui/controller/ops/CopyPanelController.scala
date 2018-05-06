@@ -5,7 +5,6 @@ import org.mikesajak.commander.fs.{VDirectory, VPath}
 import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.{ResourceManager, StatsUpdateListener}
 import org.mikesajak.commander.util.PathUtils
-
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.collections.ObservableBuffer
@@ -42,6 +41,8 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     dialog.graphic = new ImageView(resourceMgr.getIcon("content-copy-black-48.png"))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
     sourcePathTypeLabel.text = resourceMgr.getMessage(s"copy_dialog.to_copy.${pathType.name}")
+
+    targetDirCombo.promptText = targetDir.toString
 
     // create bindings - to resize parent layout on disable/hide
     sourcePathsListView.managed <== sourcePathsListView.visible
