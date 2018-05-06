@@ -2,8 +2,8 @@ package org.mikesajak.commander.fs
 
 import java.io.File
 import java.nio.file.{FileStore, FileSystems}
-import javax.swing.filechooser.FileSystemView
 
+import javax.swing.filechooser.FileSystemView
 import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager
 import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.util.Utils
@@ -65,10 +65,10 @@ class FilesystemsManager {
     fss2
   }
 
-  // TODO: find proper way to filter out unwanted filesystems (TODO2: what about windows??)
-  private val internalFilesystems = List("cgroup.*".r, "systemd.*".r,
-    "udev".r, "devpts".r, "proc".r, "(tmp|sys|security|config|debug|hugetlb|squash|auto|ns)fs".r,
-    "pstore".r, "mqueue".r, "fusectl".r)
+  // TODO: find better/proper way to filter out unwanted filesystems (TODO2: what about windows??)
+  private val internalFilesystems = List("cgroup.*", "systemd.*",
+    "udev", "devpts", "proc", "(tmp|sys|security|config|debug|hugetlb|squash|auto|ns|gv)fs",
+    "pstore", "mqueue", "fusectl").map(_.r)
 
   private def isInternalFs(fsType: String): Boolean =
     !internalFilesystems.exists(r => r.findFirstMatchIn(fsType).isDefined)
