@@ -12,7 +12,7 @@ import scalafx.scene.control.ButtonType
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                         countStatsOpCtrl: CountDirStatsOperationCtrl,
@@ -23,31 +23,49 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
 
   def handleCopy(): Unit = {
-    logger.warn(s"handleCopy - Not implemented yet!")
-
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val sourcePaths = selectedTab.controller.selectedPaths
       .filter(p => !p.isInstanceOf[PathToParent])
 
-    val unselectedTab = statusMgr.unselectedTabManager.selectedTab
-    val targetPath = unselectedTab.controller.focusedPath match {
-      case p: PathToParent => p.currentDir
-      case d: VDirectory => d
-      case _ => unselectedTab.dir
-    }
-
     if (sourcePaths.nonEmpty) {
-      val result = askForDecision(sourcePaths, targetPath)
+      val unselectedTab = statusMgr.unselectedTabManager.selectedTab
+      val targetDir = unselectedTab.controller.focusedPath match {
+        case p: PathToParent => p.currentDir
+        case d: VDirectory => d
+        case _ => unselectedTab.dir
+      }
+
+      val result = askForDecision(sourcePaths, targetDir)
 
       logger.debug(s"Copy dialog decision: $result")
 
       result match {
         case Right(jobStats) =>
-          runCopyOperation(sourcePaths, targetPath, jobStats)
+          executeCopy(sourcePaths, targetDir, jobStats)
+          selectedTab.controller.reload()
+          unselectedTab.controller.reload()
         case _ => // skip
       }
     }
 
+  }
+
+  private def executeCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, jobStats: Option[DirStats]): Unit = {
+    logger.debug(s"Copying: $sourcePaths -> $targetDir")
+
+    val copyResult = runCopyOperation(sourcePaths, targetDir, jobStats)
+
+    copyResult match {
+      case Success(copied) =>
+      case Failure(exception) =>
+        logger.info(s"Error during copy operation $sourcePaths -> $targetDir:\n", exception)
+        UIUtils.prepareExceptionAlert(appController.mainStage,
+          "Copy error", // TODO: i18
+          s"An error occurred during copy operation", // TODO: i18
+          s"Some of the paths $sourcePaths could not be copied successfully, because of an error: $exception.", // TODO: i18
+          exception)
+          .showAndWait()
+    }
   }
 
   private def askForDecision(sourcePaths: Seq[VPath], targetDir: VDirectory): Either[ButtonType, Option[DirStats]] = {

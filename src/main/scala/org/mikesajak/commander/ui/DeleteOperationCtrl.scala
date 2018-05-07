@@ -1,20 +1,18 @@
 package org.mikesajak.commander.ui
 
-import javafx.scene.control
-
 import com.typesafe.scalalogging.Logger
+import javafx.scene.control
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.{DirStats, RecursiveDeleteTask}
-import org.mikesajak.commander.ui.controller.TabData
 import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
 import org.mikesajak.commander.{ApplicationController, TaskManager}
+import scalafx.Includes._
+import scalafx.scene.control.ButtonType
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
-import scalafx.Includes._
-import scalafx.scene.control.ButtonType
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                           countStatsOpCtrl: CountDirStatsOperationCtrl,
@@ -25,8 +23,6 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
 
   def handleDelete(): Unit = {
-    logger.warn(s"handleDelete - Not fully implemented yet!")
-
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val targetPaths = selectedTab.controller.selectedPaths
       .filter(p => !p.isInstanceOf[PathToParent])
@@ -38,13 +34,14 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
       result match {
         case Some((ButtonType.Yes, stats)) =>
-          executeDelete(targetPaths, selectedTab, stats)
+          executeDelete(targetPaths, stats)
+          selectedTab.controller.reload()
         case _ => // operation cancelled
       }
     }
   }
 
-  private def executeDelete(targetPath: Seq[VPath], selectedTab: TabData, stats: Option[DirStats]): Unit = {
+  private def executeDelete(targetPath: Seq[VPath], stats: Option[DirStats]): Unit = {
     logger.debug(s"Deleting: $targetPath")
 
     val deleteResult = runDeleteOperation(targetPath, stats)
@@ -61,7 +58,6 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
                                       exception)
           .showAndWait()
     }
-    selectedTab.controller.reload()
   }
 
   private def runDeleteOperation(paths: Seq[VPath], stats: Option[DirStats]): Try[Boolean] = {
