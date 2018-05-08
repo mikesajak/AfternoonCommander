@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import org.mikesajak.commander.task.CancellableTask._
 import org.mikesajak.commander.util.IO
+import org.mikesajak.commander.util.Utils.runWithTimer
 
 import scala.collection.mutable
 
@@ -18,26 +19,34 @@ case class CopyJobDef(source: VPath, target: VPath)
 
 class CopyMultiFilesTask(files: Seq[CopyJobDef], jobStats: Option[DirStats]) extends Task[IOTaskSummary] with CancellableTask {
 
-  private val logger = Logger[CopyMultiFilesTask]
+  private implicit val logger: Logger = Logger[CopyMultiFilesTask]
 
   override def run(progressMonitor: ProgressMonitor[IOTaskSummary]): Option[IOTaskSummary] = {
 
     logger.debug(s"starting task for $files, stats=$jobStats")
 
     withAbort(progressMonitor) { () =>
+      val result = runWithTimer(s"Copy files task: files=$files") { () =>
+        progressMonitor.notifyProgress(0, Some(s"Starting recursive delete of $files"), None) // TODO: i18
 
-      val copyListener = new CopyProgressListenerImpl(jobStats, progressMonitor)
-      val results =
-        for (file <- files) yield {
-          try {
-            copy(file.source, file.target, copyListener)
-            IOTaskSummary.success(file.source)
-          } catch {
-            case e: Exception => IOTaskSummary.failed(file.source, e.getLocalizedMessage)
+        val copyListener = new CopyProgressListenerImpl(jobStats, progressMonitor)
+        val results =
+          for (file <- files) yield {
+            try {
+              copy(file.source, file.target, copyListener)
+              IOTaskSummary.success(file.source)
+            } catch {
+              case e: Exception => IOTaskSummary.failed(file.source, e.getLocalizedMessage)
+            }
           }
-        }
 
-      results.reduce((a, b) => a + b)
+        results.reduce((a, b) => a + b)
+      }
+
+      if (result.errors.isEmpty) progressMonitor.notifyFinished(Some("Finished copying $files"), Some(result)) // TODO: i18
+      else progressMonitor.notifyError(s"Copying of $files finished with errors: ${result.errors}", Some(result)) // TODO: i18
+
+      result
     }
   }
 

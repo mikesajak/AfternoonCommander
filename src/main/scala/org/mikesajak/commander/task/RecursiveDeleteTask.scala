@@ -17,19 +17,19 @@ class RecursiveDeleteTask(targetPaths: Seq[VPath], targetStats: Option[DirStats]
 
     val targetName = targetPaths match {
       case p: Seq[VPath] if p.size == 1 => p.toString
-      case p @ _ => s"${p.size} elements"
+      case p @ _ => s"${p.size} elements" // TODO: i18
     }
 
     withAbort(progressMonitor) { () =>
       val result = runWithTimer(s"Recursive task : delete $targetName") { () =>
-        progressMonitor.notifyProgress(0, Some(s"Starting recursive delete of $targetName"), None)
+        progressMonitor.notifyProgress(0, Some(s"Starting recursive delete of $targetName"), None) // TODO: i18
 
         targetPaths.map(p => deletePath(p, IOTaskSummary.empty))
                    .reduceLeft((acc, stats) => acc + stats)
       }
 
-      if (result.errors.isEmpty) progressMonitor.notifyFinished(Some("Finished delete of $path"), Some(result))
-      else progressMonitor.notifyError(s"Delete of $targetName finished with errors: ${result.errors}", Some(result))
+      if (result.errors.isEmpty) progressMonitor.notifyFinished(Some("Finished delete of $path"), Some(result)) // TODO: i18
+      else progressMonitor.notifyError(s"Delete of $targetName finished with errors: ${result.errors}", Some(result)) // TODO: i18
 
       result
     }
