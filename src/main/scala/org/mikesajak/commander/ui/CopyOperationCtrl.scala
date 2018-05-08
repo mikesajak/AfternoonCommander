@@ -20,7 +20,8 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
   private val logger = Logger[DeletePanelController]
 
   private val copyLayout = "/layout/ops/copy-dialog.fxml"
-  private val progressLayout = "/layout/ops/progress-dialog.fxml"
+  private val singleProgressLayout = "/layout/ops/progress-dialog.fxml"
+  private val multiProgressLayout = "/layout/ops/multi-progress-dialog.fxml"
 
   def handleCopy(): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
@@ -91,20 +92,25 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
   }
 
   private def runCopyOperation(srcPaths: Seq[VPath], targetDir: VDirectory, stats: Option[DirStats]): Try[Boolean] = {
+    val progressLayout = if (srcPaths.size == 1 && srcPaths.head.isFile) singleProgressLayout else multiProgressLayout
+
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
     val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
-    val (pathType, pathName) =
-      srcPaths match {
-        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", s"${p.head}")
-        case p if p.size == 1 => ("file", s"${p.head}")
-        case p @ _ => (s"paths", s"${p.size} elements")
-      }
 
     val copyJobDefs = srcPaths.map(src => CopyJobDef(src, targetDir))
 
     val copyTask = new CopyMultiFilesTask(copyJobDefs, stats)
 
+    // TODO: i18
+    val (pathType, pathName) =
+      srcPaths match { // TODO: i18
+        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", s"${p.head}")
+        case p if p.size == 1 => ("file", s"${p.head}")
+        case p @ _ => (s"paths", s"${p.size} elements")
+      }
+
+    // TODO: i18
     ctrl.init(s"Copy", s"Copy selected $pathType\n$pathName",
       s"Copying $pathName", s"$pathName", resourceMgr.getIcon("delete-circle-48.png"),
       progressDialog, copyTask)
