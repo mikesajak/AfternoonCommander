@@ -42,7 +42,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
     sourcePathTypeLabel.text = resourceMgr.getMessage(s"copy_dialog.to_copy.${pathType.name}")
 
-    targetDirCombo.promptText = targetDir.toString
+    targetDirCombo.selectionModel.value.select(targetDir.toString)
 
     // create bindings - to resize parent layout on disable/hide
     sourcePathsListView.managed <== sourcePathsListView.visible

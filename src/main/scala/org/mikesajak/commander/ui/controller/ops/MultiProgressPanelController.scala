@@ -1,6 +1,6 @@
 package org.mikesajak.commander.ui.controller.ops
 
-import scalafx.scene.control.{Label, ProgressBar}
+import scalafx.scene.control.{CheckBox, Label, ProgressBar}
 import scalafx.scene.image.{Image, ImageView}
 import scalafxml.core.macros.sfxml
 
@@ -16,7 +16,8 @@ class MultiMultiProgressPanelControllerImpl(headerImageView: ImageView,
                                             nameLabel: Label,
                                             detailsLabel: Label,
                                             curProgressBar: ProgressBar,
-                                            totalProgressBar: ProgressBar)
+                                            totalProgressBar: ProgressBar,
+                                            dontCloseCheckbox: CheckBox)
     extends MultiProgressPanelController {
 
   override def init(operationName: String, operationDetails: String, operationIcon: Image): Unit = {
