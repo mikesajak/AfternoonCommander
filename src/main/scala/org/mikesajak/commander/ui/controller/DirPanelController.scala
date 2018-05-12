@@ -1,12 +1,12 @@
 package org.mikesajak.commander.ui.controller
 
 import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
-import javafx.scene.{Parent, control}
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.inject.Key
 import com.google.inject.name.Names
 import com.typesafe.scalalogging.Logger
+import javafx.scene.{Parent, control}
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.status.StatusMgr
@@ -14,9 +14,9 @@ import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.{FSUIHelper, ResourceManager, UILoader}
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr, HistoryMgr}
-
 import scalafx.Includes._
 import scalafx.application.Platform
+import scalafx.geometry.Insets
 import scalafx.scene.Node
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
@@ -38,6 +38,7 @@ object PanelId {
 trait DirPanelControllerIntf {
   def init(panelId: PanelId)
   def updateCurTab(path: VDirectory)
+  def addNewTab(dir: Option[VDirectory] = None)
 }
 /**
   * Created by mike on 14.04.17.
@@ -67,7 +68,7 @@ class DirPanelController(tabPane: TabPane,
 
   private val localHistoryMgr = new HistoryMgr
 
-  def init(panelId: PanelId) {
+  override def init(panelId: PanelId) {
     // TODO: better way of getting dependency - use injection!!
     dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
                                                                           Names.named(panelId.toString)))
@@ -103,8 +104,6 @@ class DirPanelController(tabPane: TabPane,
       tabPane += tab
       tabPane.selectionModel.select(tab.text.value)
     }
-
-    tabPane += createNewTabTab()
 
     val selectedPath = tabPaths.head
 
@@ -202,6 +201,7 @@ class DirPanelController(tabPane: TabPane,
 
   def handlePrevDirButton(): Unit = {
     logger.warn("Prev dir button action not yet implemented")
+    // TODO: implement
   }
 
   def handleParentDirButton(): Unit = {
@@ -228,70 +228,37 @@ class DirPanelController(tabPane: TabPane,
     }
   }
 
+  override def addNewTab(newTabDir: Option[VDirectory]): Unit = {
+    fsMgr.resolvePath(newTabDir.getOrElse(fsMgr.homeDir).toString)
+      .map(_.directory)
+      .foreach { dir =>
+        val tab = createTab(dir)
+        tabPane += tab
+        dirTabManager.addTab(dir, tab.controller)
+        tabPane.selectionModel.value.select(tab)
+      }
+  }
+
   private def registerListeners(panelId: PanelId): Unit = {
-    var tabSelectionPending = false
     tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
       println(s"$panelId - tab selection change $oldIdx->$newIdx")
-      val prevIdx = oldIdx.intValue
       val tabIdx = newIdx.intValue
-      if (!tabSelectionPending && isNewTabButton(tabIdx)) {
-        println(s"Last tab!!")
-        try {
-          tabSelectionPending = true
-          addNewTabToPane()
-        } finally {
-          tabSelectionPending = false
-        }
-      } else {
-        // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
-        logger.debug(s"$panelId - reloading tab: $tabIdx: ${dirTabManager.tab(tabIdx).dir}")
-        dirTabManager.tab(tabIdx).controller.reload()
-      }
+      // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
+      logger.debug(s"$panelId - reloading tab: $tabIdx: ${dirTabManager.tab(tabIdx).dir}")
+      dirTabManager.tab(tabIdx).controller.reload()
 
       if (tabIdx < tabPane.tabs.size) {
         val selectedTab = tabPane.tabs.get(tabIdx)
         statusMgr.selectedTabManager.selectedTabIdx = tabIdx
       }
     }
-
-    tabPane.selectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) => {
-      if (newTab.getGraphic != null) {
-        //        val oldPath = oldTab.asInstanceOf[DirTab].tabPath
-        //        tabPane += createTab(oldPath)
-      }
-      //      currentTab = newTab
-    })
-  }
-
-  private def isNewTabButton(tabIdx: Int) =
-    tabIdx == tabPane.tabs.size - 1 && tabPane.tabs.size > 1
-
-  private def addNewTabToPane(): Unit = {
-    tabPane.tabs.remove(tabPane.tabs.size - 1)
-
-    val newTabPath = pathForNewTab()
-
-    for (dir <- newTabPath) {
-      val tab = createTab(dir)
-      tabPane += tab
-      dirTabManager.addTab(dir, tab.controller)
-      tabPane += createNewTabTab()
-
-      val lastDirTab = tabPane.tabs.size - 2
-      tabPane.selectionModel.value.select(lastDirTab)
-    }
-  }
-
-  private def pathForNewTab() = {
-    val newTabPathName = fsMgr.homePath
-    fsMgr.resolvePath(newTabPathName).map(_.directory)
   }
 
   private def createTab(path: VDirectory) = {
     new DirTab(this, path)
   }
 
-  def updateCurTab(path: VDirectory): Unit = {
+  override def updateCurTab(path: VDirectory): Unit = {
     val selectionModel = tabPane.selectionModel.value
     val curTab = selectionModel.getSelectedItem
 
@@ -316,8 +283,12 @@ class DirPanelController(tabPane: TabPane,
     new Tab {
       closable = false
 //      disable = true
-      graphic = new ImageView(resourceMgr.getIcon("plus-box-24.png"))
-      text = ""
+      val button = new Button()
+      button.graphic = new ImageView(resourceMgr.getIcon("plus-box-24.png"))
+      button.padding = Insets.Empty
+      graphic = button
+
+      text = null
     }
   }
 

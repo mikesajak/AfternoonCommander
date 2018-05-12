@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirTableController">
@@ -26,10 +29,26 @@
       </TableView>
    </center>
    <top>
-      <TextField fx:id="curDirField" editable="false" focusTraversable="false" maxWidth="1.7976931348623157E308" styleClass="cur_dir_field" text="/current/directory" BorderPane.alignment="CENTER">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </TextField>
+      <HBox BorderPane.alignment="CENTER">
+         <children>
+            <TextField fx:id="curDirField" editable="false" focusTraversable="false" maxWidth="1.7976931348623157E308" styleClass="cur_dir_field" text="/current/directory" HBox.hgrow="ALWAYS">
+               <font>
+                  <Font size="10.0" />
+               </font>
+            </TextField>
+            <Button fx:id="addTabButton" focusTraversable="false" mnemonicParsing="false" prefHeight="22.0" HBox.hgrow="NEVER">
+               <graphic>
+                  <ImageView pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/plus-box-24.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+               <padding>
+                  <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+               </padding>
+            </Button>
+         </children>
+      </HBox>
    </top>
 </BorderPane>

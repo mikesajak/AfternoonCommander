@@ -11,6 +11,7 @@ import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
+import scalafx.geometry.Insets
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
@@ -71,6 +72,7 @@ trait DirTableControllerIntf {
 
 @sfxml
 class DirTableController(curDirField: TextField,
+                         addTabButton: Button,
                          dirTableView: TableView[FileRow],
                          idColumn: TableColumn[FileRow, VPath],
                          nameColumn: TableColumn[FileRow, String],
@@ -97,6 +99,9 @@ class DirTableController(curDirField: TextField,
   private val tableRows = ObservableBuffer[FileRow]()
   private val filteredRows = new FilteredBuffer(tableRows)
   private val sortedRows = new SortedBuffer(filteredRows)
+
+  addTabButton.padding = Insets.Empty
+  curDirField.prefHeight <== addTabButton.height
 
   private val showHiddenFilesPreditate = {
     (row: FileRow) =>
@@ -187,10 +192,11 @@ class DirTableController(curDirField: TextField,
     dirTableView.handleEvent(KeyEvent.KeyPressed) { event: KeyEvent => handleKeyEvent(event) }
 
     filteredRows.predicate = showHiddenFilesPreditate
-
     dirTableView.items = sortedRows
 
     config.registerObserver(showHiddenConfigObserver)
+
+    addTabButton.onAction = e => dirPanelController.addNewTab()
 
     setCurrentDirectory(path)
   }
