@@ -247,7 +247,7 @@ class DirTableController(curDirField: TextField,
 
   private def findIconFor(path: VPath): ImageView = {
     val fileType = fileTypeMgr.detectFileType(path)
-    fileType.mediumIcon.map { iconFile =>
+    fileType.icon.map { iconFile =>
       val imageView = new ImageView(resourceMgr.getIcon(iconFile, 18, 18))
       imageView.preserveRatio = true
       imageView

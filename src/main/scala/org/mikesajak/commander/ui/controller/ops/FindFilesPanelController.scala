@@ -1,7 +1,6 @@
 package org.mikesajak.commander.ui.controller.ops
 
-import org.mikesajak.commander.ui.ResourceManager
-
+import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
@@ -13,6 +12,6 @@ trait FindFilesPanelController {
 class FindFilesPanelControllerImpl(headerImageView: ImageView,
                                resourceMgr: ResourceManager)
     extends FindFilesPanelController {
-  headerImageView.image = resourceMgr.getIcon("file-find-48.png")
+  headerImageView.image = resourceMgr.getIcon("file-find.png", IconSize.Big)
 
 }

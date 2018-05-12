@@ -2,9 +2,8 @@ package org.mikesajak.commander.ui.controller.ops
 
 import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.task.DirStats
-import org.mikesajak.commander.ui.{ResourceManager, StatsUpdateListener}
+import org.mikesajak.commander.ui.{IconSize, ResourceManager, StatsUpdateListener}
 import org.mikesajak.commander.util.Utils.MyRichBoolean
-
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control.{ButtonType, Dialog, Label}
@@ -34,14 +33,14 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     extends CountStatsPanelController {
   private var dialog: Dialog[ButtonType] = _
 
-  headerImageView.image = resourceMgr.getIcon("counter-48.png")
+  headerImageView.image = resourceMgr.getIcon("counter.png", IconSize.Big)
 
   override def init(paths: Seq[VPath], parentDialog: Dialog[ButtonType],
                     showClose: Boolean, showCancel: Boolean, showSkip: Boolean): Unit = {
     this.dialog = parentDialog
     dirLabel.text = if (paths.size == 1) paths.head.absolutePath
                     else s"${paths.size} paths"
-    dirLabel.graphic = new ImageView(resourceMgr.getIcon("folder-24.png"))
+    dirLabel.graphic = new ImageView(resourceMgr.getIcon("folder.png", IconSize.Small))
 
     statsPanel.height.onChange { (_, oldVal, newVal) =>
       if (newVal.doubleValue > oldVal.doubleValue) dialog.dialogPane.value.getScene.getWindow.sizeToScene()
@@ -51,7 +50,7 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
     statsPanelController.init(paths)
 
-    messageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
+    messageLabel.graphic = new ImageView(resourceMgr.getIcon2("loading-chasing-arrows.gif"))
     messageLabel.text = resourceMgr.getMessage("count_stats_dialog.counting.label")
 
     dialog.dialogPane().buttonTypes =

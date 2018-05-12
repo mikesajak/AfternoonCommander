@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller.ops
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{VDirectory, VPath}
 import org.mikesajak.commander.task.DirStats
-import org.mikesajak.commander.ui.{ResourceManager, StatsUpdateListener}
+import org.mikesajak.commander.ui.{IconSize, ResourceManager, StatsUpdateListener}
 import org.mikesajak.commander.util.PathUtils
 import scalafx.Includes._
 import scalafx.application.Platform
@@ -38,7 +38,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     val pathType = pathTypeOf(sourcePaths)
     dialog.title = s"${resourceMgr.getMessage("app.name")} - ${resourceMgr.getMessage(s"copy_dialog.title")}"
     dialog.headerText = resourceMgr.getMessage(s"copy_dialog.header.${pathType.name}")
-    dialog.graphic = new ImageView(resourceMgr.getIcon("content-copy-black-48.png"))
+    dialog.graphic = new ImageView(resourceMgr.getIcon("content-copy-black.png", IconSize.Big))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
     sourcePathTypeLabel.text = resourceMgr.getMessage(s"copy_dialog.to_copy.${pathType.name}")
 
@@ -53,7 +53,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     val targetParentName = targetPath.parent.map(_.absolutePath).getOrElse("")
     pathToSourceLabel.text = s"${PathUtils.shortenPathTo(targetParentName, 80)}/"
     pathToSourceLabel.tooltip = s"$targetParentName/"
-    pathToSourceLabel.graphic = new ImageView(resourceMgr.getIcon(pathType.icon))
+    pathToSourceLabel.graphic = new ImageView(resourceMgr.getIcon(pathType.icon, IconSize.Small))
 
     if (pathType != MultiPaths) {
       sourceNameLabel.text = targetPath.name
@@ -68,10 +68,10 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       statsMessageLabel.visible = false
     } else {
       statsMessageLabel.visible = true
-      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
+      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon2("loading-chasing-arrows.gif"))
       statsMessageLabel.text = resourceMgr.getMessage("copy_dialog.stats_counting.label")
       summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_not_available.label")
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline-24.png"))
+      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))
       summaryMessageLabel.tooltip = resourceMgr.getMessage("copy_dialog.progress_not_available.tooltip")
     }
 
@@ -110,7 +110,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     Platform.runLater {
       summaryMessageLabel.text = message
       summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle-24.png"))
+      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle.png", IconSize.Small))
     }
   }
 }

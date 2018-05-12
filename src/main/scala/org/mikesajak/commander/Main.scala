@@ -1,12 +1,9 @@
 package org.mikesajak.commander
 
-import javafx.{scene => jfxs}
-
 import com.google.inject.Key
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
-
 import scalafx.Includes._
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.application.{JFXApp, Platform}
@@ -31,7 +28,7 @@ object Main extends JFXApp {
 
   stage = new PrimaryStage() {
     title = resourceMgr.getMessage("app.name")
-    icons += resourceMgr.getIcon("internal_drive.png")
+    icons += resourceMgr.getIcon2("internal_drive.png")
     scene = new Scene(root)
   }
 

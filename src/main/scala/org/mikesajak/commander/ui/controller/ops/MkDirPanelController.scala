@@ -2,10 +2,8 @@ package org.mikesajak.commander.ui.controller.ops
 
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.scene.control
-
 import org.mikesajak.commander.fs.VDirectory
-import org.mikesajak.commander.ui.ResourceManager
-
+import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control._
@@ -32,7 +30,7 @@ class MkDirPanelControllerImpl(headerImageView: ImageView,
     parentFolderNameLabel.text = parentFolder.name
 
     dialog.headerText = "Create new directory"
-    dialog.graphic = new ImageView(resourceMgr.getIcon("folder-plus-48.png"))
+    dialog.graphic = new ImageView(resourceMgr.getIcon("folder-plus.png", IconSize.Big))
 
 
     dialog.title ="Afternoon Commander - create directory"

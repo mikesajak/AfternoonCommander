@@ -11,7 +11,7 @@ import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
-import org.mikesajak.commander.ui.{FSUIHelper, ResourceManager, UILoader}
+import org.mikesajak.commander.ui.{FSUIHelper, IconSize, ResourceManager, UILoader}
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
 import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr, HistoryMgr}
 import scalafx.Includes._
@@ -131,7 +131,7 @@ class DirPanelController(tabPane: TabPane,
             .flatten
             .reduce((a,b) => s"$a, $b") +
           s" [${UnitFormatter.mkDataSize(fs.freeSpace)} / ${UnitFormatter.mkDataSize(fs.totalSpace)}]"
-        graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs, 24)))
+        graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))//, 24)))
 
         onAction = ae => setCurrentTabDir(fs.rootDirectory)
       })
@@ -276,7 +276,7 @@ class DirPanelController(tabPane: TabPane,
     val fs =
       (matchingFss foldLeft dir.fileSystem)((a,b) => if (a.rootDirectory.segments.size > b.rootDirectory.segments.size) a else b)
     driveSelectionButton.text = s"${fs.rootDirectory.absolutePath}"
-    driveSelectionButton.graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs, 24)))
+    driveSelectionButton.graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))
   }
 
   private def createNewTabTab() = {
@@ -284,7 +284,7 @@ class DirPanelController(tabPane: TabPane,
       closable = false
 //      disable = true
       val button = new Button()
-      button.graphic = new ImageView(resourceMgr.getIcon("plus-box-24.png"))
+      button.graphic = new ImageView(resourceMgr.getIcon("plus-box.png", IconSize.Small))
       button.padding = Insets.Empty
       graphic = button
 

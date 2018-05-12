@@ -3,45 +3,35 @@ package org.mikesajak.commander
 import org.mikesajak.commander.fs.local.{SymlinkDir, SymlinkFile}
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 
-sealed abstract class FileType(icon: Option[IconDef]) {
-  def this(icon: IconDef) = this(Some(icon))
-  def this(iconName: String) = this(IconDef(iconName))
+sealed abstract class FileType(val icon: Option[String]) {
+  def this(icon: String) = this(Some(icon))
   def this() = this(None)
-
-  private def nameForSize(size: Int) = icon.map(i => s"${i.name}-$size.${i.ext}")
-
-  def smallIcon: Option[String] = nameForSize(24)
-  def mediumIcon: Option[String] = nameForSize(36)
-  def bigIcon: Option[String] = nameForSize(48)
 }
 
-case class IconDef(name: String, ext: String = "png", small: Boolean = true, medium: Boolean = true, big: Boolean = true)
-
 object FileType { // TODO: i18 (note: file types are resolved dynamically, by type name)
-  case object ExecutableFile extends FileType("open-in-app")
-  case object SymbolicLinkType extends FileType("link-variant")
-  case object TextFile extends FileType("note-text")
-  case object GraphicFile extends FileType("file-image")
-  case object VideoFile extends FileType("file-video")
-  case object MusicFile extends FileType("file-music")
-  case object ArchiveFile extends FileType("archive")
-  case object DirectoryType extends FileType("folder")
-  case object ParentDirectoryType extends FileType("arrow-left-thick")
-  case object PdfFile extends FileType("file-pdf")
-  case object WordFile extends FileType("file-word")
-  case object DocumentFile extends FileType("file-document")
-  case object ExcelFile extends FileType("file-excel")
-  case object SpreadsheetFile extends FileType("file-chart")
-  case object DelimitedFile extends FileType("file-delimited")
-  case object PowerpointFile extends FileType("file-powerpoint")
-  case object PresentationFile extends FileType("file-presentation-box")
-  case object XmlFile extends FileType("file-xml")
-  case object EbookFile extends FileType("book-open-variant")
-  case object OtherFile extends FileType("file-outline")
+  case object ExecutableFile extends FileType("open-in-app.png")
+  case object SymbolicLinkType extends FileType("link-variant.png")
+  case object TextFile extends FileType("note-text.png")
+  case object GraphicFile extends FileType("file-image.png")
+  case object VideoFile extends FileType("file-video.png")
+  case object MusicFile extends FileType("file-music.png")
+  case object ArchiveFile extends FileType("archive.png")
+  case object DirectoryType extends FileType("folder.png")
+  case object ParentDirectoryType extends FileType("arrow-left-thick.png")
+  case object PdfFile extends FileType("file-pdf.png")
+  case object WordFile extends FileType("file-word.png")
+  case object DocumentFile extends FileType("file-document.png")
+  case object ExcelFile extends FileType("file-excel.png")
+  case object SpreadsheetFile extends FileType("file-chart.png")
+  case object DelimitedFile extends FileType("file-delimited.png")
+  case object PowerpointFile extends FileType("file-powerpoint.png")
+  case object PresentationFile extends FileType("file-presentation-box.png")
+  case object XmlFile extends FileType("file-xml.png")
+  case object EbookFile extends FileType("book-open-variant.png")
+  case object OtherFile extends FileType("file-outline.png")
 }
 
 class FileTypeManager(archiveManager: ArchiveManager) {
-
   import FileType._
 
   private val defaultFileTypeDetector = new DefaultFileTypeDetector

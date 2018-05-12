@@ -1,10 +1,8 @@
 package org.mikesajak.commander.ui.controller
 
 import javafx.{scene => jfxs}
-
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.ui.UILoader
-
 import scalafx.Includes._
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Insets
@@ -16,7 +14,8 @@ import scalafxml.core.macros.sfxml
 case class SettingsCategory(name: String,
                        panelLayout: Option[String],
                        children: Seq[SettingsCategory]) {
-  lazy val panel: Option[Node] = panelLayout.map(layout => new Node(UILoader.loadScene(s"/layout/settings/$layout")._1){})
+  lazy val panel: Option[Node] = panelLayout.map(layout =>
+    new Node(UILoader.loadScene2(s"/layout/settings/$layout")){})
 }
 object SettingsCategory {
   def apply(name: String, layoutFile: String, children: Seq[SettingsCategory]) =

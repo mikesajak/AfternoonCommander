@@ -2,9 +2,8 @@ package org.mikesajak.commander.ui.controller.ops
 
 import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.task.DirStats
-import org.mikesajak.commander.ui.{ResourceManager, StatsUpdateListener}
+import org.mikesajak.commander.ui.{IconSize, ResourceManager, StatsUpdateListener}
 import org.mikesajak.commander.util.PathUtils
-
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.collections.ObservableBuffer
@@ -33,7 +32,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     val pathType = pathTypeOf(targetPaths)
     dialog.title = s"${resourceMgr.getMessage("app.name")} - ${resourceMgr.getMessage(s"delete_dialog.title")}"
     dialog.headerText = resourceMgr.getMessage(s"delete_dialog.header.${pathType.name}")
-    dialog.graphic = new ImageView(resourceMgr.getIcon("delete-circle-48.png"))
+    dialog.graphic = new ImageView(resourceMgr.getIcon("delete-circle.png", IconSize.Big))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
     pathTypeLabel.text = resourceMgr.getMessage(s"delete_dialog.to_delete.${pathType.name}")
 
@@ -46,7 +45,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     val targetParentName = targetPath.parent.map(_.absolutePath).getOrElse("")
     pathToTargetLabel.text = s"${PathUtils.shortenPathTo(targetParentName, 80)}/"
     pathToTargetLabel.tooltip = s"$targetParentName/"
-    pathToTargetLabel.graphic = new ImageView(resourceMgr.getIcon(pathType.icon))
+    pathToTargetLabel.graphic = new ImageView(resourceMgr.getIcon(pathType.icon, IconSize.Small))
 
     if (pathType != MultiPaths) {
       targetNameLabel.text = targetPath.name
@@ -61,10 +60,10 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       statsMessageLabel.visible = false
     } else {
       statsMessageLabel.visible = true
-      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
+      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon2("loading-chasing-arrows.gif"))
       statsMessageLabel.text = resourceMgr.getMessage("delete_dialog.stats_counting.label")
       summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline-24.png"))
+      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))
       summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_not_available.tooltip")
     }
 
@@ -103,7 +102,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     Platform.runLater {
       summaryMessageLabel.text = message
       summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle-24.png"))
+      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle.png", IconSize.Small))
     }
   }
 }

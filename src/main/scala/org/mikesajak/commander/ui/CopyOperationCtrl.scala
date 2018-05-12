@@ -112,14 +112,13 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
 
     // TODO: i18
     ctrl.init(s"Copy", s"Copy selected $pathType\n$pathName",
-      s"Copying $pathName", s"$pathName", resourceMgr.getIcon("delete-circle-48.png"),
+      s"Copying $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big),
       progressDialog, copyTask)
 
     taskManager.runTaskAsync(copyTask, new MultiProgressMonitor(List(new ConsoleProgressMonitor[IOTaskSummary](),
                                                                      new ProgressMonitorWithGUIPanel(ctrl))))
     val result = progressDialog.showAndWait()
 
-    result
     Success(false) // FIXME: evaluate the result of operation and return proper value
   }
 

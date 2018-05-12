@@ -74,7 +74,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     val deleteTask = new RecursiveDeleteTask(paths, stats)
 
     ctrl.init(s"Delete", s"Delete selected $pathType\n$pathName", // TODO: i18
-              s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle-48.png"), // TODO: i18
+              s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big), // TODO: i18
               progressDialog, deleteTask)
 
     taskManager.runTaskAsync(deleteTask, new ProgressMonitorWithGUIPanel(ctrl))
