@@ -156,13 +156,15 @@ class DirTableController(curDirField: TextField,
           val fileRowOpt = if (curRowIdx >= 0 && curRowIdx < tableItems.size) Option(tableItems.get(curRowIdx))
                            else None
           tooltip = fileRowOpt.map { fileRow =>
-              val fileType = fileTypeMgr.detectFileType(fileRow.path)
-              val fileTypeName = resourceMgr.getMessage(s"file_type_manager.${camelToSnake(fileType.toString)}")
-              new Tooltip() {
-                text = resourceMgr.getMessageWithArgs("file_table_panel.row_tooltip",
-                  List(fileRow.path.absolutePath, fileRow.modifyDate.value,
-                    fileRow.attributes.value, fileRow.size.value, fileTypeName))
-              }
+            val fileType = fileTypeMgr.detectFileType(fileRow.path)
+            val fileTypeName = resourceMgr.getMessageOpt(s"file_type_manager.${camelToSnake(fileType.toString)}")
+              .getOrElse(fileType.toString)
+
+            new Tooltip() {
+              text = resourceMgr.getMessageWithArgs("file_table_panel.row_tooltip",
+                List(fileRow.path.absolutePath, fileRow.modifyDate.value,
+                  fileRow.attributes.value, fileRow.size.value, fileTypeName))
+            }
           }.orNull
         }
       }
