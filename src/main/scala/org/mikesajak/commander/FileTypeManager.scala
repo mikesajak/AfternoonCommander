@@ -8,7 +8,7 @@ sealed abstract class FileType(val icon: Option[String]) {
   def this() = this(None)
 }
 
-object FileType { // TODO: i18 (note: file types are resolved dynamically, by type name)
+object FileType {
   case object ExecutableFile extends FileType("open-in-app.png")
   case object SymbolicLinkType extends FileType("link-variant.png")
   case object TextFile extends FileType("note-text.png")
