@@ -3,7 +3,7 @@ package org.mikesajak.commander.fs.local
 import java.io.File
 import java.time.Instant
 
-import org.mikesajak.commander.fs.{VDirectory, VPath}
+import org.mikesajak.commander.fs.{Attribs, VDirectory, VPath}
 
 trait LocalPath extends VPath {
 
@@ -16,13 +16,16 @@ trait LocalPath extends VPath {
 
   override def size: Long = file.length()
 
-  override def attribs: String = {
-    "" +
-      (if (file.isDirectory) "d" else " ") +
-      (if (file.canRead) "r" else " ") +
-      (if (file.canWrite) "w" else " ") +
-      (if (file.canExecute) "x" else " ") +
-      (if (file.isHidden) "h" else " ")
+  override def attributes: Attribs = {
+    val b = Attribs.builder()
+
+    if (file.isDirectory) b.addAttrib('d')
+    if (file.canRead) b.addAttrib('r')
+    if (file.canWrite) b.addAttrib('w')
+    if (file.canExecute) b.addAttrib('x')
+    if (file.isHidden) b.addAttrib('h')
+
+    b.build()
   }
 
   override def modificationDate: Instant = Instant.ofEpochMilli(file.lastModified())

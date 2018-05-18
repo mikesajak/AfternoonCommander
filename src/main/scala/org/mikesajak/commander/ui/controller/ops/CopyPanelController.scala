@@ -68,7 +68,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       statsMessageLabel.visible = false
     } else {
       statsMessageLabel.visible = true
-      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon2("loading-chasing-arrows.gif"))
+      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
       statsMessageLabel.text = resourceMgr.getMessage("copy_dialog.stats_counting.label")
       summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_not_available.label")
       summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))

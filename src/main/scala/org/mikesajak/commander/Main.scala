@@ -28,7 +28,7 @@ object Main extends JFXApp {
 
   stage = new PrimaryStage() {
     title = resourceMgr.getMessage("app.name")
-    icons += resourceMgr.getIcon2("internal_drive.png")
+    icons += resourceMgr.getIcon("internal_drive.png")
     scene = new Scene(root)
   }
 

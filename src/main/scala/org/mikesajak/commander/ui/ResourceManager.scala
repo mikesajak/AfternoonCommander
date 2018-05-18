@@ -20,18 +20,38 @@ object IconSize {
   * Created by mike on 23.04.17.
   */
 class ResourceManager {
+
+  private case class CacheKey(path: String, size: Option[(Int, Int)])
+  private object CacheKey {
+    def apply(path: String): CacheKey = new CacheKey(path, None)
+  }
+  private var cache: Map[CacheKey, Image] = Map()
+
+  private def getImage(key: CacheKey) = {
+    if (!cache.contains(key)) {
+      val image = mkImage(key.path, key.size)
+      cache += key -> image
+    }
+    cache(key)
+  }
+
+  private def mkImage(path: String, size: Option[(Int, Int)]) =
+    size.map(s => new Image(path, s._1, s._2, true, true))
+      .getOrElse(new Image(path))
+
   def getIcon(name: String, size: Option[IconSize]): Image = {
     val path = s"/images/$name"
-    size.map(s => getIcon(path, s)).getOrElse(getIcon2(path))
+    size.map(s => getIcon(path, s)).getOrElse(getIcon(path))
   }
 
   def getIcon(name: String, size: IconSize): Image =
     getIcon(name, size.size, size.size)
 
-  def getIcon2(name: String): Image = {
+  def getIcon(name: String): Image = {
     val imagePath = s"/images/$name"
     try {
-      new Image(imagePath)
+//      new Image(imagePath)
+      getImage(CacheKey(imagePath))
     } catch {
       case e: Exception =>
         Logger[ResourceManager].warn(s"Exception thrown during getting icon $imagePath", e)
@@ -42,7 +62,7 @@ class ResourceManager {
   def getIcon(name: String, width: Int, height: Int): Image = {
     val imagePath = s"/images/$name"
     try {
-      new Image(imagePath, width, height, true, true)
+      getImage(CacheKey(imagePath, Some((width, height))))
     } catch {
       case e: Exception =>
         Logger[ResourceManager].warn(s"Exception thrown during getting icon $imagePath, width=$width, height=$height", e)

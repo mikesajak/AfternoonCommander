@@ -60,7 +60,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       statsMessageLabel.visible = false
     } else {
       statsMessageLabel.visible = true
-      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon2("loading-chasing-arrows.gif"))
+      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
       statsMessageLabel.text = resourceMgr.getMessage("delete_dialog.stats_counting.label")
       summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
       summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))

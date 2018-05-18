@@ -7,7 +7,6 @@ import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.ui.controller.ops.StatsUtils.ContentType
 import org.mikesajak.commander.ui.controller.ops.StatsUtils.ContentType.ContentType
 import org.mikesajak.commander.util.UnitFormatter._
-
 import scalafx.application.Platform
 import scalafx.scene.control.Label
 import scalafxml.core.macros.sfxml
@@ -82,7 +81,7 @@ class StatsPanelControllerImpl(modifiedLabel: Label,
   def setProperties(path: VPath): Unit = {
     Platform.runLater {
       modifiedValueLabel.text = path.modificationDate.toString // TODO: format
-      attribsValueLabel.text = path.attribs
+      attribsValueLabel.text = path.attributes.toString
       if (path.isFile)
         sizeValueLabel.text = formatDataSize(path.size)
     }

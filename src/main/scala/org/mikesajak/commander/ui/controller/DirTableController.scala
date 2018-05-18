@@ -13,8 +13,10 @@ import scalafx.collections.ObservableBuffer
 import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
 import scalafx.geometry.Insets
 import scalafx.scene.control._
+import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
+import scalafx.scene.{CacheHint, Group, Node}
 import scalafx.stage.Popup
 import scalafxml.core.macros.sfxml
 
@@ -30,7 +32,7 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
   val extension = new StringProperty(mkExt(path))
   val size = new StringProperty(formatSize(path))
   val modifyDate = new StringProperty(path.modificationDate.toString)
-  val attributes = new StringProperty(path.attribs)
+  val attributes = new StringProperty(path.attributes.toString)
 
   private def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else pname
   private def mkExt(p: VPath): String = if (p.isDirectory) "" else pext
@@ -103,12 +105,11 @@ class DirTableController(curDirField: TextField,
   addTabButton.padding = Insets.Empty
   curDirField.prefHeight <== addTabButton.height
 
-  private val showHiddenFilesPreditate = {
-    (row: FileRow) =>
-      !row.path.attribs.contains('h') || config.boolProperty("file_panel", "show_hidden").getOrElse(false)
+  private val showHiddenFilesPreditate = { row: FileRow =>
+    !row.path.attributes.contains('h') || config.boolProperty("file_panel", "show_hidden").getOrElse(false)
   }
 
-  private val showHiddenConfigObserver = new ConfigObserver {
+  private val showHiddenConfigObserver: ConfigObserver = new ConfigObserver {
     override val observedKey = ConfigKey("file_panel", "show_hidden")
     override def configChanged(key: ConfigKey): Unit = key match {
       case ConfigKey("file_panel", "show_hidden") =>
@@ -140,8 +141,7 @@ class DirTableController(curDirField: TextField,
     idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
       new TableCell[FileRow, VPath]() {
         item.onChange { (_, _, newValue) =>
-          graphic = if (newValue == null) null
-                    else findIconFor(newValue)
+          graphic = Option(newValue).flatMap(findIconFor).orNull
         }
       }
     }
@@ -245,13 +245,27 @@ class DirTableController(curDirField: TextField,
     selectIndex(selIndex)
   }
 
-  private def findIconFor(path: VPath): ImageView = {
+  private def findIconFor(path: VPath): Option[Node] = {
     val fileType = fileTypeMgr.detectFileType(path)
     fileType.icon.map { iconFile =>
       val imageView = new ImageView(resourceMgr.getIcon(iconFile, 18, 18))
       imageView.preserveRatio = true
-      imageView
-    }.orNull
+      imageView.cache = true
+      imageView.cacheHint = CacheHint.Speed
+
+      if (path.attributes.contains('x') && !path.attributes.contains('d')) new Group(imageView, execOverlayIcon)
+      else imageView
+    }
+  }
+
+  private def execOverlayIcon: ImageView = {
+    val asterisk = new ImageView(resourceMgr.getIcon("asterisk-green.png", 14, 14))
+    asterisk.x = 6
+    asterisk.y = 6
+    asterisk.blendMode = BlendMode.SrcAtop
+    asterisk.cache = true
+    asterisk.cacheHint = CacheHint.Speed
+    asterisk
   }
 
   private def handleKeyEvent(event: KeyEvent) {

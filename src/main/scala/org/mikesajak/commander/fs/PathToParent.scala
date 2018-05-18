@@ -18,7 +18,7 @@ class PathToParent(val currentDir: VDirectory) extends VDirectory {
 
   override def absolutePath: String = currentDir.parent.get.absolutePath
 
-  override def attribs: String = currentDir.parent.get.attribs
+  override def attributes: Attribs = currentDir.parent.get.attributes
 
   override def modificationDate: Instant = currentDir.parent.get.modificationDate
 

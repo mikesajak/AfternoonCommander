@@ -50,7 +50,7 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
     statsPanelController.init(paths)
 
-    messageLabel.graphic = new ImageView(resourceMgr.getIcon2("loading-chasing-arrows.gif"))
+    messageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
     messageLabel.text = resourceMgr.getMessage("count_stats_dialog.counting.label")
 
     dialog.dialogPane().buttonTypes =

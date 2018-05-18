@@ -5,6 +5,32 @@ import java.time.Instant
 
 import org.mikesajak.commander.util.PathUtils
 
+import scala.collection.SortedSet
+
+class Attribs(val values: SortedSet[Char]) {
+  def this() = this(SortedSet.empty[Char])
+  def this(attrs: Char*) = this(SortedSet(attrs: _*))
+
+  def contains(attr: Char): Boolean = values.contains(attr)
+
+  override def toString: String = (values foldLeft "")(_+_)
+}
+
+object Attribs {
+  def builder() = new Builder()
+
+  class Builder {
+    private var attrs = List[Char]()
+
+    def addAttrib(a: Char): Builder = {
+      attrs :+= a
+      this
+    }
+
+    def build() = new Attribs(SortedSet(attrs: _*))
+  }
+}
+
 trait VPath {
   def name: String
   def parent: Option[VDirectory]
@@ -12,7 +38,7 @@ trait VPath {
   def absolutePath: String
   def segments: Seq[String] = PathUtils.collectParents(this)
   def modificationDate: Instant
-  def attribs: String
+  def attributes: Attribs
   def isDirectory: Boolean
   def isFile: Boolean = !isDirectory
   def fileSystem: FS
