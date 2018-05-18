@@ -1,15 +1,14 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import javafx.scene.control
-
 import org.mikesajak.commander.task.CancellableTask
-
-import scala.language.implicitConversions
 import scalafx.Includes._
 import scalafx.event.ActionEvent
 import scalafx.scene.control._
 import scalafx.scene.image.{Image, ImageView}
 import scalafxml.core.macros.sfxml
+
+import scala.language.implicitConversions
 
 trait ProgressPanelController {
   def init(operationName: String, headerText: String, details1: String, details2: String,
@@ -76,7 +75,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
   override def updateFinished(details: String): Unit = {
     detailsLabel.text = details
-    progressBar.progress = 100
+    progressBar.progress = 1
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
     if (!dontCloseCheckbox.selected.value) {
        dialog.result = ButtonType.Close

@@ -66,8 +66,8 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
     val (pathType, pathName) =
       paths match {
-        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", "${p.head}") // TODO: i18
-        case p if p.size == 1 => ("file", "${p.head") // TODO: i18
+        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", p.head.toString) // TODO: i18
+        case p if p.size == 1 => ("file", p.head.toString) // TODO: i18
         case p @ _ => (s"paths", s"${p.size} elements") // TODO: i18
       }
 

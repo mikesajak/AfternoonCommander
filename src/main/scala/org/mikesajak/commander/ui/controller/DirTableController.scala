@@ -106,7 +106,9 @@ class DirTableController(curDirField: TextField,
   curDirField.prefHeight <== addTabButton.height
 
   private val showHiddenFilesPreditate = { row: FileRow =>
-    !row.path.attributes.contains('h') || config.boolProperty("file_panel", "show_hidden").getOrElse(false)
+    row.path.isInstanceOf[PathToParent] ||
+      !row.path.attributes.contains('h') ||
+      config.boolProperty("file_panel", "show_hidden").getOrElse(false)
   }
 
   private val showHiddenConfigObserver: ConfigObserver = new ConfigObserver {

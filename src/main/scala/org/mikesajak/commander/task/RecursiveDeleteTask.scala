@@ -63,7 +63,7 @@ class RecursiveDeleteTask(targetPaths: Seq[VPath], targetStats: Option[DirStats]
       val fs = dir.fileSystem
       fs.delete(dir) match {
         case Success(deleted) => if (deleted) IOTaskSummary.success(dir)
-                                 else IOTaskSummary.empty
+                                 else IOTaskSummary.failed(dir, s"Directory $dir, cannot be deleted. Dir contents: ${dir.children}")
 
         case Failure(exception) => IOTaskSummary.failed(dir, s"Delete of directory $dir failed with error: $exception")
       }
@@ -83,7 +83,7 @@ class RecursiveDeleteTask(targetPaths: Seq[VPath], targetStats: Option[DirStats]
     val targetCount = target.numFiles + target.numDirs
     val curCount = current.numFiles + current.numDirs
     val progress = curCount / targetCount.toFloat
-    Math.min(progress, 100.0f)
+    Math.min(progress, 1.0f)
   }
 
 }
