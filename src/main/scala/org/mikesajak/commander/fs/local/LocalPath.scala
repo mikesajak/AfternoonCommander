@@ -1,6 +1,7 @@
 package org.mikesajak.commander.fs.local
 
 import java.io.File
+import java.nio.file.Files
 import java.time.Instant
 
 import org.mikesajak.commander.fs.Attrib._
@@ -20,11 +21,13 @@ trait LocalPath extends VPath {
   override def attributes: Attribs = {
     val b = Attribs.builder()
 
-    if (file.isDirectory) b.addAttrib(Attrib.Directory)
-    if (file.canRead) b.addAttrib(Readable)
-    if (file.canWrite) b.addAttrib(Writable)
-    if (file.canExecute) b.addAttrib(Executable)
-    if (file.isHidden) b.addAttrib(Hidden)
+    val path = file.toPath
+    if (Files.isDirectory(path)) b.addAttrib(Attrib.Directory)
+    if (Files.isReadable(path)) b.addAttrib(Readable)
+    if (Files.isWritable(path)) b.addAttrib(Writable)
+    if (Files.isExecutable(path)) b.addAttrib(Executable)
+    if (Files.isHidden(path)) b.addAttrib(Hidden)
+    if (Files.isSymbolicLink(path)) b.addAttrib(Symlink)
 
     b.build()
   }
