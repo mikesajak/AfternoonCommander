@@ -8,7 +8,7 @@ import scalafx.scene.image.Image
 
 import scala.language.implicitConversions
 
-sealed abstract class IconSize(val size: Int)
+sealed abstract class IconSize(val size: Double)
 
 object IconSize {
   case object Small extends IconSize(24)
@@ -21,7 +21,7 @@ object IconSize {
   */
 class ResourceManager {
 
-  private case class CacheKey(path: String, size: Option[(Int, Int)])
+  private case class CacheKey(path: String, size: Option[(Double, Double)])
   private object CacheKey {
     def apply(path: String): CacheKey = new CacheKey(path, None)
   }
@@ -35,7 +35,7 @@ class ResourceManager {
     cache(key)
   }
 
-  private def mkImage(path: String, size: Option[(Int, Int)]) =
+  private def mkImage(path: String, size: Option[(Double, Double)]) =
     size.map(s => new Image(path, s._1, s._2, true, true))
       .getOrElse(new Image(path))
 
@@ -59,7 +59,7 @@ class ResourceManager {
     }
   }
 
-  def getIcon(name: String, width: Int, height: Int): Image = {
+  def getIcon(name: String, width: Double, height: Double): Image = {
     val imagePath = s"/images/$name"
     try {
       getImage(CacheKey(imagePath, Some((width, height))))

@@ -245,7 +245,6 @@ class DirTableController(curDirField: TextField,
       val idx = dirTableView.items.value.map(fileRow => fileRow.path.name).indexOf(target)
       if (idx > 0) idx else 0
     }
-
     selectIndex(selIndex)
   }
 
@@ -269,35 +268,31 @@ class DirTableController(curDirField: TextField,
     }
   }
 
-  private def execOverlayIcon: Node = {
-    val asterisk = new ImageView(resourceMgr.getIcon("asterisk-light.png", 9, 9))
-    asterisk.cache = true
-    asterisk.cacheHint = CacheHint.Speed
-    asterisk.x = 9
-    asterisk.y = 10
-    asterisk.blendMode = BlendMode.SrcAtop
-    new Group(circle(14,15), asterisk)
+  private def execOverlayIcon: Node =
+    createOverlayBadge(10, 11, 10, Color.DarkGreen, "asterisk-light.png")
+
+  private def symlinkOverlayIcon =
+    createOverlayBadge(0, 11, 10, Color.DarkBlue, "icons8-right-2-48.png")
+
+  private def createOverlayBadge(posX: Double, posY: Double, size: Double, color: Color,
+                                 iconName: String) = {
+    val icon = new ImageView(resourceMgr.getIcon(iconName, size, size))
+    icon.cache = true
+    icon.cacheHint = CacheHint.Speed
+    icon.x = posX
+    icon.y = posY
+    icon.blendMode = BlendMode.SrcAtop
+    val rad = size / 2 + 0.5
+    new Group(circle(posX + rad, posY + rad, rad, color), icon)
   }
 
-  private def symlinkOverlayIcon = {
-    val linkIcon = new ImageView(resourceMgr.getIcon("link_white_48x48-2.png", 9, 9))
-    linkIcon.cache = true
-    linkIcon.cacheHint = CacheHint.Speed
-    linkIcon.x = 9
-    linkIcon.y = 0
-    linkIcon.blendMode = BlendMode.SrcAtop
-    new Group(circle(14,5), linkIcon)
-  }
-
-  private def circle(posX: Int, posY: Int) = {
+  private def circle(posX: Double, posY: Double, radius0: Double, color: Color) =
     new Circle {
-      radius = 5
+      radius = radius0
       centerX = posX
       centerY = posY
-      stroke = Color.White
-      fill = Color.Red
+      fill = color
     }
-  }
 
   private def handleKeyEvent(event: KeyEvent) {
     println(s"handleKeyEvent: $event")
