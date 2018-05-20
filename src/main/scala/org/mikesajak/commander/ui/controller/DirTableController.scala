@@ -2,7 +2,7 @@ package org.mikesajak.commander.ui.controller
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
-import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
+import org.mikesajak.commander.fs._
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
@@ -16,6 +16,8 @@ import scalafx.scene.control._
 import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
+import scalafx.scene.paint.Color
+import scalafx.scene.shape.Circle
 import scalafx.scene.{CacheHint, Group, Node}
 import scalafx.stage.Popup
 import scalafxml.core.macros.sfxml
@@ -107,7 +109,7 @@ class DirTableController(curDirField: TextField,
 
   private val showHiddenFilesPreditate = { row: FileRow =>
     row.path.isInstanceOf[PathToParent] ||
-      !row.path.attributes.contains('h') ||
+      !row.path.attributes.contains(Attrib.Hidden) ||
       config.boolProperty("file_panel", "show_hidden").getOrElse(false)
   }
 
@@ -248,26 +250,53 @@ class DirTableController(curDirField: TextField,
   }
 
   private def findIconFor(path: VPath): Option[Node] = {
+    var icon = findIcon(path)
+    if (path.attributes.contains(Attrib.Executable) && !path.attributes.contains(Attrib.Directory))
+      icon = icon.map(i => new Group(i, execOverlayIcon))
+    if (path.attributes.contains(Attrib.Symlink))
+      icon = icon.map(i => new Group(i, symlinkOverlayIcon))
+    icon
+  }
+
+  private def findIcon(path: VPath): Option[Node] = {
     val fileType = fileTypeMgr.detectFileType(path)
     fileType.icon.map { iconFile =>
       val imageView = new ImageView(resourceMgr.getIcon(iconFile, 18, 18))
       imageView.preserveRatio = true
       imageView.cache = true
       imageView.cacheHint = CacheHint.Speed
-
-      if (path.attributes.contains('x') && !path.attributes.contains('d')) new Group(imageView, execOverlayIcon)
-      else imageView
+      imageView
     }
   }
 
-  private def execOverlayIcon: ImageView = {
-    val asterisk = new ImageView(resourceMgr.getIcon("asterisk-green.png", 14, 14))
-    asterisk.x = 6
-    asterisk.y = 6
-    asterisk.blendMode = BlendMode.SrcAtop
+  private def execOverlayIcon: Node = {
+    val asterisk = new ImageView(resourceMgr.getIcon("asterisk-light.png", 9, 9))
     asterisk.cache = true
     asterisk.cacheHint = CacheHint.Speed
-    asterisk
+    asterisk.x = 9
+    asterisk.y = 10
+    asterisk.blendMode = BlendMode.SrcAtop
+    new Group(circle(14,15), asterisk)
+  }
+
+  private def symlinkOverlayIcon = {
+    val linkIcon = new ImageView(resourceMgr.getIcon("link_white_48x48-2.png", 9, 9))
+    linkIcon.cache = true
+    linkIcon.cacheHint = CacheHint.Speed
+    linkIcon.x = 9
+    linkIcon.y = 0
+    linkIcon.blendMode = BlendMode.SrcAtop
+    new Group(circle(14,5), linkIcon)
+  }
+
+  private def circle(posX: Int, posY: Int) = {
+    new Circle {
+      radius = 5
+      centerX = posX
+      centerY = posY
+      stroke = Color.White
+      fill = Color.Red
+    }
   }
 
   private def handleKeyEvent(event: KeyEvent) {

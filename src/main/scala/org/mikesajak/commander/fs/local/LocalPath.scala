@@ -3,7 +3,8 @@ package org.mikesajak.commander.fs.local
 import java.io.File
 import java.time.Instant
 
-import org.mikesajak.commander.fs.{Attribs, VDirectory, VPath}
+import org.mikesajak.commander.fs.Attrib._
+import org.mikesajak.commander.fs.{Attrib, Attribs, VDirectory, VPath}
 
 trait LocalPath extends VPath {
 
@@ -19,11 +20,11 @@ trait LocalPath extends VPath {
   override def attributes: Attribs = {
     val b = Attribs.builder()
 
-    if (file.isDirectory) b.addAttrib('d')
-    if (file.canRead) b.addAttrib('r')
-    if (file.canWrite) b.addAttrib('w')
-    if (file.canExecute) b.addAttrib('x')
-    if (file.isHidden) b.addAttrib('h')
+    if (file.isDirectory) b.addAttrib(Attrib.Directory)
+    if (file.canRead) b.addAttrib(Readable)
+    if (file.canWrite) b.addAttrib(Writable)
+    if (file.canExecute) b.addAttrib(Executable)
+    if (file.isHidden) b.addAttrib(Hidden)
 
     b.build()
   }

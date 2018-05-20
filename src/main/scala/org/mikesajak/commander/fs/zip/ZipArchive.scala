@@ -44,7 +44,7 @@ class ZipRoot(parentDir: VDirectory, zipFile: jZipFile) extends VDirectory {
   override def parent: Option[VDirectory] = Some(parentDir)
   override def absolutePath: String = parentDir.absolutePath + "/zip://" + zipFile.getName
   override def modificationDate: Instant = Instant.now()
-  override val attributes: Attribs = new Attribs('r')
+  override val attributes: Attribs = new Attribs(Attrib.Readable)
 
   override def size: Long = 0
 
@@ -80,7 +80,7 @@ class ZipDir(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) exte
 
   override def modificationDate: Instant = zipEntry.getLastModifiedTime.toInstant
 
-  override val attributes: Attribs = new Attribs('r')
+  override val attributes: Attribs = new Attribs(Attrib.Readable)
 
   override def fileSystem: FS = ???
 
@@ -107,7 +107,7 @@ class ZipInternalFile(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEn
 
   override def modificationDate: Instant = zipEntry.getLastModifiedTime.toInstant
 
-  override val attributes: Attribs = new Attribs('r')
+  override val attributes: Attribs = new Attribs(Attrib.Readable)
 
   override def isDirectory: Boolean = false
 

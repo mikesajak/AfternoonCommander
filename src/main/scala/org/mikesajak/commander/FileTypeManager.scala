@@ -1,6 +1,5 @@
 package org.mikesajak.commander
 
-import org.mikesajak.commander.fs.local.{SymlinkDir, SymlinkFile}
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
 
 sealed abstract class FileType(val icon: Option[String]) {
@@ -99,8 +98,8 @@ class DefaultFileTypeDetector extends FileTypeDetector {
 
   override def detect(path: VPath): Option[FileType] = path match {
     case d: PathToParent => Some(FileType.ParentDirectoryType)
-    case s: SymlinkFile => Some(FileType.SymbolicLinkType)
-    case s: SymlinkDir => Some(FileType.SymbolicLinkType)
+//    case s: SymlinkFile => Some(FileType.SymbolicLinkType)
+//    case s: SymlinkDir => Some(FileType.SymbolicLinkType)
     case d: VDirectory=> Some(FileType.DirectoryType)
 //    case f: VFile if f.attribs contains 'x' => Some(ExecutableFile)
     case _ => None
