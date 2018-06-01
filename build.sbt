@@ -30,4 +30,3 @@ libraryDependencies += "net.samuelcampos" % "usbdrivedetector" % "2.0.2"
 libraryDependencies += "com.beachape" %% "enumeratum" % "1.5.13"
 
 libraryDependencies += "com.typesafe.akka" % "akka-actor-typed_2.12" % "2.5.9"
-
