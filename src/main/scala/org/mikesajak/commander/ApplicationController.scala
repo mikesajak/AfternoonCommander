@@ -1,7 +1,6 @@
 package org.mikesajak.commander
 
 import org.mikesajak.commander.config.Configuration
-
 import scalafx.application.Platform
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
@@ -25,16 +24,17 @@ class ApplicationController(config: Configuration) {
     mainStage0 = Some(stage)
   }
 
-  def exitApplication(): Boolean = {
+  def exitApplication(): Unit = exitApplication(() => false)
+  def exitApplication(exitAction: () => Boolean): Unit = {
     if (canExit) {
       // TODO: save config, close connections, etc.
       config.intProperty("window", "width") := mainStage.width.toInt
       config.intProperty("window", "height") := mainStage.height.toInt
       config.save()
 
-      Platform.exit()
+      if (!exitAction())
+        Platform.exit()
     }
-    false
   }
 
   private def canExit: Boolean = {
