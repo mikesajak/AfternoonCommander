@@ -250,7 +250,7 @@ class DirTableController(curDirField: TextField,
 
   private def findIconFor(path: VPath): Option[Node] = {
     var icon = findIcon(path)
-    if (path.attributes.contains(Attrib.Executable) && !path.attributes.contains(Attrib.Directory))
+    if (fileTypeMgr.isExecutable(path))
       icon = icon.map(i => new Group(i, execOverlayIcon))
     if (path.attributes.contains(Attrib.Symlink))
       icon = icon.map(i => new Group(i, symlinkOverlayIcon))

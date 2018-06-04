@@ -1,6 +1,6 @@
 package org.mikesajak.commander
 
-import org.mikesajak.commander.fs.{PathToParent, VDirectory, VFile, VPath}
+import org.mikesajak.commander.fs._
 
 sealed abstract class FileType(val icon: Option[String]) {
   def this(icon: String) = this(Some(icon))
@@ -88,6 +88,27 @@ class FileTypeManager(archiveManager: ArchiveManager) {
       case OtherFile => None
       case t @ _ => handlersMap.get(t)
     }
+
+
+  def isExecutable(path: VPath): Boolean = {
+    val execAttrib = path.attributes.contains(Attrib.Executable) && !path.attributes.contains(Attrib.Directory)
+
+    if (!isWindows()) execAttrib
+    else {
+      val execExtensions = List("exe", "bat", "cmd")
+      path match {
+        case f: VFile if f.extension.isDefined => execExtensions.contains(f.extension.get)
+        case _ => false
+      }
+    }
+
+  }
+
+  def isWindows() =
+    Option(System.getProperty("os.name"))
+      .map(_.toLowerCase)
+      .exists(_.startsWith("windows"))
+
 }
 
 trait FileTypeDetector {
