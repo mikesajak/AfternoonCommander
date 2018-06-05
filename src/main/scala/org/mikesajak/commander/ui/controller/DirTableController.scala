@@ -1,5 +1,7 @@
 package org.mikesajak.commander.ui.controller
 
+import java.io.IOException
+
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
@@ -315,8 +317,14 @@ class DirTableController(curDirField: TextField,
       changeDir(path.asInstanceOf[VDirectory])
     else {
       val fileType = fileTypeMgr.detectFileType(path)
-      val fileTypeActionHandler = fileTypeMgr.fileTypeHandler(path)
-      println(s"TODO: file action $path, fileType=$fileType, fileTypeActionHandler=$fileTypeActionHandler")
+      val maybeHandler = fileTypeMgr.fileTypeHandler(path)
+      println(s"file action $path, fileType=$fileType, fileTypeActionHandler=$maybeHandler")
+      for (handler <- maybeHandler) try {
+        handler.handle(path)
+      } catch {
+        case e: IOException => logger.info(s"Error while opening file $path by default OS/Desktop environment application. Most probably there's no association defined for this file.", e)
+      }
+
     }
   }
 

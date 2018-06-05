@@ -1,7 +1,10 @@
 package org.mikesajak.commander
 
+import java.awt.Desktop
+
 import org.mikesajak.commander.OSType.Windows
 import org.mikesajak.commander.fs._
+import org.mikesajak.commander.fs.local.LocalFile
 
 sealed abstract class FileType(val icon: Option[String]) {
   def this(icon: String) = this(Some(icon))
@@ -37,6 +40,7 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver) {
   private val defaultFileTypeDetector = new DefaultFileTypeDetector
   private var fileTypeDetectors = List[FileTypeDetector]()
   private var handlersMap = Map[FileType, FileHandler]()
+  private val defaultFileHandler = new DefaultFileHandler
 
 //  registerFileTypeDetector(archiveManager)
   registerFileTypeDetector(new SimpleByExtensionFileDetector(List("zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"), ArchiveFile))
@@ -86,8 +90,8 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver) {
 
   def fileTypeHandler(path: VPath): Option[FileHandler] =
     detectFileType(path) match {
-      case OtherFile => None
-      case t @ _ => handlersMap.get(t)
+      case OtherFile => Some(defaultFileHandler)//None
+      case t @ _ => handlersMap.get(t).orElse(Some(defaultFileHandler))
     }
 
   def isExecutable(path: VPath): Boolean = {
@@ -134,4 +138,13 @@ class SimpleByExtensionFileDetector(extensions: Seq[String], fileType: FileType)
 
 trait FileHandler {
   def handle(path: VPath)
+}
+
+class DefaultFileHandler extends FileHandler {
+  override def handle(path: VPath): Unit = {
+    if (path.isFile && path.isInstanceOf[LocalFile]) {
+      val file = path.asInstanceOf[LocalFile]
+      Desktop.getDesktop.open(file.file)
+    }
+  }
 }
