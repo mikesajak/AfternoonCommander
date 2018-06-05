@@ -1,5 +1,6 @@
 package org.mikesajak.commander
 
+import org.mikesajak.commander.OSType.Windows
 import org.mikesajak.commander.fs._
 
 sealed abstract class FileType(val icon: Option[String]) {
@@ -30,7 +31,7 @@ object FileType {
   case object OtherFile extends FileType("file-outline.png")
 }
 
-class FileTypeManager(archiveManager: ArchiveManager) {
+class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver) {
   import FileType._
 
   private val defaultFileTypeDetector = new DefaultFileTypeDetector
@@ -89,26 +90,19 @@ class FileTypeManager(archiveManager: ArchiveManager) {
       case t @ _ => handlersMap.get(t)
     }
 
-
   def isExecutable(path: VPath): Boolean = {
     val execAttrib = path.attributes.contains(Attrib.Executable) && !path.attributes.contains(Attrib.Directory)
 
-    if (!isWindows()) execAttrib
+    if (osResolver.getOSType != Windows) execAttrib
     else {
       val execExtensions = List("exe", "bat", "cmd")
-      path match {
+      val knownExtension = path match {
         case f: VFile if f.extension.isDefined => execExtensions.contains(f.extension.get)
         case _ => false
       }
+      execAttrib && knownExtension
     }
-
   }
-
-  def isWindows() =
-    Option(System.getProperty("os.name"))
-      .map(_.toLowerCase)
-      .exists(_.startsWith("windows"))
-
 }
 
 trait FileTypeDetector {

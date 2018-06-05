@@ -5,6 +5,8 @@ import java.nio.file.{FileStore, FileSystems}
 
 import javax.swing.filechooser.FileSystemView
 import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager
+import org.mikesajak.commander.OSResolver
+import org.mikesajak.commander.OSType.Windows
 import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.util.Utils
 
@@ -13,8 +15,7 @@ import scala.collection.JavaConverters._
 /**
 *  Created by mike on 25.10.14.
 */
-class FilesystemsManager {
-  private val isWindowsOS = System.getProperty("os.name").toLowerCase.contains("windows")
+class FilesystemsManager(osResolver: OSResolver) {
   private lazy val driveDetector = new USBDeviceDetectorManager()
 
   private var filesystems = Seq[FS]()
@@ -74,7 +75,7 @@ class FilesystemsManager {
     !internalFilesystems.exists(r => r.findFirstMatchIn(fsType).isDefined)
 
   private def parseFileStore(fileStore: FileStore) =
-    if (isWindowsOS) parseWindowsFileStore(fileStore)
+    if (osResolver.getOSType == Windows) parseWindowsFileStore(fileStore)
     else parseUnixFileStore(fileStore)
 
   private def parseWindowsFileStore(fileStore: FileStore): Option[(String, Map[String, String])] = {

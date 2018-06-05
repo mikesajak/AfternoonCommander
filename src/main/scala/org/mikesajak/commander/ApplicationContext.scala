@@ -36,7 +36,12 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideFileTypeManager(archiveManager: ArchiveManager) = new FileTypeManager(archiveManager)
+  def provideOSResolver = new OSResolver
+
+  @Provides
+  @Singleton
+  def provideFileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver) =
+    new FileTypeManager(archiveManager, osResolver)
 
   @Provides
   @Singleton
@@ -44,8 +49,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideFilesystemsManager(): FilesystemsManager = {
-    val fsMgr = new FilesystemsManager()
+  def provideFilesystemsManager(osResolver: OSResolver): FilesystemsManager = {
+    val fsMgr = new FilesystemsManager(osResolver)
     fsMgr.init()
     fsMgr
   }
