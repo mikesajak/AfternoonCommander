@@ -78,12 +78,9 @@ class DirPanelController(tabPane: TabPane,
 
     topUIPane.setStyle("-fx-border-color: Transparent")
     eventBus.register(new AnyRef() {
-      @Subscribe
-      def handle(event: PanelSelected) = {
-        if (event.newPanelId == panelId)
-          topUIPane.setStyle("-fx-border-color: Blue")
-        else
-          topUIPane.setStyle("-fx-border-color: Transparent")
+      @Subscribe def handle(event: PanelSelected) = {
+        val style = if (event.newPanelId == panelId) "-fx-border-color: Blue" else "-fx-border-color: Transparent"
+        topUIPane.setStyle(style)
       }
     })
 
@@ -226,7 +223,7 @@ class DirPanelController(tabPane: TabPane,
 
   private def setCurrentTabDir(dir: VDirectory): Unit = {
     if (dir.fileSystem.exists(dir)) {
-      dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
+//      dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
       updateCurTab(dir)
     } else {
       logger.info(s"Cannot set current tab directory $dir. The target directory does not exist.")
@@ -265,11 +262,14 @@ class DirPanelController(tabPane: TabPane,
     val selectionModel = tabPane.selectionModel.value
     val curTab = selectionModel.getSelectedItem
 
+    // TODO: Hide this inside DirTabManager!
+    dirTabManager.selectedTab.controller.setCurrentDirectory(path)
     dirTabManager.tab(selectionModel.getSelectedIndex).dir = path
     DirTab.updateTab(curTab, path)
 
     updateDriveSelection(path)
 
+    // TODO: #eventbus Use publish event, and let any subscribers (global, local history managers etc.) listen and react
     localHistoryMgr.add(path)
     globalHistoryMgr.add(path)
   }
