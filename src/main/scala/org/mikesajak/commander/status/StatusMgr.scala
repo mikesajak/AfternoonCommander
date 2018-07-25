@@ -1,7 +1,10 @@
 package org.mikesajak.commander.status
 
+import com.google.common.eventbus.Subscribe
 import com.typesafe.scalalogging.Logger
+import org.mikesajak.commander.EventBus
 import org.mikesajak.commander.fs.VPath
+import org.mikesajak.commander.status.StatusChangeEvents.{PanelSelected, PanelSelectionLogger}
 import org.mikesajak.commander.ui.controller.PanelId.LeftPanel
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
 
@@ -12,37 +15,39 @@ trait PanelData {
   def selection: Seq[VPath]
 }
 
-class StatusMgr(val leftDirTabMgr: DirTabManager, val rightDirTabMgr: DirTabManager) {
+class StatusMgr(val leftDirTabMgr: DirTabManager, val rightDirTabMgr: DirTabManager,
+                eventBus: EventBus) {
   private val logger = Logger(getClass)
 
   private var selectedPanel0: PanelId = LeftPanel
-  private var selectedPanelListeners = List[PanelSelectionListener]()
+
+  eventBus.register(new PanelSelectionLogger)
 
   def selectedPanel: PanelId = selectedPanel0
   def selectedPanel_=(panelId: PanelId): Unit = {
 //    if (panelId != selectedPanel0) {
       val oldSelectedPanel = selectedPanel0
       selectedPanel0 = panelId
-      logger.debug(s"Change panel selection: panelId: $oldSelectedPanel -> $selectedPanel0")
-      selectedPanelListeners.foreach(_.apply(oldSelectedPanel, selectedPanel0))
+      eventBus.publish(PanelSelected(oldSelectedPanel, selectedPanel0))
 //    }
   }
 
   def unselectedPanel: PanelId = PanelId.oppositePanel(selectedPanel)
-
-  def addPanelSelectionListener(listener: PanelSelectionListener): Unit =
-    selectedPanelListeners ::= listener
-  def removePanelSelectionListener(listener: PanelSelectionListener): Unit =
-    selectedPanelListeners = selectedPanelListeners.filter(l => l != listener)
-
 
   def tabManager(panelId: PanelId): DirTabManager =
     if (panelId == LeftPanel) leftDirTabMgr else rightDirTabMgr
 
   def selectedTabManager: DirTabManager = tabManager(selectedPanel)
   def unselectedTabManager: DirTabManager = tabManager(unselectedPanel)
+}
 
-  trait PanelSelectionListener extends Function2[PanelId, PanelId, Unit] {
-    def apply(oldPanelId: PanelId, newPanelId: PanelId): Unit
+
+object StatusChangeEvents {
+  case class PanelSelected(oldPanelId: PanelId, newPanelId: PanelId)
+
+  class PanelSelectionLogger {
+    @Subscribe
+    def handle(event: PanelSelected): Unit =
+      Logger[StatusMgr].debug(s"Change panel selection: panelId: ${event.oldPanelId} -> ${event.newPanelId}")
   }
 }

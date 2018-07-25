@@ -4,13 +4,14 @@ import java.io.{File, FileWriter}
 
 import com.typesafe.config._
 import com.typesafe.scalalogging.Logger
+import org.mikesajak.commander.EventBus
 
 import scala.collection.JavaConverters._
 
 /**
   * Created by mike on 17.04.17.
   */
-class TypesafeConfig(filename: String) extends Configuration {
+class TypesafeConfig(filename: String, eventBus: EventBus) extends Configuration(eventBus) {
 
   private val logger = Logger[TypesafeConfig]
   private var config: Config = ConfigFactory.empty("Afternoon Commander settings")
@@ -47,7 +48,7 @@ class TypesafeConfig(filename: String) extends Configuration {
 
   override def setBoolProperty(key: ConfigKey, value: Boolean): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromAnyRef(value))
-    notifyObservers(key)
+    notifyConfigChanged(key)
   }
 
   override def getIntProperty(key: ConfigKey): Option[Int] = {
@@ -57,7 +58,7 @@ class TypesafeConfig(filename: String) extends Configuration {
 
   override def setIntProperty(key: ConfigKey, value: Int): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromAnyRef(value))
-    notifyObservers(key)
+    notifyConfigChanged(key)
   }
 
   override def getStringProperty(key: ConfigKey): Option[String] = {
@@ -67,7 +68,7 @@ class TypesafeConfig(filename: String) extends Configuration {
 
   override def setStringProperty(key: ConfigKey, value: String): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromAnyRef(value))
-    notifyObservers(key)
+    notifyConfigChanged(key)
   }
 
   override def getStringSeqProperty(key: ConfigKey): Option[Seq[String]] = {
@@ -77,6 +78,6 @@ class TypesafeConfig(filename: String) extends Configuration {
 
   override def setStringSeqProperty(key: ConfigKey, value: Seq[String]): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromIterable(value.asJava))
-    notifyObservers(key)
+    notifyConfigChanged(key)
   }
 }

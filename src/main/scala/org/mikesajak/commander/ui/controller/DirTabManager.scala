@@ -1,12 +1,14 @@
 package org.mikesajak.commander.ui.controller
 
 import com.typesafe.scalalogging.Logger
+import org.mikesajak.commander.EventBus
 import org.mikesajak.commander.fs.VDirectory
+import org.mikesajak.commander.ui.controller.TabEvents._
 
 /**
   * Created by mike on 07.05.17.
   */
-class DirTabManager(panelId: PanelId) {
+class DirTabManager(panelId: PanelId, eventBus: EventBus) {
   private val logger = Logger(this.getClass)
 
   private var tabs0 = IndexedSeq[TabData]()
@@ -18,14 +20,21 @@ class DirTabManager(panelId: PanelId) {
 
   def addTab(dir: VDirectory, controller: DirTableControllerIntf): Unit = {
     tabs0 :+= TabData(dir, controller)
+
+    eventBus.publish(TabAdded(panelId, tabs0.size, dir))
   }
 
   def removeTab(idx: Int): Unit = {
+    val dir = tabs0(idx).dir
     tabs0 = tabs0.patch(idx, Nil, 1)
+
+    eventBus.publish(TabRemoved(panelId, idx, dir))
   }
 
   def clearTabs(): Unit = {
     tabs0 = IndexedSeq()
+
+    eventBus.publish(TabsCleared(panelId))
   }
 
 //  def updateTab(idx: Int, dir: VDirectory): Unit = {
@@ -41,7 +50,19 @@ class DirTabManager(panelId: PanelId) {
   def selectedTabIdx_=(newIdx: Int): Unit = {
     logger.debug(s"Tab selection change: panelId=$panelId, tab selection: $selectedTabIdx0 -> $newIdx")
     selectedTabIdx0 = newIdx
+
+    eventBus.publish(TabSelected(panelId, newIdx))
   }
 }
 
 case class TabData(var dir: VDirectory, controller: DirTableControllerIntf)
+
+object TabEvents {
+
+  case class TabAdded(panelId: PanelId, idx: Int, dir: VDirectory)
+  case class TabRemoved(panelId: PanelId, idx: Int, dir: VDirectory)
+  case class TabsCleared(panelId: PanelId)
+
+  case class TabSelected(panelId: PanelId, idx: Int)
+
+}

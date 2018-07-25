@@ -1,6 +1,7 @@
 package org.mikesajak.commander.ui.controller
 
 import java.io.IOException
+import java.util.function.Predicate
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
@@ -8,7 +9,7 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
-import org.mikesajak.commander.{ApplicationController, FileTypeManager}
+import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager}
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
@@ -92,6 +93,7 @@ class DirTableController(curDirField: TextField,
                          fileTypeMgr: FileTypeManager,
                          resourceMgr: ResourceManager,
                          config: Configuration,
+                         eventBus: EventBus,
                          appController: ApplicationController)
     extends DirTableControllerIntf {
 
@@ -109,18 +111,13 @@ class DirTableController(curDirField: TextField,
   addTabButton.padding = Insets.Empty
   curDirField.prefHeight <== addTabButton.height
 
-  private val showHiddenFilesPreditate = { row: FileRow =>
-    row.path.isInstanceOf[PathToParent] ||
-      !row.path.attributes.contains(Attrib.Hidden) ||
-      config.boolProperty("file_panel", "show_hidden").getOrElse(false)
-  }
+  private val configObserver: ConfigObserver = new ConfigObserver {
+    override val observedKey = ConfigKey("file_panel", "*")
 
-  private val showHiddenConfigObserver: ConfigObserver = new ConfigObserver {
-    override val observedKey = ConfigKey("file_panel", "show_hidden")
     override def configChanged(key: ConfigKey): Unit = key match {
       case ConfigKey("file_panel", "show_hidden") =>
-        filteredRows.predicate = showHiddenFilesPreditate
-      case _ => logger.info(s"Unexpected config change delivered to this observer: $key")
+        filteredRows.predicate = createShowHiddenFilesPredicate()
+      case _ =>
     }
   }
 
@@ -199,10 +196,10 @@ class DirTableController(curDirField: TextField,
 
     dirTableView.handleEvent(KeyEvent.KeyPressed) { event: KeyEvent => handleKeyEvent(event) }
 
-    filteredRows.predicate = showHiddenFilesPreditate
-    dirTableView.items = sortedRows
+    eventBus.register(configObserver)
+    filteredRows.predicate = createShowHiddenFilesPredicate()
 
-    config.registerObserver(showHiddenConfigObserver)
+    dirTableView.items = sortedRows
 
     addTabButton.onAction = e => dirPanelController.addNewTab()
 
@@ -210,7 +207,14 @@ class DirTableController(curDirField: TextField,
   }
 
   override def dispose(): Unit = {
-    config.unregisterObserver(showHiddenConfigObserver)
+    eventBus.unregister(configObserver)
+  }
+
+  private def createShowHiddenFilesPredicate() = {
+    row: FileRow =>
+      val showHidden = config.boolProperty("file_panel", "show_hidden").getOrElse(false)
+      row.path.isInstanceOf[PathToParent] ||
+        !row.path.attributes.contains(Attrib.Hidden) || showHidden
   }
 
   override def setCurrentDirectory(dir: VDirectory, focusedPath: Option[VPath] = None): Unit = {
@@ -354,11 +358,13 @@ class DirTableController(curDirField: TextField,
     val popup = new Popup() {
       content += tf
       autoHide = true
-      onHiding = e => filteredRows.predicate = showHiddenFilesPreditate
+      // TODO: disable configuration changes while popup is opened? is it necessary?
+      onHiding = e => filteredRows.predicate = createShowHiddenFilesPredicate()
     }
     var pending = false
     tf.handleEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
       try {
+        val curFilterPredicate = filteredRows.predicate.value
         if (!pending) {
           pending = true
           ke.code match {
@@ -369,9 +375,10 @@ class DirTableController(curDirField: TextField,
 //              dirTableView.fireEvent(ke)
               popup.hide()
             case _ =>
-              filteredRows.predicate = row => {
-                showHiddenFilesPreditate(row) && row.path.name.toLowerCase.contains(tf.text.value.toLowerCase)
-              }
+              val filterNamePredicate: Predicate[_ >: FileRow] = r => r.path.name.toLowerCase.contains(tf.text.value.toLowerCase)
+//              filteredRows.predicate = curFilterPredicate and filterNamePredicate
+              // TODO: combine predicates with "and"
+              filteredRows.predicate = row => curFilterPredicate.test(row) && filterNamePredicate.test(row)
           }
         }
       } finally {

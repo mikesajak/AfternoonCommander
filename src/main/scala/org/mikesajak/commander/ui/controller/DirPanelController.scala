@@ -2,18 +2,20 @@ package org.mikesajak.commander.ui.controller
 
 import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
+import com.google.common.eventbus.Subscribe
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.inject.Key
 import com.google.inject.name.Names
 import com.typesafe.scalalogging.Logger
 import javafx.scene.{Parent, control}
+import org.mikesajak.commander._
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
+import org.mikesajak.commander.status.StatusChangeEvents.PanelSelected
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.{FSUIHelper, IconSize, ResourceManager, UILoader}
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
-import org.mikesajak.commander.{ApplicationContext, ApplicationController, BookmarkMgr, HistoryMgr}
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.geometry.Insets
@@ -60,7 +62,8 @@ class DirPanelController(tabPane: TabPane,
                          bookmarkMgr: BookmarkMgr,
                          globalHistoryMgr: HistoryMgr,
                          resourceMgr: ResourceManager,
-                         appController: ApplicationController)
+                         appController: ApplicationController,
+                         eventBus: EventBus)
     extends DirPanelControllerIntf {
 
   private val logger = Logger[DirPanelController]
@@ -74,13 +77,15 @@ class DirPanelController(tabPane: TabPane,
                                                                           Names.named(panelId.toString)))
 
     topUIPane.setStyle("-fx-border-color: Transparent")
-
-    statusMgr.addPanelSelectionListener { (oldPanelId, newPanelId) =>
-      if (newPanelId == panelId)
-        topUIPane.setStyle("-fx-border-color: Blue")
-      else
-        topUIPane.setStyle("-fx-border-color: Transparent")
-    }
+    eventBus.register(new AnyRef() {
+      @Subscribe
+      def handle(event: PanelSelected) = {
+        if (event.newPanelId == panelId)
+          topUIPane.setStyle("-fx-border-color: Blue")
+        else
+          topUIPane.setStyle("-fx-border-color: Transparent")
+      }
+    })
 
     topUIPane.filterEvent(MouseEvent.MousePressed) {
       (me: MouseEvent) => statusMgr.selectedPanel = panelId
@@ -241,14 +246,12 @@ class DirPanelController(tabPane: TabPane,
 
   private def registerListeners(panelId: PanelId): Unit = {
     tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
-      println(s"$panelId - tab selection change $oldIdx->$newIdx")
       val tabIdx = newIdx.intValue
       // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
       logger.debug(s"$panelId - reloading tab: $tabIdx: ${dirTabManager.tab(tabIdx).dir}")
       dirTabManager.tab(tabIdx).controller.reload()
 
       if (tabIdx < tabPane.tabs.size) {
-        val selectedTab = tabPane.tabs.get(tabIdx)
         statusMgr.selectedTabManager.selectedTabIdx = tabIdx
       }
     }

@@ -1,11 +1,12 @@
 package org.mikesajak.commander.config
 
 import com.typesafe.scalalogging.Logger
+import org.mikesajak.commander.EventBus
 
 /**
   * Created by mike on 09.04.17.
   */
-class SimpleConfig extends Configuration {
+class SimpleConfig(eventBus: EventBus) extends Configuration(eventBus) {
   private val logger = Logger[SimpleConfig]
   private var settingsMap = Map[String, String]()
 
@@ -13,7 +14,7 @@ class SimpleConfig extends Configuration {
     val path = key.toString
     settingsMap += path -> value
 
-    notifyObservers(key)
+    notifyConfigChanged(key)
   }
 
   override def getBoolProperty(key: ConfigKey): Option[Boolean] =

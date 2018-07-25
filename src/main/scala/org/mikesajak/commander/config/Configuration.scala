@@ -1,6 +1,8 @@
 package org.mikesajak.commander.config
 
+import com.google.common.eventbus.Subscribe
 import com.typesafe.scalalogging.Logger
+import org.mikesajak.commander.EventBus
 
 import scala.language.implicitConversions
 
@@ -13,12 +15,20 @@ object ConfigKey {
 
   val Any = ConfigKey("*", "*")
   def forCategory(category: String) = ConfigKey(category, "*")
+
+  def matches(workingKey: ConfigKey, registrationKey: ConfigKey): Boolean = {
+    val key = registrationKey.toString
+    key == "*" || key == "*.*" ||
+      key == workingKey.toString ||
+      key == workingKey.category || key == s"${workingKey.category}.*"
+  }
+
 }
 
 /**
   * Created by mike on 09.04.17.
   */
-trait Configuration { config =>
+abstract class Configuration(eventBus: EventBus) { config =>
   private var observers = Map[String, List[ConfigObserver]]()
 
   abstract class PropertyOperator[A] (key: ConfigKey) {
@@ -74,31 +84,14 @@ trait Configuration { config =>
   protected def getStringSeqProperty(key: ConfigKey): Option[Seq[String]]
   protected def setStringSeqProperty(key: ConfigKey, value: Seq[String])
 
-  def registerObserver(observer: ConfigObserver): Unit = {
-    val key = observer.observedKey
-    if (key.category == "*" && key.name != "*" || key.category != "*" && key.name == "*")
-      throw new IllegalArgumentException(s"Partial wildcard not supported: category=${key.category}, name=${key.name}")
-
-    val path = key.toString
-    val curList: List[ConfigObserver] = observers.getOrElse(path, List[ConfigObserver]())
-    observers += path -> (observer :: curList)
-  }
-
-  def unregisterObserver(observer: ConfigObserver): Unit = {
-    val path = observer.observedKey.toString
-    val valueObservers = observers.get(path)
-    valueObservers.foreach { valObservers =>
-      val newObserversList = valObservers.filter(_ != observer)
-      observers += path -> newObserversList
-    }
-  }
-
-  def notifyObservers(key: ConfigKey): Unit = {
+  def notifyConfigChanged(key: ConfigKey): Unit = {
     val paths = List(key.toString, key.category, "*", "*.*")
 
     paths.flatMap(observers.get(_))
       .flatten
       .foreach(o => o.configChanged(key))
+
+    eventBus.publish(key)
   }
 
   def save()
@@ -107,15 +100,21 @@ trait Configuration { config =>
 
 trait ConfigObserver {
   def observedKey: ConfigKey
-  def configChanged(key: ConfigKey)
+
+  @Subscribe
+  def filteredConfigChange(key: ConfigKey): Unit = {
+    if (ConfigKey.matches(key, observedKey))
+      configChanged(key)
+  }
+
+  def configChanged(key: ConfigKey): Unit
 }
 
-class LoggingConfigObserver(override val observedKey: ConfigKey, config: Configuration) extends ConfigObserver {
-  def this(config: Configuration) = this(ConfigKey.Any, config)
-
+class LoggingConfigObserver(config: Configuration) {
   private val logger = Logger[SimpleConfig]
 
-  override def configChanged(key: ConfigKey): Unit = {
+  @Subscribe
+  def logConfigChange(key: ConfigKey): Unit = {
     val path = key.toString
     logger.info(s"Configuration changed: $path -> ${config.stringProperty(key)}")
   }

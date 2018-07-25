@@ -24,8 +24,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideConfig(): Configuration = {
-    val config = new TypesafeConfig(s"${ApplicationController.configPath}/${ApplicationController.configFile}")
+  def provideConfig(eventBus: EventBus): Configuration = {
+    val config = new TypesafeConfig(s"${ApplicationController.configPath}/${ApplicationController.configFile}",
+                                    eventBus)
     config.load()
     config
   }
@@ -67,8 +68,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideStatusManager(@Named("LeftPanel") leftDirTabMgr: DirTabManager,
-                           @Named("RightPanel") rightDirTabMgr: DirTabManager): StatusMgr = {
-    new StatusMgr(leftDirTabMgr, rightDirTabMgr)
+                           @Named("RightPanel") rightDirTabMgr: DirTabManager,
+                           eventBus: EventBus): StatusMgr = {
+    new StatusMgr(leftDirTabMgr, rightDirTabMgr, eventBus)
   }
 
   @Provides
@@ -102,6 +104,10 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideHistoryMgr() = new HistoryMgr
+
+  @Provides
+  @Singleton
+  def provideEventBus() = new EventBus
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
@@ -109,15 +115,14 @@ class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
 
   override def configure(): Unit = {
     logger.trace(s"Configuring PanelContext for panelId=${panelId.toString}")
-    bind(classOf[DirTabManager]).annotatedWith(Names.named(panelId.toString))
-      .toInstance(new DirTabManager(panelId)) // todo: use better way - some provider etc...
+    bind(classOf[DirTabManager]).annotatedWith(Names.named(panelId.toString)).to(classOf[DirTabManager])
     expose(classOf[DirTabManager]).annotatedWith(Names.named(panelId.toString))
   }
 
   @Provides
   @Singleton
-  def provideDirTabManager(): DirTabManager = {
-    new DirTabManager(panelId)
+  def provideDirTabManager(eventBus: EventBus): DirTabManager = {
+    new DirTabManager(panelId, eventBus)
   }
 }
 
