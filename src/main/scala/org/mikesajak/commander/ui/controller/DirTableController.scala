@@ -6,9 +6,10 @@ import java.util.function.Predicate
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
+import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
-import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
+import org.mikesajak.commander.util.{PathUtils, ReentrantGuard, UnitFormatter}
 import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager}
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
@@ -68,7 +69,7 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
 }
 
 trait DirTableControllerIntf {
-  def init(panelController: DirPanelControllerIntf, path: VDirectory)
+  def init(path: VDirectory)
   def dispose()
   def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None)
   def focusedPath: VPath
@@ -90,10 +91,12 @@ class DirTableController(curDirField: TextField,
                          statusLabel1: Label,
                          statusLabel2: Label,
 
+                         panelId: PanelId,
                          fileTypeMgr: FileTypeManager,
                          resourceMgr: ResourceManager,
                          config: Configuration,
                          eventBus: EventBus,
+                         panelController: DirPanelControllerIntf,
                          appController: ApplicationController)
     extends DirTableControllerIntf {
 
@@ -102,7 +105,6 @@ class DirTableController(curDirField: TextField,
   private val logger = Logger[DirTableController]
 
   private var curDir: VDirectory = _
-  private var panelController: DirPanelControllerIntf = _
 
   private val tableRows = ObservableBuffer[FileRow]()
   private val filteredRows = new FilteredBuffer(tableRows)
@@ -125,9 +127,7 @@ class DirTableController(curDirField: TextField,
 
   override def selectedPaths: ObservableBuffer[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path)
 
-  override def init(dirPanelController: DirPanelControllerIntf, path: VDirectory) {
-    this.panelController = dirPanelController
-
+  override def init(path: VDirectory) {
     statusLabel1.styleClass += "file_panel_status"
     statusLabel2.styleClass += "file_panel_status"
 
@@ -201,7 +201,7 @@ class DirTableController(curDirField: TextField,
 
     dirTableView.items = sortedRows
 
-    addTabButton.onAction = e => dirPanelController.addNewTab()
+    addTabButton.onAction = e => eventBus.publish(NewTabRequest(panelId, curDir))//dirPanelController.addNewTab()
 
     setCurrentDirectory(path)
   }
@@ -217,11 +217,20 @@ class DirTableController(curDirField: TextField,
         !row.path.attributes.contains(Attrib.Hidden) || showHidden
   }
 
-  override def setCurrentDirectory(dir: VDirectory, focusedPath: Option[VPath] = None): Unit = {
-    curDir = dir
-    curDirField.text = curDir.absolutePath
-    initTable(dir, focusedPath)
-    updateStatusBar(dir)
+  private val curDirReentrantUpdate = new ReentrantGuard
+  override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit =
+    curDirReentrantUpdate.guard { () =>
+      val dir = resolveDir(directory)
+      curDir = dir
+      curDirField.text = curDir.absolutePath
+      initTable(dir, focusedPath)
+      updateStatusBar(dir)
+      eventBus.publish(CurrentDirChange(panelId, dir))
+    }
+
+  private def resolveDir(dir: VDirectory) = dir match {
+    case p: PathToParent => p.targetDir
+    case _ => dir
   }
 
   private def updateStatusBar(directory: VDirectory): Unit =
@@ -335,7 +344,7 @@ class DirTableController(curDirField: TextField,
   private def changeDir(directory: VDirectory): Unit = {
     var prevDir = curDir
     curDir = directory
-    updateParentTab(directory)
+//    updateParentTab(directory)
     val selection = directory match {
       case p: PathToParent => Some(prevDir)
       case _ => None
@@ -343,13 +352,13 @@ class DirTableController(curDirField: TextField,
     setCurrentDirectory(directory, selection)
   }
 
-  private def updateParentTab(directory: VDirectory): Unit = {
-    val targetDir = directory match {
-      case p: PathToParent => p.targetDir
-      case _ => directory
-    }
-    panelController.updateCurTab(targetDir)
-  }
+//  private def updateParentTab(directory: VDirectory): Unit = {
+//    val targetDir = directory match {
+//      case p: PathToParent => p.targetDir
+//      case _ => directory
+//    }
+//    panelController.updateCurTab(targetDir)
+//  }
 
   private def showFilterPopup(): Unit = {
     val tf = new TextField() {
@@ -449,4 +458,9 @@ class DirTableController(curDirField: TextField,
     // TODO: smarter shortening - e.g. cut the middle of the path, leave the beginning and ending etc. /root/directory/.../lastDir
     text.substring(1)
   }
+}
+
+object DirViewEvents {
+  case class CurrentDirChange(panelId: PanelId, curDir: VDirectory)
+  case class NewTabRequest(panelId: PanelId, curDir: VDirectory)
 }

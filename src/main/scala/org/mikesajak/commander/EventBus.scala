@@ -17,6 +17,6 @@ class DeadEventHandler {
   private val logger = Logger[DeadEventHandler]
   @Subscribe
   def handleDeadEvent(de: DeadEvent): Unit = {
-    logger.debug(s"Dead event: $de")
+    logger.debug(s"$de")
   }
 }

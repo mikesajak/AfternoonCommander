@@ -4,16 +4,17 @@ import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 import com.google.common.eventbus.Subscribe
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.google.inject.Key
 import com.google.inject.name.Names
+import com.google.inject.{Binder, Key, Module}
 import com.typesafe.scalalogging.Logger
 import javafx.scene.{Parent, control}
 import org.mikesajak.commander._
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
+import org.mikesajak.commander.fs._
 import org.mikesajak.commander.status.StatusChangeEvents.PanelSelected
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
+import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{FSUIHelper, IconSize, ResourceManager, UILoader}
 import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
 import scalafx.Includes._
@@ -67,11 +68,13 @@ class DirPanelController(tabPane: TabPane,
     extends DirPanelControllerIntf {
 
   private val logger = Logger[DirPanelController]
+  private var panelId: PanelId = _
   private var dirTabManager: DirTabManager = _
 
   private val localHistoryMgr = new HistoryMgr
 
   override def init(panelId: PanelId) {
+    this.panelId = panelId
     // TODO: better way of getting dependency - use injection!!
     dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
                                                                           Names.named(panelId.toString)))
@@ -113,11 +116,13 @@ class DirPanelController(tabPane: TabPane,
 
     tabPane.getSelectionModel.selectFirst()
 
-    registerListeners(panelId)
+    registerListeners()
 
-    startPeriodicTasks(panelId)
+    startPeriodicTasks()
 
     prevDirButton.disable = true
+
+    eventBus.register(this)
   }
 
   def handleDriveSelectionButton(): Unit = {
@@ -230,6 +235,11 @@ class DirPanelController(tabPane: TabPane,
     }
   }
 
+  @Subscribe
+  def addNewTab(request: NewTabRequest): Unit =
+    if (request.panelId == panelId)
+      addNewTab(Some(request.curDir))
+
   override def addNewTab(newTabDir: Option[VDirectory]): Unit = {
     fsMgr.resolvePath(newTabDir.getOrElse(fsMgr.homeDir).toString)
       .map(_.directory)
@@ -241,7 +251,7 @@ class DirPanelController(tabPane: TabPane,
       }
   }
 
-  private def registerListeners(panelId: PanelId): Unit = {
+  private def registerListeners(): Unit = {
     tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
       val tabIdx = newIdx.intValue
       // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
@@ -255,23 +265,28 @@ class DirPanelController(tabPane: TabPane,
   }
 
   private def createTab(path: VDirectory) = {
-    new DirTab(this, path)
+    new DirTab(panelId, path)
   }
 
-  override def updateCurTab(path: VDirectory): Unit = {
+  @Subscribe
+  def updateCurTab(event: CurrentDirChange): Unit =
+    if (event.panelId == panelId)
+      updateCurTab(event.curDir)
+
+  override def updateCurTab(dir: VDirectory): Unit = {
     val selectionModel = tabPane.selectionModel.value
     val curTab = selectionModel.getSelectedItem
 
     // TODO: Hide this inside DirTabManager!
-    dirTabManager.selectedTab.controller.setCurrentDirectory(path)
-    dirTabManager.tab(selectionModel.getSelectedIndex).dir = path
-    DirTab.updateTab(curTab, path)
+    dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
+    dirTabManager.tab(selectionModel.getSelectedIndex).dir = dir
+    DirTab.updateTab(curTab, dir)
 
-    updateDriveSelection(path)
+    updateDriveSelection(dir)
 
     // TODO: #eventbus Use publish event, and let any subscribers (global, local history managers etc.) listen and react
-    localHistoryMgr.add(path)
-    globalHistoryMgr.add(path)
+    localHistoryMgr.add(dir)
+    globalHistoryMgr.add(dir)
   }
 
   private def updateDriveSelection(dir: VDirectory): Unit = {
@@ -296,7 +311,7 @@ class DirPanelController(tabPane: TabPane,
   }
 
   val scheduler = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).build())
-  private def startPeriodicTasks(panelId: PanelId): Unit = {
+  private def startPeriodicTasks(): Unit = {
     val task: Runnable = { () =>
 //      logger.debug(s"$panelId - reloading tab: ${dirTabManager.selectedTab.dir}")
 //      dirTabManager.selectedTab.controller.reload()
@@ -334,19 +349,26 @@ object DirTab {
 
 }
 
-class DirTab(panelController: DirPanelControllerIntf, tabPath: VDirectory) extends Tab {
+class DirTab(panelId: PanelId, tabPath: VDirectory) extends Tab {
   import DirTab._
 
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
 
-  val (root: Parent, controller) = UILoader.loadScene[DirTableControllerIntf](dirTableLayout)
+  private val context = new Module {
+    override def configure(binder: Binder): Unit = {
+//      binder.bind(classOf[DirPanelControllerIntf]).toInstance(panelController)
+      binder.bind(classOf[PanelId]).toInstance(panelId)
+    }
+  }
+
+  val (root: Parent, controller) = UILoader.loadScene[DirTableControllerIntf](dirTableLayout, context)
 
   private val pane = new Node(root){}
   content = pane
 
   updateTab(this, tabPath)
 
-  controller.init(panelController, tabPath)
+  controller.init(tabPath)
 
   this.onClosed = { _ => controller.dispose() }
 }
