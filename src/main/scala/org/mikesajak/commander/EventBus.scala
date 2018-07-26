@@ -5,9 +5,22 @@ import com.typesafe.scalalogging.Logger
 
 class EventBus {
   private val eventBus = new com.google.common.eventbus.EventBus("App event bus")
+  private val logger = Logger[EventBus]
   eventBus.register(new DeadEventHandler)
 
-  def publish[A](event: A): Unit = eventBus.post(event)
+  def logScope[A](name: => String)(code: () => A): A = {
+    logger.trace(s"Start: $name")
+    val r = code()
+    logger.trace(s"End: $name")
+    r
+  }
+
+  def publish[A](event: A): Unit = {
+    logScope(s"Publishing event: $event") { () =>
+      eventBus.post(event)
+    }
+  }
+
   def register(subscriber: AnyRef): Unit = eventBus.register(subscriber)
   def unregister(subscriber: AnyRef): Unit = eventBus.unregister(subscriber)
 

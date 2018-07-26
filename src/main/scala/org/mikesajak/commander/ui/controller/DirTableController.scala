@@ -218,14 +218,18 @@ class DirTableController(curDirField: TextField,
   }
 
   private val curDirReentrantUpdate = new ReentrantGuard
+  private var pending = false
   override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit =
-    curDirReentrantUpdate.guard { () =>
+//    curDirReentrantUpdate.guard { () =>
+    if (!pending) {
+      pending = true
       val dir = resolveDir(directory)
       curDir = dir
       curDirField.text = curDir.absolutePath
       initTable(dir, focusedPath)
       updateStatusBar(dir)
       eventBus.publish(CurrentDirChange(panelId, dir))
+      pending = false
     }
 
   private def resolveDir(dir: VDirectory) = dir match {

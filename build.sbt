@@ -15,8 +15,8 @@ libraryDependencies += "com.google.inject" % "guice" % "4.1.0"
 libraryDependencies += "net.codingwell" %% "scala-guice" % "4.1.0"
 
 // logging
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 // config
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"
