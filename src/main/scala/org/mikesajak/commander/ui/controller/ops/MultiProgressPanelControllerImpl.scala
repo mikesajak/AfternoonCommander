@@ -8,34 +8,19 @@ import scalafx.scene.control._
 import scalafx.scene.image.{Image, ImageView}
 import scalafxml.core.macros.sfxml
 
-import scala.language.implicitConversions
-
-trait ProgressPanelController {
-  def init(operationName: String, headerText: String, details1: String, details2: String,
-              operationIcon: Image, dialog: Dialog[ButtonType],
-              task: CancellableTask)
-
-  def updateIndeterminate(details: String): Unit
-  def update(details: String, progress: Float): Unit
-  def update(details: String, partProgress: Float, totalProgress: Float): Unit
-  def updateFinished(details: String): Unit
-  def updateAborted(details: String): Unit
-}
-
 @sfxml
-class ProgressPanelControllerImpl(nameLabel: Label,
-                                  detailsLabel: Label,
-                                  progressBar: ProgressBar,
-                                  elapsedTimeLabel: Label,
-                                  estimatedTimeLabel: Label,
-                                  dontCloseCheckbox: CheckBox)
+class MultiProgressPanelControllerImpl(headerImageView: ImageView,
+                                       nameLabel: Label,
+                                       detailsLabel: Label,
+                                       curProgressBar: ProgressBar,
+                                       totalProgressBar: ProgressBar,
+                                       dontCloseCheckbox: CheckBox)
     extends ProgressPanelController {
 
   private var dialog: Dialog[ButtonType] = _
 
   override def init(operationName: String, headerText: String, details1: String, details2: String,
-                       operationIcon: Image, dialog: Dialog[ButtonType],
-                       task: CancellableTask): Unit = {
+                    operationIcon: Image, dialog: Dialog[ButtonType], task: CancellableTask): Unit = {
     this.dialog = dialog
 
     dialog.title = s"Afternoon Commander - $operationName"
@@ -58,26 +43,29 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
   override def updateIndeterminate(details: String): Unit = {
     detailsLabel.text = details
-    progressBar.progress = -1
+    curProgressBar.progress = -1
+    totalProgressBar.progress = -1
   }
 
   override def update(details: String, progress: Float): Unit = {
     detailsLabel.text = details
-    progressBar.progress = progress
+    totalProgressBar.progress = progress
+    curProgressBar.progress = 0
   }
 
-  override def update(details: String, partProgress: Float, totalProgress: Float): Unit = {
+  override def update(details: String, curProgress: Float, totalProgress: Float): Unit = {
     detailsLabel.text = details
-    progressBar.progress = totalProgress
-    // TODO: partial progress
+    curProgressBar.progress = curProgress
+    totalProgressBar.progress = totalProgress
   }
 
   override def updateFinished(details: String): Unit = {
     detailsLabel.text = details
-    progressBar.progress = 1
+    totalProgressBar.progress = 1
+    curProgressBar.progress = 1
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
     if (!dontCloseCheckbox.selected.value) {
-       dialog.result = ButtonType.Close
+      dialog.result = ButtonType.Close
     }
   }
 
