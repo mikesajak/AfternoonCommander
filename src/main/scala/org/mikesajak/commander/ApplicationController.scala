@@ -1,7 +1,8 @@
 package org.mikesajak.commander
 
 import org.mikesajak.commander.config.Configuration
-import scalafx.application.Platform
+import org.mikesajak.commander.util.Check
+import scalafx.application.{JFXApp, Platform}
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
 import scalafx.stage.Stage
@@ -11,17 +12,24 @@ import scalafx.stage.Stage
   */
 class ApplicationController(config: Configuration) {
 
-  private var mainStage0: Option[Stage] = None
+  private var mainStage0: Stage =_
+  private var application0: JFXApp = _
+
+  // TODO: probably not the best way to do it...
+  def init(stage: Stage, app: JFXApp): Unit = {
+    Check.state(mainStage0 == null && application0 == null, "UI window/stage is already initialized")
+    mainStage0 = stage
+    application0 = app
+  }
 
   def mainStage: Stage = {
-    if (mainStage0.isDefined) mainStage0.get
-    else throw new IllegalStateException("UI window/stage is not initialized yet")
+    Check.state(mainStage0 != null, "UI window/stage is not initialized yet")
+    mainStage0
   }
-  // TODO: probably not the best way to do it...
-  def mainStage_=(stage: Stage): Unit = {
-    if (mainStage0.isDefined)
-      throw new IllegalStateException("UI window/stage is already initialized")
-    mainStage0 = Some(stage)
+
+  def application: JFXApp = {
+    Check.state(application0 != null, "Application has not been defined")
+    application0
   }
 
   def exitApplication(): Unit = exitApplication(() => false)

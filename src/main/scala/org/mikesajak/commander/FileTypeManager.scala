@@ -1,10 +1,14 @@
 package org.mikesajak.commander
 
 import java.awt.Desktop
+import java.util.concurrent.Executors
 
+import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.OSType.Windows
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.fs.local.LocalFile
+
+import scala.concurrent.{ExecutionContext, Future}
 
 sealed abstract class FileType(val icon: Option[String]) {
   def this(icon: String) = this(Some(icon))
@@ -34,13 +38,14 @@ object FileType {
   case object OtherFile extends FileType("file-outline.png")
 }
 
-class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver) {
+class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
+                      appController: ApplicationController) {
   import FileType._
 
   private val defaultFileTypeDetector = new DefaultFileTypeDetector
   private var fileTypeDetectors = List[FileTypeDetector]()
   private var handlersMap = Map[FileType, FileHandler]()
-  private val defaultFileHandler = new DefaultFileHandler
+  private val defaultFileHandler = new DefaultFileHandler(appController)
 
 //  registerFileTypeDetector(archiveManager)
   registerFileTypeDetector(new SimpleByExtensionFileDetector(List("zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"), ArchiveFile))
@@ -140,11 +145,29 @@ trait FileHandler {
   def handle(path: VPath)
 }
 
-class DefaultFileHandler extends FileHandler {
+class DefaultFileHandler(appCtrl: ApplicationController) extends FileHandler {
+  val logger = Logger[DefaultFileHandler]
+
+  private implicit val ec = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+
   override def handle(path: VPath): Unit = {
-    if (path.isFile && path.isInstanceOf[LocalFile]) {
-      val file = path.asInstanceOf[LocalFile]
-      Desktop.getDesktop.open(file.file)
+    if (Desktop.isDesktopSupported) path match {
+      case file: LocalFile => Future {
+          try {
+            logger.debug(s"Executing default (defined in desktop) action for file $file")
+            Desktop.getDesktop.open(file.file)
+            logger.debug(s"Finished Executing default (defined in desktop) action for file $file")
+          } catch {
+            case e: Exception => logger.warn(s"An error occurred while executing (desktop) action for file $file")
+          }
+        }
+
+      case file: VFile => logger.info(s"The file $file is not a local file, skipping desktop action.")
+
+      case dir: VDirectory => logger.info(s"The file $dir is a directory. Skipping desktop action.")
+
+      case file@_ => logger.info(s"Unknown file $file. Skipping desktop action.")
     }
+    else logger.warn(s"Cannot execute default action for $path. Desktop action is not supported by OS.")
   }
 }

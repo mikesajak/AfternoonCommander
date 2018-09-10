@@ -41,8 +41,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideFileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver) =
-    new FileTypeManager(archiveManager, osResolver)
+  def provideFileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
+                             appController: ApplicationController) =
+    new FileTypeManager(archiveManager, osResolver, appController)
 
   @Provides
   @Singleton

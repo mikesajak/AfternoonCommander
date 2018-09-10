@@ -46,7 +46,7 @@ object Main extends JFXApp {
     }
   }
 
-  appController.mainStage = stage
+  appController.init(stage, this)
 
   stage.width = config.intProperty("window", "width").getOrElse(1000): Int
   stage.height = config.intProperty("window", "height").getOrElse(600): Int
