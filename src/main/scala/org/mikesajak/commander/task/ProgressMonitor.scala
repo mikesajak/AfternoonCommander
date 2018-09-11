@@ -10,7 +10,7 @@ trait ProgressMonitor[A] {
   def notifyFinished(message: Option[String], state: Option[A])
   def notifyError(message: String, state: Option[A])
 
-  def notifyAborted(message: String)
+  def notifyAborted(message: Option[String])
 }
 
 object ProgressMonitor {
@@ -75,7 +75,7 @@ class IOConsoleProgressMonitor extends ProgressMonitor[IOTaskSummary] {override 
 
   override def notifyError(message: String, state: Option[IOTaskSummary]): Unit = ???
 
-  override def notifyAborted(message: String): Unit = ???
+  override def notifyAborted(message: Option[String]): Unit = ???
 }
 
 class ConsoleProgressMonitor[A] extends ProgressMonitor[A] {
@@ -92,7 +92,7 @@ class ConsoleProgressMonitor[A] extends ProgressMonitor[A] {
 
   override def notifyError(message: String, state: Option[A]): Unit = println(s"Error executing task: $message, state=$state")
 
-  override def notifyAborted(message: String): Unit = println(s"Task aborted: $message")
+  override def notifyAborted(message: Option[String]): Unit = println(s"Task aborted: $message")
 }
 
 class MultiProgressMonitor[A](childMonitors: Seq[ProgressMonitor[A]]) extends ProgressMonitor[A] {
@@ -111,7 +111,7 @@ class MultiProgressMonitor[A](childMonitors: Seq[ProgressMonitor[A]]) extends Pr
   override def notifyError(message: String, state: Option[A]): Unit =
     childMonitors.foreach(_.notifyError(message, state))
 
-  override def notifyAborted(message: String): Unit =
+  override def notifyAborted(message: Option[String]): Unit =
     childMonitors.foreach(_.notifyAborted(message))
 }
 

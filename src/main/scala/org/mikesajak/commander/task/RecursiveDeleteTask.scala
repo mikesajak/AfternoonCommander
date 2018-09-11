@@ -22,7 +22,7 @@ class RecursiveDeleteTask(targetPaths: Seq[VPath], targetStats: Option[DirStats]
 
     withAbort(progressMonitor) { () =>
       val result = runWithTimer(s"Recursive task : delete $targetName") { () =>
-        progressMonitor.notifyProgress(0, Some(s"Starting recursive delete of $targetName"), None) // TODO: i18
+        progressMonitor.notifyProgress(0, Some(s"Starting recursive delete of $targetName"), Some(IOTaskSummary.empty)) // TODO: i18
 
         targetPaths.map(p => deletePath(p, IOTaskSummary.empty))
                    .reduceLeft((acc, stats) => acc + stats)
@@ -48,8 +48,9 @@ class RecursiveDeleteTask(targetPaths: Seq[VPath], targetStats: Option[DirStats]
   private def deleteFile(file: VFile, curSummary: IOTaskSummary): IOTaskSummary = {
     val fs = file.fileSystem
     val result = fs.delete(file) match {
-        case Success(deleted) => if (deleted) IOTaskSummary.success(file)
-                                 else IOTaskSummary.empty
+        case Success(deleted) =>
+          if (deleted) IOTaskSummary.success(file)
+          else IOTaskSummary.empty
 
         case Failure(exception) => IOTaskSummary.failed(file, s"Delete of file $file failed with error: $exception")
       }

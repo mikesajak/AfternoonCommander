@@ -30,7 +30,7 @@ class CountStatsProgressMonitor(statsListener: StatsUpdateListener) extends Prog
     statsListener.notifyError(state, message)
   }
 
-  override def notifyAborted(message: String): Unit = {
+  override def notifyAborted(message: Option[String]): Unit = {
     // TODO: do nothing?
   }
 }

@@ -24,8 +24,9 @@ object CancellableTask {
       Some(code())
     } catch {
       case e: AbortOperationException =>
-        logger.info(s"Task aborted, ${e.getLocalizedMessage}")
-        progressMonitor.notifyAborted(e.getLocalizedMessage)
+        val msg = Option(e.getLocalizedMessage)
+        logger.debug(s"Task aborted, message=$msg")
+        progressMonitor.notifyAborted(msg)
         None
     }
   }

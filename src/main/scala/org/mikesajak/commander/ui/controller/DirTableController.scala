@@ -314,7 +314,7 @@ class DirTableController(curDirField: TextField,
     }
 
   private def handleKeyEvent(event: KeyEvent) {
-    println(s"handleKeyEvent: $event")
+    logger.debug(s"handleKeyEvent: $event")
     event.code match {
       case KeyCode.Enter =>
         val items = dirTableView.selectionModel.value.selectedItems
@@ -335,7 +335,7 @@ class DirTableController(curDirField: TextField,
     else {
       val fileType = fileTypeMgr.detectFileType(path)
       val maybeHandler = fileTypeMgr.fileTypeHandler(path)
-      println(s"file action $path, fileType=$fileType, fileTypeActionHandler=$maybeHandler")
+      logger.debug(s"file action $path, fileType=$fileType, fileTypeActionHandler=$maybeHandler")
       for (handler <- maybeHandler) try {
         handler.handle(path)
       } catch {

@@ -1,7 +1,7 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import javafx.scene.control
-import org.mikesajak.commander.task.CancellableTask
+import org.mikesajak.commander.task.{CancellableTask, IOTaskSummary}
 import scalafx.Includes._
 import scalafx.event.ActionEvent
 import scalafx.scene.control._
@@ -15,17 +15,20 @@ trait ProgressPanelController {
               operationIcon: Image, dialog: Dialog[ButtonType],
               task: CancellableTask)
 
-  def updateIndeterminate(details: String): Unit
-  def update(details: String, progress: Float): Unit
-  def update(details: String, partProgress: Float, totalProgress: Float): Unit
-  def updateFinished(details: String): Unit
-  def updateAborted(details: String): Unit
+  def updateIndeterminate(details: String, stats: Option[IOTaskSummary] = None): Unit
+  def update(details: String, progress: Float, stats: Option[IOTaskSummary] = None): Unit
+  def detailedUpdate(details: String, partProgress: Float, totalProgress: Float, stats: Option[IOTaskSummary] = None): Unit
+  def updateFinished(details: String, stats: Option[IOTaskSummary] = None): Unit
+  def updateAborted(details: Option[String], stats: Option[IOTaskSummary] = None): Unit
 }
 
 @sfxml
 class ProgressPanelControllerImpl(nameLabel: Label,
                                   detailsLabel: Label,
                                   progressBar: ProgressBar,
+                                  fileCountLabel: Label,
+                                  dirCountLabel: Label,
+                                  sizeLabel: Label,
                                   elapsedTimeLabel: Label,
                                   estimatedTimeLabel: Label,
                                   dontCloseCheckbox: CheckBox)
@@ -56,24 +59,28 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     }
   }
 
-  override def updateIndeterminate(details: String): Unit = {
+  override def updateIndeterminate(details: String, stats: Option[IOTaskSummary]): Unit = {
     detailsLabel.text = details
+    updateStats(stats)
     progressBar.progress = -1
   }
 
-  override def update(details: String, progress: Float): Unit = {
+  override def update(details: String, progress: Float, stats: Option[IOTaskSummary]): Unit = {
     detailsLabel.text = details
+    updateStats(stats)
     progressBar.progress = progress
   }
 
-  override def update(details: String, partProgress: Float, totalProgress: Float): Unit = {
+  override def detailedUpdate(details: String, partProgress: Float, totalProgress: Float, stats: Option[IOTaskSummary]): Unit = {
     detailsLabel.text = details
+    updateStats(stats)
     progressBar.progress = totalProgress
     // TODO: partial progress
   }
 
-  override def updateFinished(details: String): Unit = {
+  override def updateFinished(details: String, stats: Option[IOTaskSummary]): Unit = {
     detailsLabel.text = details
+    updateStats(stats)
     progressBar.progress = 1
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
     if (!dontCloseCheckbox.selected.value) {
@@ -81,11 +88,19 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     }
   }
 
-  override def updateAborted(details: String): Unit = {
-    detailsLabel.text = details
+  override def updateAborted(details: Option[String], stats: Option[IOTaskSummary]): Unit = {
+    details.foreach(msg => detailsLabel.text = msg)
+    updateStats(stats)
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
     if (!dontCloseCheckbox.selected.value) {
       dialog.result = ButtonType.Close
     }
   }
+
+  private def updateStats(stats: Option[IOTaskSummary]): Unit =
+    stats.foreach { s =>
+      fileCountLabel.text = s.numFiles.toString
+      dirCountLabel.text = s.numDirs.toString
+      sizeLabel.text = s.totalSize.toString
+    }
 }

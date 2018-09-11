@@ -4,6 +4,7 @@ import java.io.{PrintWriter, StringWriter}
 
 import com.google.common.base.Stopwatch
 import com.typesafe.scalalogging.Logger
+import org.mikesajak.commander.task.AbortOperationException
 
 import scala.language.{implicitConversions, reflectiveCalls}
 
@@ -51,15 +52,18 @@ object Utils {
   }
 
   def runWithTimer[B](name: String, stepLogLovel: LogLevel = Trace,
-                      successLogLevel: LogLevel = Debug, errorLogLevel: LogLevel = Error)
+                      finishLogLevel: LogLevel = Debug, errorLogLevel: LogLevel = Error)
                      (code: () => B)(implicit logger: Logger): B = {
     val stopwatch = Stopwatch.createStarted()
     try {
       log(s"$name started", stepLogLovel)
       val result = code()
-      log(s"$name finished in $stopwatch", successLogLevel)
+      log(s"$name finished in $stopwatch", finishLogLevel)
       result
     } catch {
+      case e: AbortOperationException =>
+        log(s"$name aborted after $stopwatch", finishLogLevel)
+        throw e
       case e: Exception =>
         log(s"$name finisded in $stopwatch with error $e", e, errorLogLevel)
         throw e
