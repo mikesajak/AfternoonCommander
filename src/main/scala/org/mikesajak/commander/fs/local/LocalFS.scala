@@ -1,7 +1,7 @@
 package org.mikesajak.commander.fs.local
 
 import java.io.File
-import java.net.URI
+import java.net.{URI, URLEncoder}
 import java.nio.file.{Files, Paths}
 import java.nio.{file => jfile}
 import java.{io => jio}
@@ -30,7 +30,7 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
   override def exists(path: VPath): Boolean = new jio.File(path.absolutePath).exists
 
   override def delete(path: VPath): Try[Boolean] = Try {
-    val normalizedPath = path.absolutePath.replace('\\', '/')
+    val normalizedPath = URLEncoder.encode(path.absolutePath, "UTF-8")
     val fsPath = Paths.get(new URI(s"file:///$normalizedPath"))
     Files.deleteIfExists(fsPath)
   }
