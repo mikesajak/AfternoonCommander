@@ -1,7 +1,7 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import javafx.scene.control
-import org.mikesajak.commander.task.CancellableTask
+import org.mikesajak.commander.task.{CancellableTask, IOTaskSummary}
 import scalafx.Includes._
 import scalafx.event.ActionEvent
 import scalafx.scene.control._
@@ -19,7 +19,7 @@ class MultiProgressPanelControllerImpl(headerImageView: ImageView,
 
   private var dialog: Dialog[ButtonType] = _
 
-  override def init(operationName: String, headerText: String, details1: String, details2: String,
+  def init(operationName: String, headerText: String, details1: String, details2: String,
                     operationIcon: Image, dialog: Dialog[ButtonType], task: CancellableTask): Unit = {
     this.dialog = dialog
 
@@ -41,25 +41,25 @@ class MultiProgressPanelControllerImpl(headerImageView: ImageView,
     }
   }
 
-  override def updateIndeterminate(details: String): Unit = {
+  def updateIndeterminate(details: String, stats: Option[IOTaskSummary] = None): Unit = {
     detailsLabel.text = details
     curProgressBar.progress = -1
     totalProgressBar.progress = -1
   }
 
-  override def update(details: String, progress: Float): Unit = {
+  def update(details: String, progress: Float, stats: Option[IOTaskSummary] = None): Unit = {
     detailsLabel.text = details
     totalProgressBar.progress = progress
     curProgressBar.progress = 0
   }
 
-  override def update(details: String, curProgress: Float, totalProgress: Float): Unit = {
+  def detailedUpdate(details: String, partProgress: Float, totalProgress: Float, stats: Option[IOTaskSummary] = None): Unit = {
     detailsLabel.text = details
-    curProgressBar.progress = curProgress
+    curProgressBar.progress = partProgress
     totalProgressBar.progress = totalProgress
   }
 
-  override def updateFinished(details: String): Unit = {
+  def updateFinished(details: String, stats: Option[IOTaskSummary] = None): Unit = {
     detailsLabel.text = details
     totalProgressBar.progress = 1
     curProgressBar.progress = 1
@@ -69,8 +69,8 @@ class MultiProgressPanelControllerImpl(headerImageView: ImageView,
     }
   }
 
-  override def updateAborted(details: String): Unit = {
-    detailsLabel.text = details
+  def updateAborted(details: Option[String], stats: Option[IOTaskSummary] = None): Unit = {
+    details.foreach(text => detailsLabel.text = text)
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
     if (!dontCloseCheckbox.selected.value) {
       dialog.result = ButtonType.Close

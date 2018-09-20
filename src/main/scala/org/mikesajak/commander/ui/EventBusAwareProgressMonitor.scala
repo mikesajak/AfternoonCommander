@@ -7,7 +7,7 @@ import org.mikesajak.commander.task.{IOTaskSummary, ProgressMonitor}
 case class ProgressUpdate(totalProgress: Option[Float], partialProgress: Option[Float], message: Option[String], state: Option[IOTaskSummary])
 case class ProgressUpdateFinished(message: Option[String], state: Option[IOTaskSummary])
 case class ProgressUpdateError(message: String, state: Option[IOTaskSummary])
-case class ProgressUpdateAbort(message: String)
+case class ProgressUpdateAbort(message: Option[String])
 
 class EventBusAwareProgressMonitor(eventBus: EventBus) extends ProgressMonitor[IOTaskSummary] {
 
@@ -26,7 +26,7 @@ class EventBusAwareProgressMonitor(eventBus: EventBus) extends ProgressMonitor[I
   override def notifyError(message: String, state: Option[IOTaskSummary]): Unit =
     eventBus.publish(ProgressUpdateError(message, state))
 
-  override def notifyAborted(message: String): Unit =
+  override def notifyAborted(message: Option[String]): Unit =
     eventBus.publish(ProgressUpdateAbort(message))
 }
 
