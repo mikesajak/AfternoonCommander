@@ -2,6 +2,7 @@ package org.mikesajak.commander.task
 
 import org.mikesajak.commander.util.UnitFormatter
 
+// TODO: Remove this class
 trait ProgressMonitor[A] {
   def notifyProgressIndeterminate(message: Option[String], state: Option[A])
   def notifyProgress(progress: Float, message: Option[String], state: Option[A])

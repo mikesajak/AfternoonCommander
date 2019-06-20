@@ -157,5 +157,5 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
 }
 
 object ApplicationContext {
-  val globalInjector: Injector = Guice.createInjector(new ApplicationContext)
+  lazy val globalInjector: Injector = Guice.createInjector(new ApplicationContext)
 }

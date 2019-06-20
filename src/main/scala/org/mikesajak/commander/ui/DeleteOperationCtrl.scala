@@ -10,8 +10,6 @@ import org.mikesajak.commander.{ApplicationController, TaskManager}
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
@@ -87,14 +85,13 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     val (contentPane, contentCtrl) = UILoader.loadScene[DeletePanelController](deleteLayout)
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
 
-    val statsCountOp = countStatsOpCtrl.runCountDirStats(targetPaths, contentCtrl)
-
-    contentCtrl.init(targetPaths, DirStats.Empty, dialog)
+    val statsService = contentCtrl.init(targetPaths, DirStats.Empty, dialog)
 
     val result = dialog.showAndWait()
-    statsCountOp.requestAbort()
+    statsService.cancel()
+
     val stats =
-      if (statsCountOp.finalStatus.isCompleted) Await.result(statsCountOp.finalStatus, Duration.Zero)
+      if (statsService.getState == javafx.concurrent.Worker.State.SUCCEEDED) Some(statsService.value.value)
       else None
 
     result

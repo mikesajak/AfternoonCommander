@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<GridPane hgap="14.0" maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CountStatsPanelControllerImpl">
+<?import javafx.geometry.Insets?><?import javafx.scene.control.Label?><?import javafx.scene.image.ImageView?><?import javafx.scene.layout.*?><?import javafx.scene.text.Font?>
+<GridPane hgap="14.0" maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" vgap="20.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CountStatsPanelControllerImpl">
   <children>
     <ImageView fx:id="headerImageView" fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="0" GridPane.valignment="TOP">
       <image>
@@ -21,7 +17,6 @@
         </Label>
             <Label fx:id="dirLabel" text="/path/to/target/directory" textOverrun="LEADING_ELLIPSIS" />
             <fx:include fx:id="statsPanel" source="stats-panel.fxml" />
-            <Label fx:id="messageLabel" text="Message" textOverrun="LEADING_ELLIPSIS" />
       </children>
     </VBox>
   </children>

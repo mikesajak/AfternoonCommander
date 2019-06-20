@@ -70,7 +70,7 @@ class MultiProgressPanelControllerImpl(headerImageView: ImageView,
   }
 
   def updateAborted(details: Option[String], stats: Option[IOTaskSummary] = None): Unit = {
-    details.foreach(text => detailsLabel.text = text)
+    details.foreach(message => detailsLabel.text = message)
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
     if (!dontCloseCheckbox.selected.value) {
       dialog.result = ButtonType.Close

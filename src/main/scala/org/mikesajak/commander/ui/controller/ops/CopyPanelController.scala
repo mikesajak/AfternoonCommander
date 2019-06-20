@@ -2,19 +2,19 @@ package org.mikesajak.commander.ui.controller.ops
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{VDirectory, VPath}
-import org.mikesajak.commander.task.DirStats
-import org.mikesajak.commander.ui.{IconSize, ResourceManager, StatsUpdateListener}
+import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsTask}
+import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.PathUtils
 import scalafx.Includes._
-import scalafx.application.Platform
 import scalafx.collections.ObservableBuffer
+import scalafx.concurrent.Service
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
 
-trait CopyPanelController extends StatsUpdateListener {
-  def init(sourcePaths: Seq[VPath], targetDir: VDirectory, stats: DirStats, dialog: Dialog[ButtonType]): Unit
+trait CopyPanelController {
+  def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats]
 }
 
 @sfxml
@@ -24,7 +24,6 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
                               sourcePathsListView: ListView[String],
                               statsPanel: Pane,
                               @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
-                              statsMessageLabel: Label,
                               targetDirCombo: ComboBox[String],
                               summaryMessageLabel: Label,
 
@@ -34,7 +33,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
   logger.debug(s"CopyPanelControllerImpl - constr")
 
-  override def init(sourcePaths: Seq[VPath], targetDir: VDirectory, stats: DirStats, dialog: Dialog[ButtonType]): Unit = {
+  override def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats] = {
     val pathType = pathTypeOf(sourcePaths)
     dialog.title = s"${resourceMgr.getMessage("app.name")} - ${resourceMgr.getMessage(s"copy_dialog.title")}"
     dialog.headerText = resourceMgr.getMessage(s"copy_dialog.header.${pathType.name}")
@@ -47,7 +46,6 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     // create bindings - to resize parent layout on disable/hide
     sourcePathsListView.managed <== sourcePathsListView.visible
     statsPanel.managed <== statsPanel.visible
-    statsMessageLabel.managed <== statsMessageLabel.visible
 
     val targetPath = sourcePaths.head
     val targetParentName = targetPath.parent.map(_.absolutePath).getOrElse("")
@@ -64,18 +62,21 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       sourcePathsListView.items = ObservableBuffer(sourcePaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
     }
 
-    if (pathType == SingleFile) {
-      statsMessageLabel.visible = false
-    } else {
-      statsMessageLabel.visible = true
-      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
-      statsMessageLabel.text = resourceMgr.getMessage("copy_dialog.stats_counting.label")
-      summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_not_available.label")
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))
-      summaryMessageLabel.tooltip = resourceMgr.getMessage("copy_dialog.progress_not_available.tooltip")
-    }
+    summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_not_available.label")
+    summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))
+    summaryMessageLabel.tooltip = resourceMgr.getMessage("copy_dialog.progress_not_available.tooltip")
 
     statsPanelController.init(sourcePaths)
+
+    val statsService = new BackgroundService(() => new DirStatsTask(sourcePaths))
+    statsService.onRunning = e => statsPanelController.notifyStarted()
+    statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
+    statsService.onSucceeded = e => notifyFinished(statsService.value.value, None)
+    statsService.value.onChange { (_, _, stats) => statsPanelController.updateStats(stats, None)}
+
+    dialog.onShown = e => statsService.start()
+
+    statsService
   }
 
   private def pathTypeOf(targetPaths: Seq[VPath]): PathType =
@@ -85,33 +86,28 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       case p => MultiPaths
     }
 
-  override def updateStats(stats: DirStats, message: Option[String]): Unit = {
-    statsPanelController.updateStats(stats)
+  private def updateStats(stats: DirStats, message: Option[String]): Unit = {
+    statsPanelController.updateStats(stats, message)
   }
 
-  override def updateMessage(message: String): Unit = {
+  private def updateMessage(message: String): Unit = {
     println(s"TODO: message: $message")
   }
 
-  override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
-    statsPanelController.updateStats(stats)
-    Platform.runLater {
-      statsMessageLabel.graphic = null
-      statsMessageLabel.text = null
+  private def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
+    statsPanelController.notifyFinished(stats, message)
 
-      summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_available.label")
-      summaryMessageLabel.graphic = null
-      summaryMessageLabel.tooltip = resourceMgr.getMessage("copy_dialog.progress_available.tooltip")
-    }
+    summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_available.label")
+    summaryMessageLabel.graphic = null
+    summaryMessageLabel.tooltip = resourceMgr.getMessage("copy_dialog.progress_available.tooltip")
   }
 
-  override def notifyError(stats: Option[DirStats], message: String): Unit = {
-    stats.foreach(st => statsPanelController.updateStats(st))
-    Platform.runLater {
-      summaryMessageLabel.text = message
-      summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle.png", IconSize.Small))
-    }
+  private def notifyError(stats: Option[DirStats], message: String): Unit = {
+    statsPanelController.notifyError(stats, message)
+
+    summaryMessageLabel.text = message
+    summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
+    summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle.png", IconSize.Small))
   }
 }
 

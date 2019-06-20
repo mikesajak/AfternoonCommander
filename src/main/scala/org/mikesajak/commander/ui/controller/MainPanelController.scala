@@ -27,7 +27,7 @@ class MainPanelController(dirsSplitPane: SplitPane,
 
   statusMgr.selectedPanel = LeftPanel
 
-  mainPane.filterEvent(KeyEvent.KeyPressed) { (ke: KeyEvent) =>
+  mainPane.filterEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
     ke.code match {
       case KeyCode.F3  => operationMgr.handleView()
       case KeyCode.F4  => operationMgr.handleEdit()

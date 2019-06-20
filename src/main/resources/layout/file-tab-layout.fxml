@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
+<?import javafx.geometry.Insets?><?import javafx.scene.control.*?><?import javafx.scene.image.Image?><?import javafx.scene.image.ImageView?><?import javafx.scene.layout.*?><?import javafx.scene.text.Font?>
 <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirTableController">
    <bottom>
-      <HBox nodeOrientation="LEFT_TO_RIGHT" prefHeight="0.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+      <HBox nodeOrientation="LEFT_TO_RIGHT" prefHeight="0.0" BorderPane.alignment="CENTER">
          <children>
             <Label fx:id="statusLabel2" text="Selected info" />
-            <Pane maxHeight="0.0" minHeight="0.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
+            <Pane maxHeight="0.0" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
             <Label fx:id="statusLabel1" text="Directory summary" />
          </children>
       </HBox>

@@ -9,11 +9,17 @@ import org.mikesajak.commander.ui.controller.ops.StatsUtils.ContentType.ContentT
 import org.mikesajak.commander.util.UnitFormatter._
 import scalafx.application.Platform
 import scalafx.scene.control.Label
+import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
 trait StatsPanelController {
   def init(targetPath: Seq[VPath]): Unit
-  def updateStats(stats: DirStats): Unit
+
+  def notifyStarted(): Unit
+  def notifyFinished(stats: DirStats, message: Option[String] = None): Unit
+  def notifyError(stats: Option[DirStats], message: String): Unit
+  def updateMessage(message: String): Unit
+  def updateStats(stats: DirStats, message: Option[String]): Unit
 }
 
 package object StatsUtils {
@@ -31,7 +37,9 @@ package object StatsUtils {
 }
 
 @sfxml
-class StatsPanelControllerImpl(modifiedLabel: Label,
+class StatsPanelControllerImpl(messageLabel: Label,
+
+                               modifiedLabel: Label,
                                modifiedValueLabel: Label,
                                attribsLabel: Label,
                                attribsValueLabel: Label,
@@ -86,8 +94,40 @@ class StatsPanelControllerImpl(modifiedLabel: Label,
         sizeValueLabel.text = formatDataSize(path.size)
     }
   }
-  override def updateStats(stats: DirStats): Unit = {
+
+
+  override def notifyStarted(): Unit = {
+    messageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
+    messageLabel.text = resourceMgr.getMessage("count_stats_dialog.counting.label")
+  }
+
+  override def notifyFinished(stats: DirStats, message: Option[String] = None): Unit = {
+    updateStats(stats, message)
     Platform.runLater {
+      messageLabel.graphic = null
+      messageLabel.text = null
+    }
+  }
+
+  override def notifyError(stats: Option[DirStats], message: String): Unit = {
+    stats match {
+      case Some(s) => updateStats(s, Some(message))
+      case _ => updateMessage(message)
+    }
+    Platform.runLater {
+      messageLabel.graphic = null
+    }
+  }
+
+  override def updateMessage(message: String): Unit =
+    Platform.runLater {
+      messageLabel.text = message
+    }
+
+  override def updateStats(stats: DirStats, message: Option[String]): Unit = {
+    Platform.runLater {
+      message.foreach(msg => messageLabel.text = msg)
+
       directoriesValueLabel.text = resourceMgr.getMessageWithArgs("count_stats.num_directories",
         Array(stats.numDirs, stats.depth))
       val unit = findDataSizeUnit(stats.size)

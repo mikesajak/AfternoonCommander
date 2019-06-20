@@ -1,7 +1,8 @@
 package org.mikesajak.commander.task
 
+import com.typesafe.scalalogging.Logger
+import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
-import org.mikesajak.commander.task.CancellableTask._
 import org.mikesajak.commander.util.UnitFormatter
 
 case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
@@ -16,16 +17,28 @@ object DirStats {
   val Empty = DirStats(0,0,0,0)
 }
 
-class DirStatsTask(paths: Seq[VPath]) extends Task[DirStats] with CancellableTask {
+class DirStatsTask(paths: Seq[VPath]) extends scalafx.concurrent.Task(new jfxc.Task[DirStats] {
+  private val logger = Logger("DirStatsTask")
 
-  override def run(progressMonitor: ProgressMonitor[DirStats]): Option[DirStats] = {
-    withAbort(progressMonitor) { () =>
-      val total = paths.map(path => countStats(path, progressMonitor))
-                       .reduceLeft((acc, stats) => acc + stats)
+  updateTitle(s"DirStatsTask($paths)")
 
-      progressMonitor.notifyFinished(None, Some(total))
-      total
-    }
+  override def call(): DirStats = try {
+    updateProgress(-1, -1) // set progress indeterminate
+
+    val total = paths.map(path => countStats(path))
+                    .reduceLeft((acc, stats) => acc + stats)
+
+    updateProgress(1, 1)
+    total
+  } catch {
+    case c: CancelledException =>
+      logger.info(s"Task $this has been cancelled.")
+      updateProgress(0, 0)
+      null
+    case e: Exception =>
+      updateProgress(0, 0)
+      updateMessage(e.getLocalizedMessage)
+      throw e
   }
 
   private def dirCounts(dir: VDirectory, level: Int) = {
@@ -37,21 +50,23 @@ class DirStatsTask(paths: Seq[VPath]) extends Task[DirStats] with CancellableTas
     DirStats(files.size, subDirs.size, filesSize + dirsSize, level)
   }
 
-  private def countStats(path: VPath, progressMonitor: ProgressMonitor[DirStats]): DirStats = {
+  private def countStats(path: VPath): DirStats = {
     path match {
-      case d: VDirectory => countStats(d, progressMonitor, DirStats(0, 1, 0, 1), 0)
+      case d: VDirectory => countStats(d, DirStats(0, 1, 0, 1), 0)
       case f: VFile => DirStats(1, 0, f.size, 0)
     }
   }
 
-  private def countStats(dir: VDirectory, progressMonitor: ProgressMonitor[DirStats], globalCounts: DirStats, level: Int): DirStats = {
-    abortIfNeeded()
+  private def countStats(dir: VDirectory, globalCounts: DirStats, level: Int): DirStats = {
+    if (isCancelled)
+      throw new CancelledException
 
     val curCounts = globalCounts + dirCounts(dir, level)
     val totalCounts = (dir.childDirs foldLeft curCounts) ((accCounts, subDir) =>
-      countStats(subDir, progressMonitor, accCounts, level + 1))
+                                                            countStats(subDir, accCounts, level + 1))
 
-    progressMonitor.notifyProgressIndeterminate(None, Some(totalCounts))
+    updateValue(totalCounts)
     totalCounts
   }
-}
+})
+

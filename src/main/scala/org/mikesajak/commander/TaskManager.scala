@@ -5,6 +5,7 @@ import org.mikesajak.commander.task.{ProgressMonitor, Task}
 
 import scala.concurrent.Future
 
+// TODO: Remove this class
 class TaskManager {
   private val logger = Logger[TaskManager]
 

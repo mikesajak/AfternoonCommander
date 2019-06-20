@@ -10,8 +10,6 @@ import org.mikesajak.commander.{ApplicationController, TaskManager}
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
 class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
@@ -48,7 +46,6 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
         case _ => // skip
       }
     }
-
   }
 
   private def executeCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, jobStats: Option[DirStats]): Unit = {
@@ -73,17 +70,16 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
     val (contentPane, contentCtrl) = UILoader.loadScene[CopyPanelController](copyLayout)
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
 
-    val statsCountOp = countStatsOpCtrl.runCountDirStats(sourcePaths, contentCtrl)
-
-    contentCtrl.init(sourcePaths, targetDir, DirStats.Empty, dialog)
+    val statsService = contentCtrl.init(sourcePaths, targetDir, dialog)
 
     val result = dialog.showAndWait()
-    statsCountOp.requestAbort()
+
+    statsService.cancel()
 
     result match {
       case Some(bt) if bt == control.ButtonType.YES || bt == control.ButtonType.OK =>
         val stats =
-          if (statsCountOp.finalStatus.isCompleted) Await.result(statsCountOp.finalStatus, Duration.Zero)
+          if (statsService.getState == javafx.concurrent.Worker.State.SUCCEEDED) Some(statsService.value.value)
           else None
         Right(stats)
       case Some(bt) => Left(new ButtonType(bt.asInstanceOf[control.ButtonType]))

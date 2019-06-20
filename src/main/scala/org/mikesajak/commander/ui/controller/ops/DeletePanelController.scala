@@ -1,18 +1,18 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import org.mikesajak.commander.fs.VPath
-import org.mikesajak.commander.task.DirStats
-import org.mikesajak.commander.ui.{IconSize, ResourceManager, StatsUpdateListener}
+import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsTask}
+import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.PathUtils
 import scalafx.Includes._
-import scalafx.application.Platform
 import scalafx.collections.ObservableBuffer
+import scalafx.concurrent.Service
 import scalafx.scene.control.{ButtonType, Dialog, Label, ListView}
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.{nested, sfxml}
 
-trait DeletePanelController extends StatsUpdateListener {
-  def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Unit
+trait DeletePanelController {
+  def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Service[DirStats]
 }
 
 @sfxml
@@ -20,15 +20,12 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
                                 pathToTargetLabel: Label,
                                 targetNameLabel: Label,
                                 pathsListView: ListView[String],
-//                                statsPanel: Pane,
                                 @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
-
-                                statsMessageLabel: Label,
                                 summaryMessageLabel: Label,
 
                                 resourceMgr: ResourceManager) extends DeletePanelController {
 
-  override def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Unit = {
+  override def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Service[DirStats] = {
     val pathType = pathTypeOf(targetPaths)
     dialog.title = s"${resourceMgr.getMessage("app.name")} - ${resourceMgr.getMessage(s"delete_dialog.title")}"
     dialog.headerText = resourceMgr.getMessage(s"delete_dialog.header.${pathType.name}")
@@ -38,8 +35,6 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     // create bindings - to resize parent layout on disable/hide
     pathsListView.managed <== pathsListView.visible
-//    statsPanel.managed <== statsPanel.visible
-    statsMessageLabel.managed <== statsMessageLabel.visible
 
     val targetPath = targetPaths.head
     val targetParentName = targetPath.parent.map(_.absolutePath).getOrElse("")
@@ -56,18 +51,22 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       pathsListView.items = ObservableBuffer(targetPaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
     }
 
-    if (pathType == SingleFile) {
-      statsMessageLabel.visible = false
-    } else {
-      statsMessageLabel.visible = true
-      statsMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
-      statsMessageLabel.text = resourceMgr.getMessage("delete_dialog.stats_counting.label")
-      summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))
-      summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_not_available.tooltip")
-    }
+    summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
+    summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))
+    summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_not_available.tooltip")
 
     statsPanelController.init(targetPaths)
+
+
+    val statsService = new BackgroundService(() => new DirStatsTask(targetPaths))
+    statsService.onRunning = e => statsPanelController.notifyStarted()
+    statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
+    statsService.onSucceeded = e => notifyFinished(statsService.value.value, None)
+    statsService.value.onChange { (_, _, stats) => statsPanelController.updateStats(stats, None)}
+
+    dialog.onShown = e => statsService.start()
+
+    statsService
   }
 
   private def pathTypeOf(targetPaths: Seq[VPath]): PathType =
@@ -77,32 +76,27 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       case p => MultiPaths
     }
 
-  override def updateStats(stats: DirStats, message: Option[String]): Unit = {
-    statsPanelController.updateStats(stats)
+  private def updateStats(stats: DirStats, message: Option[String]): Unit = {
+    statsPanelController.updateStats(stats, message)
   }
 
-  override def updateMessage(message: String): Unit = {
+  private def updateMessage(message: String): Unit = {
     println(s"TODO: message: $message")
   }
 
-  override def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
-    statsPanelController.updateStats(stats)
-    Platform.runLater {
-      statsMessageLabel.graphic = null
-      statsMessageLabel.text = null
+  private def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
+    statsPanelController.updateStats(stats, message)
 
-      summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_available.label")
-      summaryMessageLabel.graphic = null
-      summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_available.tooltip")
-    }
+    summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_available.label")
+    summaryMessageLabel.graphic = null
+    summaryMessageLabel.tooltip = resourceMgr.getMessage("delete_dialog.progress_available.tooltip")
   }
 
-  override def notifyError(stats: Option[DirStats], message: String): Unit = {
-    stats.foreach(st => statsPanelController.updateStats(st))
-    Platform.runLater {
-      summaryMessageLabel.text = message
-      summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
-      summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle.png", IconSize.Small))
-    }
+  private def notifyError(stats: Option[DirStats], message: String): Unit = {
+    stats.foreach(st => statsPanelController.updateStats(st, Some(message)))
+
+    summaryMessageLabel.text = message
+    summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
+    summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle.png", IconSize.Small))
   }
 }
