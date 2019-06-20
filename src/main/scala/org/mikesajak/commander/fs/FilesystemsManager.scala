@@ -127,15 +127,11 @@ class FilesystemsManager(osResolver: OSResolver) {
 
   private val PathPattern = raw"(\S+)://(.+)".r
 
-  def resolvePath(path: String): Option[VPath] = {
-    val (fsId, fsPath) = path match {
-        case PathPattern(id, _) => (id, path)
-        case _ => ("local", s"local://$path")
-      }
-
-      filesystems.find(fs => fs.id == fsId)
-        .map(fs => fs.resolvePath(fsPath))
-  }
+  def resolvePath(path: String): Option[VPath] =
+    filesystems.toIterator
+               .map(fs => fs.resolvePath(path)
+                            .filter(p => fs.exists(p)))
+               .collectFirst { case Some(x) => x }
 
   def homePath: String = {
     //    val fsv = FileSystemView.getFileSystemView

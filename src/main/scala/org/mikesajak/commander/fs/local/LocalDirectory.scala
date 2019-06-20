@@ -3,7 +3,7 @@ package org.mikesajak.commander.fs.local
 import java.io.File
 import java.nio.file.Files
 
-import org.mikesajak.commander.fs.VDirectory
+import org.mikesajak.commander.fs.{VDirectory, VPath}
 
 /**
  * Created by mike on 26.10.14.
@@ -23,6 +23,9 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
       files.filter(f => !f.isDirectory).map(resolveFile)
     else Seq()
   }
+
+  override def isParent(path: VPath): Boolean =
+    path.absolutePath startsWith absolutePath
 
   private def resolveFile(file: File) = {
     if (Files.isSymbolicLink(file.toPath)) new SymlinkFile(file, fileSystem)

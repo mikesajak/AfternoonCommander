@@ -3,7 +3,6 @@ package org.mikesajak.commander.fs.local
 import java.io.File
 import java.net.{URI, URLEncoder}
 import java.nio.file.{Files, Paths}
-import java.nio.{file => jfile}
 import java.{io => jio}
 
 import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
@@ -47,14 +46,26 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
 
   override def rootDirectory: VDirectory = new LocalDirectory(rootFile, this)
 
-  override def resolvePath(path: String): VPath =
+  override def resolvePath(path: String): Option[VPath] =
     path match {
       case LocalFS.PathPattern(p) =>
         val file = new File(p)
-        if (file.isDirectory) new LocalDirectory(file, this)
-        else new LocalFile(file, this)
-      case _ => throw new IllegalArgumentException(s"Provided path parameter is invalid (path=$path). LocalFS supports only local paths.")
+
+        if (isChild(file, rootFile)) {
+          val resolved =
+            if (file.isDirectory) new LocalDirectory(file, this)
+            else new LocalFile(file, this)
+          Some(resolved)
+        } else None
+
+      case _ => None
     }
+
+  private def isChild(childFile: File, parentFile: File) = {
+    val parentPath = parentFile.getAbsolutePath
+    val childPath = childFile.getAbsolutePath
+    childPath.startsWith(parentPath)
+  }
 
   override def toString = s"LocalFS($id, $rootDirectory, $attributes)"
 

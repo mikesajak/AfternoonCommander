@@ -61,6 +61,8 @@ class ZipRoot(parentDir: VDirectory, zipFile: jZipFile) extends VDirectory {
 
   override def fileSystem: FS = ??? // TODO
 
+  override def isParent(path: VPath): Boolean = ???
+
   override def mkChildDir(child: String): Nothing = ???
 
   override def mkChildFile(child: String): Nothing = ???
@@ -77,6 +79,8 @@ class ZipDir(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) exte
   override def children: Seq[VPath] = ??? // TODO
   override def childDirs: Seq[VDirectory] = ??? // TODO
   override def childFiles: Seq[VFile] = ??? // TODO
+
+  override def isParent(path: VPath): Boolean = ???
 
   override def modificationDate: Instant = zipEntry.getLastModifiedTime.toInstant
 
@@ -125,7 +129,7 @@ class ZipFS(zipFile: VFile) extends FS {
 
   override def rootDirectory: VDirectory = ???
 
-  override def resolvePath(path: String): VPath = ???
+  override def resolvePath(path: String): Option[VPath] = ???
 
   override def exists(path: VPath): Boolean = ???
 

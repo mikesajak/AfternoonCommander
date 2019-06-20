@@ -95,8 +95,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideBookmarkManager(filesystemsManager: FilesystemsManager,
-                             configuration: Configuration): BookmarkMgr = {
+  def provideBookmarkMgr(filesystemsManager: FilesystemsManager,
+                         configuration: Configuration): BookmarkMgr = {
     val bookmarkMgr = new BookmarkMgr(configuration)
     bookmarkMgr.init(filesystemsManager)
     bookmarkMgr

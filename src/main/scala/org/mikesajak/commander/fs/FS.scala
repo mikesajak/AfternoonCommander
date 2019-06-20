@@ -7,7 +7,7 @@ trait FS {
   def rootDirectory: VDirectory
   def attributes: Map[String, String]
 
-  def resolvePath(path: String): VPath
+  def resolvePath(path: String): Option[VPath]
 
   def exists(path: VPath): Boolean
   def create(parent: VPath): Try[Boolean]

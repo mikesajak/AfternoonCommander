@@ -35,4 +35,6 @@ class PathToParent(val currentDir: VDirectory) extends VDirectory {
   override def mkChildFile(child: String) = throw new UnsupportedOperationException(s"Create child file not supported on this wrapper directory")
 
   override def toString = s".. -> ($absolutePath)"
+
+  override def isParent(path: VPath): Boolean = currentDir.parent.get.isParent(path)
 }

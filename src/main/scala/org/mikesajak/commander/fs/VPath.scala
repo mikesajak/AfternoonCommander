@@ -79,6 +79,8 @@ trait VDirectory extends VPath {
   def childDirs: Seq[VDirectory]
   def childFiles: Seq[VFile]
 
+  def isParent(path: VPath): Boolean
+
   def mkChildDir(child: String): VDirectory
   def mkChildFile(child: String): VFile
 
