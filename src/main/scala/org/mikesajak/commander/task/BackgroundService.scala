@@ -5,9 +5,9 @@ import javafx.{concurrent => jfxc}
 import scalafx.Includes._
 import scalafx.concurrent.{Service, WorkerStateEvent}
 
-class BackgroundService[A](taskProducer: () => scalafx.concurrent.Task[A])(implicit manifest: Manifest[A])
+class BackgroundService[A](task: => scalafx.concurrent.Task[A])(implicit manifest: Manifest[A])
     extends Service[A](new jfxc.Service[A]() {
-    override def createTask(): jfxc.Task[A] = taskProducer()
+    override def createTask(): jfxc.Task[A] = task
   }) {
   private val logger = Logger[BackgroundService[A]]
 

@@ -68,7 +68,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
     statsPanelController.init(sourcePaths)
 
-    val statsService = new BackgroundService(() => new DirStatsTask(sourcePaths))
+    val statsService = new BackgroundService(new DirStatsTask(sourcePaths))
     statsService.onRunning = e => statsPanelController.notifyStarted()
     statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
     statsService.onSucceeded = e => notifyFinished(statsService.value.value, None)
@@ -85,14 +85,6 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       case p if p.size == 1 => SingleFile
       case p => MultiPaths
     }
-
-  private def updateStats(stats: DirStats, message: Option[String]): Unit = {
-    statsPanelController.updateStats(stats, message)
-  }
-
-  private def updateMessage(message: String): Unit = {
-    println(s"TODO: message: $message")
-  }
 
   private def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
     statsPanelController.notifyFinished(stats, message)

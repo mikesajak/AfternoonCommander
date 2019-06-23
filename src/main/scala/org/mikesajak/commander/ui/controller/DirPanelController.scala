@@ -16,7 +16,7 @@ import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{FSUIHelper, IconSize, ResourceManager, UILoader}
-import org.mikesajak.commander.util.{PathUtils, UnitFormatter}
+import org.mikesajak.commander.util.{DataUnit, PathUtils}
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.geometry.Insets
@@ -137,7 +137,7 @@ class DirPanelController(tabPane: TabPane,
                fs.attributes.get("type").map(t => s"[$t]"))
             .flatten
             .reduce((a,b) => s"$a, $b") +
-          s" [${UnitFormatter.mkDataSize(fs.freeSpace)} / ${UnitFormatter.mkDataSize(fs.totalSpace)}]"
+          s" [${DataUnit.mkDataSize(fs.freeSpace)} / ${DataUnit.mkDataSize(fs.totalSpace)}]"
         graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))//, 24)))
 
         onAction = ae => setCurrentTabDir(fs.rootDirectory)
@@ -313,6 +313,7 @@ class DirPanelController(tabPane: TabPane,
   val scheduler = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).build())
   private def startPeriodicTasks(): Unit = {
     val task: Runnable = { () =>
+        // FIXME: disabled until reload performance is fixed/improved
 //      logger.debug(s"$panelId - reloading tab: ${dirTabManager.selectedTab.dir}")
 //      dirTabManager.selectedTab.controller.reload()
       updateFreeSpace()
@@ -325,8 +326,8 @@ class DirPanelController(tabPane: TabPane,
     val curFs = dirTabManager.selectedTab.dir.fileSystem
     val free = curFs.freeSpace
     val total = curFs.totalSpace
-    val freeUnit = UnitFormatter.findDataSizeUnit(free)
-    val totalUnit = UnitFormatter.findDataSizeUnit(total)
+    val freeUnit = DataUnit.findDataSizeUnit(free)
+    val totalUnit = DataUnit.findDataSizeUnit(total)
 
     Platform.runLater {
       freeSpaceLabel.text = resourceMgr.getMessageWithArgs("file_group_panel.free_space.message",

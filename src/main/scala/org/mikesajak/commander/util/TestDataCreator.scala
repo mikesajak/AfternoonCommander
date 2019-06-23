@@ -9,13 +9,13 @@ import com.google.common.base.Stopwatch
 object TestDataCreator {
 
   val NumTestDirs = 3
-  val NumTestFiles = 5
-  val TestFileSize = 1024 * 100
+  val NumTestFiles = 10
+  val TestFileSize = 1024 * 10
 
   val Depth = 5
 
   def main(args: Array[String]): Unit = {
-    val rootPath = Paths.get("./test/test")
+    val rootPath = Paths.get("./test/test2")
 
     if (!Files.exists(rootPath)) {
       Files.createDirectory(rootPath)

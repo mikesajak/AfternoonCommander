@@ -1,9 +1,13 @@
 package org.mikesajak.commander.ui.controller.ops
 
+import java.util.{Timer, TimerTask}
+
+import com.typesafe.scalalogging.Logger
 import javafx.scene.control
-import org.mikesajak.commander.task.{CancellableTask, IOTaskSummary}
+import org.mikesajak.commander.task.{BackgroundService, IOProgress}
+import org.mikesajak.commander.util.{DataUnit, TimeInterval}
 import scalafx.Includes._
-import scalafx.event.ActionEvent
+import scalafx.application.Platform
 import scalafx.scene.control._
 import scalafx.scene.image.{Image, ImageView}
 import scalafxml.core.macros.sfxml
@@ -12,19 +16,14 @@ import scala.language.implicitConversions
 
 trait ProgressPanelController {
   def init(operationName: String, headerText: String, details1: String, details2: String,
-              operationIcon: Image, dialog: Dialog[ButtonType],
-              task: CancellableTask)
-
-  def updateIndeterminate(details: String, stats: Option[IOTaskSummary] = None): Unit
-  def update(details: String, progress: Float, stats: Option[IOTaskSummary] = None): Unit
-  def detailedUpdate(details: String, partProgress: Float, totalProgress: Float, stats: Option[IOTaskSummary] = None): Unit
-  def updateFinished(details: String, stats: Option[IOTaskSummary] = None): Unit
-  def updateAborted(details: Option[String], stats: Option[IOTaskSummary] = None): Unit
+           operationIcon: Image, dialog: Dialog[ButtonType],
+           workerService: BackgroundService[IOProgress])
 }
 
 @sfxml
 class ProgressPanelControllerImpl(nameLabel: Label,
                                   detailsLabel: Label,
+                                  totalProgressIndicator: ProgressIndicator,
                                   progressBar: ProgressBar,
                                   fileCountLabel: Label,
                                   dirCountLabel: Label,
@@ -34,11 +33,18 @@ class ProgressPanelControllerImpl(nameLabel: Label,
                                   dontCloseCheckbox: CheckBox)
     extends ProgressPanelController {
 
+  private val logger = Logger[ProgressPanelController]
+
   private var dialog: Dialog[ButtonType] = _
 
+  private var startTime: Long = _
+  private val timer = new Timer()
+
+  dontCloseCheckbox.selected = true // TODO: make configurable
+
   override def init(operationName: String, headerText: String, details1: String, details2: String,
-                       operationIcon: Image, dialog: Dialog[ButtonType],
-                       task: CancellableTask): Unit = {
+                    operationIcon: Image, dialog: Dialog[ButtonType],
+                    workerService: BackgroundService[IOProgress]): Unit = {
     this.dialog = dialog
 
     dialog.title = s"Afternoon Commander - $operationName"
@@ -48,59 +54,80 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     nameLabel.text= details1
     detailsLabel.text = details2
 
+    workerService.value.onChange { (_,_,value) =>
+      updateValue(value)
+      updateProgress(value)
+    }
+
+    workerService.onSucceeded = { e => updateFinished() }
+    workerService.onFailed = { e => updateFinished() }
+
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Cancel)
 
-    val cancelButton = new Button(dialog.getDialogPane.lookupButton(ButtonType.Cancel).asInstanceOf[control.Button])
-    cancelButton.filterEvent(ActionEvent.Any) { ae: ActionEvent =>
-      println(s"Suppressing cancel: $ae")
-      ae.consume() // suppress cancel, notify task to cancel
-      cancelButton.disable = true
-      task.cancel()
+    val cancelButton = getButton(ButtonType.Cancel)
+    cancelButton.onAction = { ae =>
+      logger.info(s"Cancelling operation: ${workerService.title}")
+      workerService.cancel()
+      timer.cancel()
     }
+
+    dialog.onShowing = e => dialog.getDialogPane.getScene.getWindow.sizeToScene()
+
+    dialog.onShown = { e =>
+      startTime = System.currentTimeMillis()
+      timer.scheduleAtFixedRate(new TimerTask {
+        override def run(): Unit = {
+          Platform.runLater(updateTimes())
+        }
+      }, 2000, 2000)
+      workerService.start()
+    }
+
+    dialog.onHidden = e => timer.cancel()
   }
 
-  override def updateIndeterminate(details: String, stats: Option[IOTaskSummary]): Unit = {
-    detailsLabel.text = details
-    updateStats(stats)
-    progressBar.progress = -1
-  }
+  private def updateFinished(): Unit = {
+    progressBar.progress = 1.0
+    totalProgressIndicator.progress = 1.0
 
-  override def update(details: String, progress: Float, stats: Option[IOTaskSummary]): Unit = {
-    detailsLabel.text = details
-    updateStats(stats)
-    progressBar.progress = progress
-  }
+    timer.cancel()
+    updateTimes()
 
-  override def detailedUpdate(details: String, partProgress: Float, totalProgress: Float, stats: Option[IOTaskSummary]): Unit = {
-    detailsLabel.text = details
-    updateStats(stats)
-    progressBar.progress = totalProgress
-    // TODO: partial progress
-  }
-
-  override def updateFinished(details: String, stats: Option[IOTaskSummary]): Unit = {
-    detailsLabel.text = details
-    updateStats(stats)
-    progressBar.progress = 1
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
-    if (!dontCloseCheckbox.selected.value) {
-       dialog.result = ButtonType.Close
+
+    val closeButton = getButton(ButtonType.Close)
+    if (!dontCloseCheckbox.isSelected) {
+      closeButton.fire()
     }
   }
 
-  override def updateAborted(details: Option[String], stats: Option[IOTaskSummary]): Unit = {
-    details.foreach(msg => detailsLabel.text = msg)
-    updateStats(stats)
-    dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
-    if (!dontCloseCheckbox.selected.value) {
-      dialog.result = ButtonType.Close
-    }
+  private def getButton(buttonType: ButtonType) =
+    new Button(dialog.getDialogPane.lookupButton(buttonType).asInstanceOf[control.Button])
+
+  private def updateProgress(progress: IOProgress): Unit = {
+    val progressValue = progress.jobStats.map(s => IOProgress.calcProgress(progress.summary, s))
+                                .getOrElse(-1.0)
+
+    progressBar.progress = progressValue
+
+    totalProgressIndicator.progress = progress.transferState.map(t => t.bytesDone.toDouble / t.totalBytes)
+            .getOrElse(progressValue)
   }
 
-  private def updateStats(stats: Option[IOTaskSummary]): Unit =
-    stats.foreach { s =>
-      fileCountLabel.text = s.numFiles.toString
-      dirCountLabel.text = s.numDirs.toString
-      sizeLabel.text = s.totalSize.toString
-    }
+  private def updateValue(progress: IOProgress): Unit = {
+    fileCountLabel.text = progress.summary.numFiles.toString
+    dirCountLabel.text = progress.summary.numDirs.toString
+    sizeLabel.text = DataUnit.formatDataSize(progress.summary.totalSize)
+
+    progress.curMessage.foreach(msg => detailsLabel.text = msg)
+  }
+
+  private def updateTimes(): Unit = {
+    val millis = System.currentTimeMillis() - startTime
+    val interval = TimeInterval.apply(millis)
+    elapsedTimeLabel.text = interval.format()
+    estimatedTimeLabel.text = "n/a"
+
+    println("updateTimes()")
+  }
 }

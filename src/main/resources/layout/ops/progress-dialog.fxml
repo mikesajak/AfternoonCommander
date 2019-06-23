@@ -1,90 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<GridPane hgap="14.0" maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" minWidth="-Infinity" vgap="20.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.ProgressPanelControllerImpl">
-  <children>
-    <VBox maxHeight="+Infinity" maxWidth="+Infinity" minHeight="-Infinity" prefWidth="400.0" spacing="7.0" GridPane.rowIndex="0">
-      <children>
-        <Label fx:id="nameLabel" text="message" textAlignment="LEFT">
-          <font>
-            <Font name="System Bold" size="13.0" />
-          </font>
-        </Label>
-        <Label fx:id="detailsLabel" text="details" textAlignment="LEFT" textOverrun="LEADING_ELLIPSIS">
-          <font>
-            <Font size="12.0" />
-          </font>
-        </Label>
-            <ProgressBar fx:id="progressBar" maxWidth="1.7976931348623157E308" progress="0.0" />
-            <TitledPane animated="false" text="Details">
-               <content>
-                  <GridPane alignment="TOP_CENTER">
-                     <columnConstraints>
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                     </columnConstraints>
-                     <rowConstraints>
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                     </rowConstraints>
+
+<?import javafx.geometry.Insets?><?import javafx.scene.control.*?><?import javafx.scene.layout.*?><?import javafx.scene.text.Font?>
+<VBox maxHeight="+Infinity" maxWidth="+Infinity" minHeight="200.0" minWidth="300.0" spacing="7.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.ProgressPanelControllerImpl">
+<children>
+      <HBox>
+         <children>
+            <VBox spacing="7.0" HBox.hgrow="ALWAYS">
+               <children>
+              <Label fx:id="nameLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="message" textAlignment="LEFT" VBox.vgrow="ALWAYS">
+                <font>
+                  <Font name="System Bold" size="13.0" />
+                </font>
+              </Label>
+              <Label fx:id="detailsLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="details" textAlignment="LEFT" textOverrun="LEADING_ELLIPSIS" VBox.vgrow="ALWAYS">
+                <font>
+                  <Font size="12.0" />
+                </font>
+              </Label>
+               </children>
+            </VBox>
+            <ProgressIndicator fx:id="totalProgressIndicator" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" progress="0.64" HBox.hgrow="NEVER" />
+         </children>
+      </HBox>
+      <ProgressBar fx:id="progressBar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" progress="0.0" />
+      <TitledPane animated="false" text="Details">
+         <content>
+            <GridPane alignment="TOP_CENTER">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+               </rowConstraints>
+               <children>
+                  <GridPane hgap="5.0">
+                    <columnConstraints>
+                      <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="-Infinity" minWidth="10.0" />
+                      <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
                      <children>
-                        <GridPane hgap="5.0">
-                          <columnConstraints>
-                            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="10.0" />
-                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-                          </columnConstraints>
-                          <rowConstraints>
-                            <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
-                          </rowConstraints>
-                           <children>
-                              <Label text="Files:" />
-                              <Label text="Size:" GridPane.rowIndex="2" />
-                              <Label fx:id="fileCountLabel" text="Label" GridPane.columnIndex="1" />
-                              <Label fx:id="sizeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Label text="Directories:" GridPane.rowIndex="1" />
-                              <Label fx:id="dirCountLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                           </children>
-                        </GridPane>
-                        <GridPane hgap="5.0" GridPane.columnIndex="1">
-                          <columnConstraints>
-                            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                          </columnConstraints>
-                          <rowConstraints>
-                            <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
-                              <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
-                          </rowConstraints>
-                           <children>
-                              <Label text="Elapsed time:" />
-                              <Label fx:id="elapsedTimeLabel" text="Label" GridPane.columnIndex="1" />
-                              <Label text="Estimated time:" GridPane.rowIndex="1" />
-                              <Label fx:id="estimatedTimeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                           </children>
-                        </GridPane>
+                        <Label text="Files:" />
+                        <Label text="Size:" GridPane.rowIndex="2" />
+                        <Label fx:id="fileCountLabel" text="Label" GridPane.columnIndex="1" />
+                        <Label fx:id="sizeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                        <Label text="Directories:" GridPane.rowIndex="1" />
+                        <Label fx:id="dirCountLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                      </children>
                   </GridPane>
-               </content>
-            </TitledPane>
-            <CheckBox fx:id="dontCloseCheckbox" mnemonicParsing="false" text="Don't close after finish">
-               <VBox.margin>
-                  <Insets top="10.0" />
-               </VBox.margin>
-            </CheckBox>
-      </children>
-    </VBox>
-  </children>
-  <columnConstraints>
-    <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" maxWidth="+Infinity" minWidth="-Infinity" />
-  </columnConstraints>
-  <padding>
-    <Insets bottom="14.0" left="14.0" right="14.0" top="14.0" />
-  </padding>
-  <rowConstraints>
-    <RowConstraints maxHeight="Infinity" minHeight="-Infinity" valignment="CENTER" vgrow="ALWAYS" />
-      <RowConstraints maxHeight="Infinity" minHeight="-Infinity" valignment="CENTER" vgrow="ALWAYS" />
-  </rowConstraints>
-</GridPane>
+                  <GridPane hgap="5.0" GridPane.columnIndex="1">
+                    <columnConstraints>
+                      <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="10.0" />
+                      <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <Label text="Elapsed time:" />
+                        <Label fx:id="elapsedTimeLabel" text="Label" GridPane.columnIndex="1" />
+                        <Label text="Estimated time:" GridPane.rowIndex="1" />
+                        <Label fx:id="estimatedTimeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                     </children>
+                  </GridPane>
+               </children>
+            </GridPane>
+         </content>
+      </TitledPane>
+      <CheckBox fx:id="dontCloseCheckbox" mnemonicParsing="false" text="Don't close after finish">
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+      </CheckBox>
+</children>
+   <padding>
+      <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+   </padding>
+</VBox>

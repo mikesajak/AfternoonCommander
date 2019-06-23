@@ -2,6 +2,8 @@ package org.mikesajak.commander.task
 
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 
+case class TransferState(bytesDone: Long, totalBytes: Long)
+
 case class IOTaskSummary(numDirs: Int, numFiles: Int, totalSize: Long,
                          errors: List[(VPath, String)]) {
 
@@ -14,6 +16,9 @@ case class IOTaskSummary(numDirs: Int, numFiles: Int, totalSize: Long,
                   numFiles + that.numFiles,
                   totalSize + that.totalSize,
                   errors ::: that.errors)
+
+  override def toString: String =
+    s"IOTaskSumary(numDirs=$numDirs, numFiles=$numFiles, totalSize=$totalSize, errors=$errors)"
 }
 
 object IOTaskSummary {

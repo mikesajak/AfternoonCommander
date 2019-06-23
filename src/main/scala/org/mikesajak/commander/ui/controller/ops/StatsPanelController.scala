@@ -6,7 +6,7 @@ import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.ui.controller.ops.StatsUtils.ContentType
 import org.mikesajak.commander.ui.controller.ops.StatsUtils.ContentType.ContentType
-import org.mikesajak.commander.util.UnitFormatter._
+import org.mikesajak.commander.util.DataUnit
 import scalafx.application.Platform
 import scalafx.scene.control.Label
 import scalafx.scene.image.ImageView
@@ -91,7 +91,7 @@ class StatsPanelControllerImpl(messageLabel: Label,
       modifiedValueLabel.text = path.modificationDate.toString // TODO: format
       attribsValueLabel.text = path.attributes.toString
       if (path.isFile)
-        sizeValueLabel.text = formatDataSize(path.size)
+        sizeValueLabel.text = DataUnit.formatDataSize(path.size)
     }
   }
 
@@ -130,7 +130,7 @@ class StatsPanelControllerImpl(messageLabel: Label,
 
       directoriesValueLabel.text = resourceMgr.getMessageWithArgs("count_stats.num_directories",
         Array(stats.numDirs, stats.depth))
-      val unit = findDataSizeUnit(stats.size)
+      val unit = DataUnit.findDataSizeUnit(stats.size)
       filesValueLabel.text = resourceMgr.getMessageWithArgs("count_stats.num_files",
         Array(stats.numFiles, unit.convert(stats.size), unit.symbol))
     }

@@ -9,7 +9,7 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
-import org.mikesajak.commander.util.{PathUtils, ReentrantGuard, UnitFormatter}
+import org.mikesajak.commander.util.{DataUnit, PathUtils, ReentrantGuard}
 import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager}
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
@@ -48,7 +48,7 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
       case p: PathToParent => resourceMgr.getMessage("file_row.parent")
       case p: VDirectory => resourceMgr.getMessageWithArgs("file_row.num_elements",
                                                            Array(path.directory.children.size))
-      case p: VFile => UnitFormatter.formatDataSize(path.size)
+      case p: VFile => DataUnit.formatDataSize(path.size)
     }
 
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifyDate, $attributes)"
@@ -248,7 +248,7 @@ class DirTableController(curDirField: TextField,
   private def prepareSummary(dirs: Seq[VDirectory], files: Seq[VFile]): String = {
     val numDirs = dirs.size
     val totalSize = files.map(_.size).sum
-    val sizeUnit = UnitFormatter.findDataSizeUnit(totalSize)
+    val sizeUnit = DataUnit.findDataSizeUnit(totalSize)
     resourceMgr.getMessageWithArgs("file_table_panel.status.message",
                                                        Array(numDirs, files.size,
                                                              sizeUnit.convert(totalSize),

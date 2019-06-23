@@ -3,14 +3,14 @@ package org.mikesajak.commander.task
 import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
-import org.mikesajak.commander.util.UnitFormatter
+import org.mikesajak.commander.util.DataUnit
 
 case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
   def +(other: DirStats): DirStats =
     DirStats(numFiles + other.numFiles, numDirs + other.numDirs, size + other.size, math.max(depth, other.depth))
 
   override def toString: String =
-    s"DirCounts(numFiles=$numFiles, numDirs=$numDirs, size=${UnitFormatter.formatDataSize(size)}, depth=$depth)}"
+    s"DirCounts(numFiles=$numFiles, numDirs=$numDirs, size=${DataUnit.formatDataSize(size)}, depth=$depth)}"
 }
 
 object DirStats {

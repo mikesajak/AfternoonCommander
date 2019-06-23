@@ -57,8 +57,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     statsPanelController.init(targetPaths)
 
-
-    val statsService = new BackgroundService(() => new DirStatsTask(targetPaths))
+    val statsService = new BackgroundService(new DirStatsTask(targetPaths))
     statsService.onRunning = e => statsPanelController.notifyStarted()
     statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
     statsService.onSucceeded = e => notifyFinished(statsService.value.value, None)
@@ -76,16 +75,8 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
       case p => MultiPaths
     }
 
-  private def updateStats(stats: DirStats, message: Option[String]): Unit = {
-    statsPanelController.updateStats(stats, message)
-  }
-
-  private def updateMessage(message: String): Unit = {
-    println(s"TODO: message: $message")
-  }
-
   private def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
-    statsPanelController.updateStats(stats, message)
+    statsPanelController.notifyFinished(stats, message)
 
     summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_available.label")
     summaryMessageLabel.graphic = null
@@ -93,7 +84,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
   }
 
   private def notifyError(stats: Option[DirStats], message: String): Unit = {
-    stats.foreach(st => statsPanelController.updateStats(st, Some(message)))
+    statsPanelController.notifyError(stats, message)
 
     summaryMessageLabel.text = message
     summaryMessageLabel.tooltip = "An error occurred while processing IO operation."

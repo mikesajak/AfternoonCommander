@@ -44,7 +44,7 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
     statsPanelController.init(paths)
 
-    val statsService = new BackgroundService(() => new DirStatsTask(paths))
+    val statsService = new BackgroundService(new DirStatsTask(paths))
     statsService.onRunning = e => statsPanelController.notifyStarted()
     statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
     statsService.onSucceeded = e => notifyFinished(statsService.value.value)

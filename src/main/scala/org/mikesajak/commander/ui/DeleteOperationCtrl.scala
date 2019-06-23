@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.Logger
 import javafx.scene.control
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.{DirStats, RecursiveDeleteTask}
+import org.mikesajak.commander.task.{BackgroundService, DeleteJobDef, DirStats, RecursiveDeleteTask}
 import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
 import org.mikesajak.commander.{ApplicationController, TaskManager}
 import scalafx.Includes._
@@ -69,13 +69,14 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
         case p @ _ => (s"paths", s"${p.size} elements") // TODO: i18
       }
 
-    val deleteTask = new RecursiveDeleteTask(paths, stats)
+    val jobs = paths.map(p => DeleteJobDef(p))
+
+    val deleteService = new BackgroundService(new RecursiveDeleteTask(jobs, stats, true))
 
     ctrl.init(s"Delete", s"Delete selected $pathType\n$pathName", // TODO: i18
               s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big), // TODO: i18
-              progressDialog, deleteTask)
+              progressDialog, deleteService)
 
-    taskManager.runTaskAsync(deleteTask, new ProgressMonitorWithGUIPanel(ctrl))
     val result = progressDialog.showAndWait()
 
     Success(false) // FIXME: evaluate the result of operation and return proper value
