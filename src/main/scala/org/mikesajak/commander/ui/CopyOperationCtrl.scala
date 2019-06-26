@@ -2,24 +2,25 @@ package org.mikesajak.commander.ui
 
 import com.typesafe.scalalogging.Logger
 import javafx.scene.control
+import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task._
 import org.mikesajak.commander.ui.controller.ops.{CopyPanelController, DeletePanelController, ProgressPanelController}
-import org.mikesajak.commander.{ApplicationController, TaskManager}
 import scalafx.Includes._
-import scalafx.scene.control.ButtonType
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType}
 
 import scala.util.{Failure, Success, Try}
 
 class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                        countStatsOpCtrl: CountDirStatsOperationCtrl,
-                        resourceMgr: ResourceManager, taskManager: TaskManager) {
+                        countStatsOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager) {
   private val logger = Logger[DeletePanelController]
 
   private val copyLayout = "/layout/ops/copy-dialog.fxml"
-  private val singleProgressLayout = "/layout/ops/progress-dialog.fxml"
-  private val multiProgressLayout = "/layout/ops/multi-progress-dialog.fxml"
+  private val progressLayout = "/layout/ops/progress-dialog.fxml"
+//  private val singleProgressLayout = "/layout/ops/progress-dialog.fxml"
+//  private val multiProgressLayout = "/layout/ops/multi-progress-dialog.fxml"
 
   def handleCopy(): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
@@ -88,15 +89,13 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
   }
 
   private def runCopyOperation(srcPaths: Seq[VPath], targetDir: VDirectory, stats: Option[DirStats]): Try[Boolean] = {
-    val progressLayout = if (srcPaths.size == 1 && srcPaths.head.isFile) singleProgressLayout else multiProgressLayout
+//    val progressLayout = if (srcPaths.size == 1 && srcPaths.head.isFile) singleProgressLayout else multiProgressLayout
 
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
-    val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
+    val progressDialog = UIUtils.mkModalDialog[IOTaskSummary](appController.mainStage, contentPane)
 
     val copyJobDefs = srcPaths.map(src => CopyJobDef(src, targetDir))
-
-    val copyTask = new CopyMultiFilesTask(copyJobDefs, stats)
 
     // TODO: i18
     val (pathType, pathName) =
@@ -106,15 +105,26 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
         case p @ _ => (s"paths", s"${p.size} elements")
       }
 
-    // TODO: i18
-    // FIXME
-//    ctrl.init(s"Copy", s"Copy selected $pathType\n$pathName",
-//      s"Copying $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big),
-//      progressDialog, copyTask)
+    val copyService = new BackgroundService(new RecursiveCopyTask(copyJobDefs, stats, true))
 
-//    taskManager.runTaskAsync(copyTask, new MultiProgressMonitor(List(new ConsoleProgressMonitor[IOTaskSummary](),
-//                                                                     new ProgressMonitorWithGUIPanel(ctrl))))
+    // TODO: i18
+    ctrl.init(s"Copy", s"Copy selected $pathType\n$pathName",
+      s"Copying $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big),
+      progressDialog, copyService)
+
     val result = progressDialog.showAndWait()
+
+    result match {
+      case Some(summary: IOTaskSummary) if summary.errors.nonEmpty =>
+        new Alert(AlertType.Error) {
+          initOwner(appController.mainStage)
+          title = "Error" // TODO: i18
+          headerText = "Error occurred during copy operation" // TODO: i18
+          contentText = summary.errors.map(err => s"${err._1}: ${err._2}")
+                               .reduce((a,b) => s"$a\n$b")
+        }.showAndWait()
+      case _ =>
+    }
 
     Success(false) // FIXME: evaluate the result of operation and return proper value
   }

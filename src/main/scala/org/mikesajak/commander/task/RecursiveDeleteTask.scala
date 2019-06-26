@@ -15,12 +15,20 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
     runWithTimer(s"Delete files task: $jobDefs")(runDelete)
   }
 
-  private def runDelete(): IOProgress = {
+  private def runDelete(): IOProgress = try {
     val result = jobDefs.foldLeft(IOTaskSummary.empty) { case (summary, job) => delete(job.target, summary) }
 
-    logger.debug(s"Firished delete task, result=$result")
+    logger.debug(s"Finished delete task, result=$result")
 
     reportProgress(result)
+  } catch {
+    case c: CancelledException =>
+      logger.info(s"Task $this has been cancelled.")
+      updateMessage(s"Operation has been cancelled.") // TODO: i18
+      null
+    case e: Exception =>
+      updateMessage(e.getLocalizedMessage)
+      throw e
   }
 
   private def delete(target: VPath, summary: IOTaskSummary) = {
@@ -29,6 +37,9 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
   }
 
   private def deleteFile(file: VFile, summary: IOTaskSummary): IOTaskSummary = {
+    if (isCancelled)
+      throw new CancelledException
+
 //    logger.trace(s"Deleting file: $file")
     reportProgress(summary, file)
     performDelete(file)
@@ -39,6 +50,9 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
   }
 
   private def deleteDir(dir: VDirectory, summary: IOTaskSummary): IOTaskSummary = {
+    if (isCancelled)
+      throw new CancelledException
+
 //    logger.trace(s"Deleting dir: $dir")
 
     reportProgress(summary, dir)

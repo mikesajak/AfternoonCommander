@@ -3,7 +3,7 @@ package org.mikesajak.commander.util
 import java.nio.ByteBuffer
 import java.nio.channels.{ReadableByteChannel, WritableByteChannel}
 
-import org.mikesajak.commander.task.AbortOperationException
+import org.mikesajak.commander.task.CancelledException
 
 object IO {
   trait CopyListener {
@@ -22,7 +22,7 @@ object IO {
       buffer.compact()
 
       if (!continue)
-        throw new AbortOperationException
+        throw new CancelledException
     }
 
     buffer.flip()
@@ -31,7 +31,7 @@ object IO {
       val continue = copyListener.forall(_.bytesWritten(count))
 
       if (!continue)
-        throw new AbortOperationException
+        throw new CancelledException
     }
   }
 }

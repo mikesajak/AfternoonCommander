@@ -4,7 +4,7 @@ import java.io.{PrintWriter, StringWriter}
 
 import com.google.common.base.Stopwatch
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.task.AbortOperationException
+import org.mikesajak.commander.task.CancelledException
 
 import scala.language.{implicitConversions, reflectiveCalls}
 
@@ -61,8 +61,8 @@ object Utils {
       log(s"$name finished in $stopwatch", finishLogLevel)
       result
     } catch {
-      case e: AbortOperationException =>
-        log(s"$name aborted after $stopwatch", finishLogLevel)
+      case e: CancelledException =>
+        log(s"$name cancelled after $stopwatch", finishLogLevel)
         throw e
       case e: Exception =>
         log(s"$name finisded in $stopwatch with error $e", e, errorLogLevel)

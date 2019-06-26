@@ -76,20 +76,14 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideTaskManager(): TaskManager = {
-    new TaskManager
-  }
-
-  @Provides
-  @Singleton
   def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
-                              fsMgr: FilesystemsManager, taskManager: TaskManager,
+                              fsMgr: FilesystemsManager,
                               appController: ApplicationController,
                               copyOperationCtrl: CopyOperationCtrl,
                               mkDirOperationCtrl: MkDirOperationCtrl,
                               deleteOperationCtrl: DeleteOperationCtrl,
                               countDirStatsOperationCtrl: CountDirStatsOperationCtrl): OperationMgr = {
-    new OperationMgr(statusMgr, resourceMgr, fsMgr, taskManager, appController,
+    new OperationMgr(statusMgr, resourceMgr, fsMgr, appController,
       copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl, countDirStatsOperationCtrl)
   }
 
@@ -133,9 +127,8 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                               countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager,
-                               taskManager: TaskManager) =
-    new CopyOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceManager, taskManager)
+                               countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager) =
+    new CopyOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceManager)
 
   @Provides
   @Singleton
@@ -145,15 +138,14 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideDeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                                 countDirOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager,
-                                 taskMgr: TaskManager) =
-    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceMgr, taskMgr)
+                                 countDirOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager) =
+    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceMgr)
 
   @Provides
   @Singleton
-  def provideCountDirStatsOperationCtrl(statusMgr: StatusMgr, taskManager: TaskManager,
-                                        appController: ApplicationController, resourceMgr: ResourceManager) =
-    new CountDirStatsOperationCtrl(statusMgr, taskManager, appController, resourceMgr)
+  def provideCountDirStatsOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
+                                        resourceMgr: ResourceManager) =
+    new CountDirStatsOperationCtrl(statusMgr, appController, resourceMgr)
 }
 
 object ApplicationContext {

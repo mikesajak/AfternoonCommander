@@ -3,12 +3,10 @@ package org.mikesajak.commander.task
 import java.nio.channels.Channels
 
 import com.typesafe.scalalogging.Logger
+import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
-import org.mikesajak.commander.task.CancellableTask._
 import org.mikesajak.commander.util.IO
 import org.mikesajak.commander.util.Utils.runWithTimer
-
-import scala.collection.mutable
 
 object CopyFileTask {
   // FixME: use configuration, not constants
@@ -17,142 +15,100 @@ object CopyFileTask {
 
 case class CopyJobDef(source: VPath, target: VPath)
 
-class CopyMultiFilesTask(files: Seq[CopyJobDef], jobStats: Option[DirStats]) extends Task[IOTaskSummary] with CancellableTask {
+class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dryRun: Boolean)
+    extends jfxc.Task[IOProgress] {
 
-  private implicit val logger: Logger = Logger[CopyMultiFilesTask]
+  private implicit val logger = Logger[RecursiveCopyTask]
 
-  override def run(progressMonitor: ProgressMonitor[IOTaskSummary]): Option[IOTaskSummary] = {
-
-    logger.debug(s"starting task for $files, stats=$jobStats")
-
-    withAbort(progressMonitor) { () =>
-      val result = runWithTimer(s"Copy files task: files=$files") { () =>
-        progressMonitor.notifyProgress(0, Some(s"Starting recursive delete of $files"), None) // TODO: i18
-
-        val copyListener = new CopyProgressListenerImpl(jobStats, progressMonitor)
-        val results =
-          for (file <- files) yield {
-            try {
-              copy(file.source, file.target, copyListener)
-              IOTaskSummary.success(file.source)
-            } catch {
-              case e: Exception => IOTaskSummary.failed(file.source, e.getLocalizedMessage)
-            }
-          }
-
-        results.reduce((a, b) => a + b)
-      }
-
-      if (result.errors.isEmpty) progressMonitor.notifyFinished(Some("Finished copying $files"), Some(result)) // TODO: i18
-      else progressMonitor.notifyError(s"Copying of $files finished with errors: ${result.errors}", Some(result)) // TODO: i18
-
-      result
-    }
+  override def call(): IOProgress = {
+    runWithTimer(s"Copy filesTask: $jobDefs")(runCopy)
   }
 
-  def copy(source: VPath, target: VPath, copyProgressListener: CopyProgressListener): Unit =
-    if (source.isDirectory)
-      copyDir(source.directory, target.directory, copyProgressListener)
-    else {
-      copyFile(source.asInstanceOf[VFile], target, copyProgressListener)
-    }
+  private def runCopy(): IOProgress = {
+    val result = jobDefs.foldLeft(IOTaskSummary.empty) { case (summary, job) => copy(job, summary) }
 
-  def copyDir(source: VDirectory, target: VDirectory, copyListener: CopyProgressListener): Unit = {
-    val targetDir = target.mkChildDir(source.name)
-    source.childDirs.foreach(dir => copyDir(dir, targetDir, copyListener))
-    source.childFiles.foreach(file => copyFile(file, targetDir, copyListener))
+    logger.debug(s"Finished copy task, result=$result")
 
-    copyListener.dirFinished(source)
+    reportProgress(result)
   }
 
-  def copyFile(source: VFile, target: VPath, copyListener: CopyProgressListener): Unit = {
+  private def copy(jobDef: CopyJobDef, summary: IOTaskSummary): IOTaskSummary = {
+    val source = jobDef.source
+    val target = jobDef.target
+    if (source.isDirectory) copyDir(source.directory, target.directory, summary)
+    else copyFile(source.asInstanceOf[VFile], target, summary)
+  }
+
+  private def copyDir(source: VDirectory, target: VDirectory, summary: IOTaskSummary): IOTaskSummary = {
+    reportProgress(summary, source)
+
+    val targetDir = if (!dryRun) target.mkChildDir(source.name)
+                    else target // todo: maybe create path for this dir without actually creating directory on FS
+
+    val dirSummary = source.childDirs.foldLeft(summary)((result, childDir) => copyDir(childDir, targetDir, result))
+    val totalSummary = source.childFiles.foldLeft(dirSummary)((result, childFile) => copyFile(childFile, targetDir, result))
+
+    val resultSummary = summary + IOTaskSummary.success(source)
+    reportProgress(resultSummary, source)
+    resultSummary
+  }
+
+  private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): IOTaskSummary = {
+    reportProgress(summary, source)
+
     val targetFs = target.fileSystem
 
     val targetFile = if (!target.isDirectory) target.asInstanceOf[VFile]
                      else target.directory.mkChildFile(source.name)
 
-    if (!targetFs.exists(targetFile))
-      targetFs.create(targetFile)
-    // TODO: ask if user wants to overwrite existing file!!
-    else logger.warn(s"Target file $targetFile exists. Overwriting!!!")
+    if (targetFs.exists(targetFile))
+      logger.warn(s"Target file $targetFile exists. Overwriting!!!")
+      // TODO: ask if user wants to overwrite existing file!!
+    else
+      if (!dryRun) {
+        targetFs.create(targetFile)
+        copyFileData(source, targetFile, summary)
+      }
 
-    copyFileData(source, targetFile, copyListener)
-
-    copyListener.fileFinished(source)
+    val resultSummary = summary + IOTaskSummary.success(targetFile)
+    reportProgress(resultSummary, targetFile)
+    resultSummary
   }
 
-  def copyFileData(source: VFile, target: VFile, copyListener: CopyProgressListener): Unit = {
+  def copyFileData(source: VFile, target: VFile, curSummary: IOTaskSummary): Unit = {
     val inChannel = Channels.newChannel(source.inStream)
     val outChannel = Channels.newChannel(target.outStream)
 
-    IO.channelCopy(inChannel, outChannel, CopyFileTask.BUFFER_SIZE, new FileCopyListener(source, copyListener))
+    IO.channelCopy(inChannel, outChannel, CopyFileTask.BUFFER_SIZE, new FileCopyListener(source, curSummary))
 
     inChannel.close()
     outChannel.close()
   }
 
-  class FileCopyListener(file: VFile, copyProgressListener: CopyProgressListener) extends IO.CopyListener {
+  class FileCopyListener(file: VFile, currentSummary: IOTaskSummary) extends IO.CopyListener {
     override def bytesWritten(size: Int): Boolean = {
-      copyProgressListener.bytesCopied(file, size)
-      true
+      reportProgress(TransferState(size, file.size), currentSummary, file)
+      isCancelled
     }
   }
-}
 
-trait CopyProgressListener {
-  def bytesCopied(file: VFile, bytesCount: Long)
-  def fileFinished(file: VFile)
-  def dirFinished(dir: VDirectory)
-}
-
-class CopyProgressListenerImpl(jobStats: Option[DirStats], progressMonitor: ProgressMonitor[IOTaskSummary]) extends CopyProgressListener {
-  private val logger = Logger[CopyProgressListenerImpl]
-
-  private var totalCopiedSize = 0L
-  private var progressMap = mutable.Map[VFile, Long]()
-  private var totalCopiedFiles = 0
-  private var totalCopiedDirs = 0
-
-  override def bytesCopied(file: VFile, bytesCount: Long): Unit = {
-//    logger.debug(s"bytesCopied: ${file.name} => $bytesCount")
-    totalCopiedSize += bytesCount
-    val fileCopiedBytes = progressMap.getOrElseUpdate(file, 0)
-    progressMap(file) = fileCopiedBytes + bytesCount
-    notifyProgress(Some(file))
+  private def reportProgress(transferState: TransferState, summary: IOTaskSummary, curPath: VPath): IOProgress = {
+    val progress = IOProgress(Some(transferState), summary, Some(curPath.absolutePath), jobStats)
+    updateValue(progress)
+    progress
   }
 
-  override def fileFinished(file: VFile): Unit = {
-    totalCopiedFiles += 1
-    notifyProgress(Some(file))
-    progressMap -= file
+  private def reportProgress(summary: IOTaskSummary, curPath: VPath): IOProgress = {
+    val progress = IOProgress(TransferState(1L, 1L), summary, Some(curPath.absolutePath), jobStats)
+    updateValue(progress)
+    progress
   }
 
-  override def dirFinished(dir: VDirectory): Unit = {
-    totalCopiedDirs += 1
-    notifyProgress(None)
-  }
-
-  private def notifyProgress(file: Option[VFile]): Unit = {
-    jobStats match {
-      case None =>
-        progressMonitor.notifyProgressIndeterminate(None,
-          Some(IOTaskSummary(totalCopiedDirs, totalCopiedFiles, totalCopiedSize, List.empty)))
-
-      case Some(stats) if stats.numFiles == 1 =>
-        file match {
-          case Some(f) =>
-            progressMonitor.notifyProgress(progressMap(f).toFloat / f.size, None,
-              Some(IOTaskSummary(totalCopiedDirs, totalCopiedFiles, totalCopiedSize, List.empty)))
-          case _ =>
-            // skip, cannot happen
-            logger.debug(s"This cannot happen. notifyProgress(file: $file)")
-        }
-
-      case Some(stats) =>
-        val partProgress = file.map(f => progressMap(f).toFloat / f.size).getOrElse(0f)
-        progressMonitor.notifyDetailedProgress(partProgress, totalCopiedSize.toFloat / stats.size, None,
-          Some(IOTaskSummary(totalCopiedDirs, totalCopiedFiles, totalCopiedSize, List.empty)))
-    }
+  private def reportProgress(summary: IOTaskSummary): IOProgress = {
+    val progress = IOProgress(TransferState(0L, 1L), summary, None, jobStats)
+    updateValue(progress)
+    progress
   }
 }
+
 

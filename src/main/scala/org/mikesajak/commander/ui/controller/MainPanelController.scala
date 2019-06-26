@@ -39,8 +39,6 @@ class MainPanelController(dirsSplitPane: SplitPane,
 
       // Debug: temporary
       case KeyCode.F2 => operationMgr.handleCountDirStats()
-      case KeyCode.F11 => operationMgr.handleTestTask(true)
-      case KeyCode.F12 => operationMgr.handleTestTask(false)
 
       case KeyCode.Tab => // todo
 

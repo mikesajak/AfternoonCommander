@@ -1,14 +1,11 @@
 package org.mikesajak.commander
 
-import javafx.stage
-
 import com.typesafe.scalalogging.Logger
+import javafx.stage
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task._
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.ops.FindFilesPanelController
-
 import scalafx.Includes._
 import scalafx.scene.Scene
 import scalafx.scene.control._
@@ -17,7 +14,6 @@ import scalafx.stage.{Modality, Stage, StageStyle}
 class OperationMgr(statusMgr: StatusMgr,
                    resourceMgr: ResourceManager,
                    fsMgr: FilesystemsManager,
-                   taskManager: TaskManager,
                    appController: ApplicationController,
                    copyOperationCtrl: CopyOperationCtrl,
                    mkDirOperationCtrl: MkDirOperationCtrl,
@@ -44,11 +40,6 @@ class OperationMgr(statusMgr: StatusMgr,
   def handleDelete(): Unit = deleteOperationCtrl.handleDelete()
 
   def handleCountDirStats(): Unit = countDirStatsCtrl.handleCountDirStats()
-
-  def handleTestTask(sync: Boolean): Unit = {
-    if (sync) taskManager.runTaskSync(new TestTask(), new ConsoleProgressMonitor[Unit])
-    else      taskManager.runTaskAsync(new TestTask(), new ConsoleProgressMonitor[Unit])
-  }
 
   def handleExit(): Unit = {
     appController.exitApplication()

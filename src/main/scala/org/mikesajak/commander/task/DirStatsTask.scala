@@ -33,10 +33,9 @@ class DirStatsTask(paths: Seq[VPath]) extends scalafx.concurrent.Task(new jfxc.T
   } catch {
     case c: CancelledException =>
       logger.info(s"Task $this has been cancelled.")
-      updateProgress(0, 0)
+      updateMessage(s"Operation has been cancelled.") // TODO: i18
       null
     case e: Exception =>
-      updateProgress(0, 0)
       updateMessage(e.getLocalizedMessage)
       throw e
   }

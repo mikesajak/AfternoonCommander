@@ -4,6 +4,10 @@ case class IOProgress(transferState: Option[TransferState], summary: IOTaskSumma
                       curMessage: Option[String], jobStats: Option[DirStats])
 
 object IOProgress {
+  def apply(transferState: TransferState, summary: IOTaskSummary,
+            curMessage: Option[String], jobStats: Option[DirStats]): IOProgress =
+    IOProgress(Some(transferState), summary, curMessage, jobStats)
+
   def calcProgress(summary: IOTaskSummary, stats: DirStats): Double =
     calcProgress(summary).toDouble / getProgressMax(stats)
 

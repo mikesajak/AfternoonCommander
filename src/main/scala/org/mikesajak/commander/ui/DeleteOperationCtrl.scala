@@ -2,19 +2,20 @@ package org.mikesajak.commander.ui
 
 import com.typesafe.scalalogging.Logger
 import javafx.scene.control
+import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.{BackgroundService, DeleteJobDef, DirStats, RecursiveDeleteTask}
+import org.mikesajak.commander.task._
 import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, ProgressPanelController}
-import org.mikesajak.commander.{ApplicationController, TaskManager}
 import scalafx.Includes._
-import scalafx.scene.control.ButtonType
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType}
 
 import scala.util.{Failure, Success, Try}
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                           countStatsOpCtrl: CountDirStatsOperationCtrl,
-                          resourceMgr: ResourceManager, taskManager: TaskManager) {
+                          resourceMgr: ResourceManager) {
   private val logger = Logger[DeletePanelController]
 
   private val deleteLayout = "/layout/ops/delete-dialog.fxml"
@@ -28,7 +29,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     if (targetPaths.nonEmpty) {
       val result = askForDecision(targetPaths)
 
-      println(s"Delete confirm decision: $result")
+      logger.debug(s"Delete confirm decision: $result")
 
       result match {
         case Some((ButtonType.Yes, stats)) =>
@@ -61,7 +62,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
   private def runDeleteOperation(paths: Seq[VPath], stats: Option[DirStats]): Try[Boolean] = {
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
-    val progressDialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
+    val progressDialog = UIUtils.mkModalDialog[IOTaskSummary](appController.mainStage, contentPane)
     val (pathType, pathName) =
       paths match {
         case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", p.head.toString) // TODO: i18
@@ -78,6 +79,18 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
               progressDialog, deleteService)
 
     val result = progressDialog.showAndWait()
+
+    result match {
+      case Some(summary: IOTaskSummary) if summary.errors.nonEmpty =>
+        new Alert(AlertType.Error) {
+          initOwner(appController.mainStage)
+          title = "Error" // TODO: i18
+          headerText = "Error occurred during delete operation" // TODO: i18
+          contentText = summary.errors.map(err => s"${err._1}: ${err._2}")
+                  .reduce((a,b) => s"$a\n$b")
+        }.showAndWait()
+      case _ =>
+    }
 
     Success(false) // FIXME: evaluate the result of operation and return proper value
   }

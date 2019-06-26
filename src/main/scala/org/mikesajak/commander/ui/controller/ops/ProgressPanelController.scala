@@ -4,7 +4,7 @@ import java.util.{Timer, TimerTask}
 
 import com.typesafe.scalalogging.Logger
 import javafx.scene.control
-import org.mikesajak.commander.task.{BackgroundService, IOProgress}
+import org.mikesajak.commander.task.{BackgroundService, IOProgress, IOTaskSummary}
 import org.mikesajak.commander.util.{DataUnit, TimeInterval}
 import scalafx.Includes._
 import scalafx.application.Platform
@@ -16,7 +16,7 @@ import scala.language.implicitConversions
 
 trait ProgressPanelController {
   def init(operationName: String, headerText: String, details1: String, details2: String,
-           operationIcon: Image, dialog: Dialog[ButtonType],
+           operationIcon: Image, dialog: Dialog[IOTaskSummary],
            workerService: BackgroundService[IOProgress])
 }
 
@@ -35,7 +35,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
   private val logger = Logger[ProgressPanelController]
 
-  private var dialog: Dialog[ButtonType] = _
+  private var dialog: Dialog[IOTaskSummary] = _
 
   private var startTime: Long = _
   private val timer = new Timer()
@@ -43,7 +43,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
   dontCloseCheckbox.selected = true // TODO: make configurable
 
   override def init(operationName: String, headerText: String, details1: String, details2: String,
-                    operationIcon: Image, dialog: Dialog[ButtonType],
+                    operationIcon: Image, dialog: Dialog[IOTaskSummary],
                     workerService: BackgroundService[IOProgress]): Unit = {
     this.dialog = dialog
 
@@ -84,6 +84,12 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     }
 
     dialog.onHidden = e => timer.cancel()
+
+    dialog.resultConverter = {
+      case ButtonType.OK => workerService.getValue.summary
+      case ButtonType.Close => workerService.getValue.summary
+      case ButtonType.Cancel => null
+    }
   }
 
   private def updateFinished(): Unit = {
@@ -108,7 +114,8 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     val progressValue = progress.jobStats.map(s => IOProgress.calcProgress(progress.summary, s))
                                 .getOrElse(-1.0)
 
-    progressBar.progress = progressValue
+    progressBar.progress = progress.transferState.map(ts => ts.bytesDone.toDouble / ts.totalBytes)
+                                   .getOrElse(progressValue)
 
     totalProgressIndicator.progress = progress.transferState.map(t => t.bytesDone.toDouble / t.totalBytes)
             .getOrElse(progressValue)
