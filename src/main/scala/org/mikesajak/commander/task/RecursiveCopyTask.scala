@@ -7,6 +7,8 @@ import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import org.mikesajak.commander.util.IO
 import org.mikesajak.commander.util.Utils.runWithTimer
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType}
 
 object CopyFileTask {
   // FixME: use configuration, not constants
@@ -19,6 +21,8 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
     extends jfxc.Task[IOProgress] {
 
   private implicit val logger = Logger[RecursiveCopyTask]
+
+  private var overwriteDecision: Option[Boolean] = None
 
   override def call(): IOProgress = {
     runWithTimer(s"Copy filesTask: $jobDefs")(runCopy)
@@ -61,14 +65,47 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
     val targetFile = if (!target.isDirectory) target.asInstanceOf[VFile]
                      else target.directory.mkChildFile(source.name)
 
-    if (targetFs.exists(targetFile))
-      logger.warn(s"Target file $targetFile exists. Overwriting!!!")
-      // TODO: ask if user wants to overwrite existing file!!
-    else
-      if (!dryRun) {
-        targetFs.create(targetFile)
-        copyFileData(source, targetFile, summary)
-      }
+    val doCopy = overwriteDecision.getOrElse {
+      if (targetFs.exists(targetFile)) {
+        logger.warn(s"Target file $targetFile exists. Overwriting!!!")
+        // TODO: ask if user wants to overwrite existing file!!
+        val yesToAllButtonType = new ButtonType("Yes to all")
+        val noToAllButtonType = new ButtonType("No to all")
+        val alert = new Alert(AlertType.Confirmation) {
+          initOwner(null)
+          title = "Confirm overwrite"
+          headerText = "Target file already exists"
+          contentText = s"Are you sure to overwrite ${targetFile.absolutePath}"
+          buttonTypes = Seq(ButtonType.Yes, yesToAllButtonType, ButtonType.No, noToAllButtonType, ButtonType.Cancel)
+        }
+
+        alert.showAndWait() match {
+          case Some(ButtonType.Yes) =>
+            logger.debug("selected Yen")
+            true
+          case Some(yesToAllButtonType) =>
+            logger.debug("selected Yes to all")
+            overwriteDecision = Some(true)
+            true
+          case Some(ButtonType.No) =>
+            logger.debug("selected No")
+            false
+          case Some(noToAllButtonType) =>
+            logger.debug("selected No to all")
+            overwriteDecision = Some(false)
+            false
+          case Some(ButtonType.Cancel) =>
+            logger.debug("selected Cancel")
+            throw new CancelledException()
+          case _ => false
+        }
+      } else true
+    }
+
+    if (doCopy && !dryRun) {
+      targetFs.create(targetFile)
+      copyFileData(source, targetFile, summary)
+    }
 
     val resultSummary = summary + IOTaskSummary.success(targetFile)
     reportProgress(resultSummary, targetFile)

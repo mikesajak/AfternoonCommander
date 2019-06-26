@@ -7,12 +7,13 @@ import org.mikesajak.commander.util.PathUtils
 import scalafx.Includes._
 import scalafx.collections.ObservableBuffer
 import scalafx.concurrent.Service
-import scalafx.scene.control.{ButtonType, Dialog, Label, ListView}
+import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.{nested, sfxml}
 
 trait DeletePanelController {
   def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Service[DirStats]
+  def dryRunSelected: Boolean
 }
 
 @sfxml
@@ -22,6 +23,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
                                 pathsListView: ListView[String],
                                 @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
                                 summaryMessageLabel: Label,
+                                dryRunCheckbox: CheckBox,
 
                                 resourceMgr: ResourceManager) extends DeletePanelController {
 
@@ -67,6 +69,8 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     statsService
   }
+
+  override def dryRunSelected: Boolean = dryRunCheckbox.selected.value
 
   private def pathTypeOf(targetPaths: Seq[VPath]): PathType =
     targetPaths match {

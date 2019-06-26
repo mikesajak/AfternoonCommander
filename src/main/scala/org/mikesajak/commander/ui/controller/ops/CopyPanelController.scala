@@ -15,6 +15,7 @@ import scalafxml.core.macros.{nested, sfxml}
 
 trait CopyPanelController {
   def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats]
+  def dryRunSelected: Boolean
 }
 
 @sfxml
@@ -26,6 +27,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
                               @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
                               targetDirCombo: ComboBox[String],
                               summaryMessageLabel: Label,
+                              dryRunCheckbox: CheckBox,
 
                               resourceMgr: ResourceManager) extends CopyPanelController {
 
@@ -78,6 +80,8 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
     statsService
   }
+
+  override def dryRunSelected: Boolean = dryRunCheckbox.selected.value
 
   private def pathTypeOf(targetPaths: Seq[VPath]): PathType =
     targetPaths match {

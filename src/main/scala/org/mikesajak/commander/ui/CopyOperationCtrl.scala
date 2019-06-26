@@ -19,8 +19,6 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
 
   private val copyLayout = "/layout/ops/copy-dialog.fxml"
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
-//  private val singleProgressLayout = "/layout/ops/progress-dialog.fxml"
-//  private val multiProgressLayout = "/layout/ops/multi-progress-dialog.fxml"
 
   def handleCopy(): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
@@ -40,8 +38,8 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
       logger.debug(s"Copy dialog decision: $result")
 
       result match {
-        case Right(jobStats) =>
-          executeCopy(sourcePaths, targetDir, jobStats)
+        case Right((jobStats, dryRun)) =>
+          executeCopy(sourcePaths, targetDir, jobStats, dryRun)
           selectedTab.controller.reload()
           unselectedTab.controller.reload()
         case _ => // skip
@@ -49,10 +47,10 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
     }
   }
 
-  private def executeCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, jobStats: Option[DirStats]): Unit = {
+  private def executeCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, jobStats: Option[DirStats], dryRun: Boolean): Unit = {
     logger.debug(s"Copying: $sourcePaths -> $targetDir")
 
-    val copyResult = runCopyOperation(sourcePaths, targetDir, jobStats)
+    val copyResult = runCopyOperation(sourcePaths, targetDir, jobStats, dryRun)
 
     copyResult match {
       case Success(copied) =>
@@ -67,7 +65,7 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
     }
   }
 
-  private def askForDecision(sourcePaths: Seq[VPath], targetDir: VDirectory): Either[ButtonType, Option[DirStats]] = {
+  private def askForDecision(sourcePaths: Seq[VPath], targetDir: VDirectory): Either[ButtonType, (Option[DirStats], Boolean)] = {
     val (contentPane, contentCtrl) = UILoader.loadScene[CopyPanelController](copyLayout)
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
 
@@ -82,13 +80,14 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
         val stats =
           if (statsService.getState == javafx.concurrent.Worker.State.SUCCEEDED) Some(statsService.value.value)
           else None
-        Right(stats)
+
+        Right(stats, contentCtrl.dryRunSelected)
       case Some(bt) => Left(new ButtonType(bt.asInstanceOf[control.ButtonType]))
       case _ => Left(ButtonType.Cancel)
     }
   }
 
-  private def runCopyOperation(srcPaths: Seq[VPath], targetDir: VDirectory, stats: Option[DirStats]): Try[Boolean] = {
+  private def runCopyOperation(srcPaths: Seq[VPath], targetDir: VDirectory, stats: Option[DirStats], dryRun: Boolean): Try[Boolean] = {
 //    val progressLayout = if (srcPaths.size == 1 && srcPaths.head.isFile) singleProgressLayout else multiProgressLayout
 
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
@@ -105,7 +104,7 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
         case p @ _ => (s"paths", s"${p.size} elements")
       }
 
-    val copyService = new BackgroundService(new RecursiveCopyTask(copyJobDefs, stats, true))
+    val copyService = new BackgroundService(new RecursiveCopyTask(copyJobDefs, stats, dryRun))
 
     // TODO: i18
     ctrl.init(s"Copy", s"Copy selected $pathType\n$pathName",

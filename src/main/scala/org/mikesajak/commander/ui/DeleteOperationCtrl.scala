@@ -32,18 +32,18 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
       logger.debug(s"Delete confirm decision: $result")
 
       result match {
-        case Some((ButtonType.Yes, stats)) =>
-          executeDelete(targetPaths, stats)
+        case Some((ButtonType.Yes, stats, dryRun)) =>
+          executeDelete(targetPaths, stats, dryRun)
           selectedTab.controller.reload()
         case _ => // operation cancelled
       }
     }
   }
 
-  private def executeDelete(targetPath: Seq[VPath], stats: Option[DirStats]): Unit = {
+  private def executeDelete(targetPath: Seq[VPath], stats: Option[DirStats], dryRun: Boolean): Unit = {
     logger.debug(s"Deleting: $targetPath")
 
-    val deleteResult = runDeleteOperation(targetPath, stats)
+    val deleteResult = runDeleteOperation(targetPath, stats, dryRun)
 
     deleteResult match {
       case Success(deleted) =>
@@ -59,7 +59,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     }
   }
 
-  private def runDeleteOperation(paths: Seq[VPath], stats: Option[DirStats]): Try[Boolean] = {
+  private def runDeleteOperation(paths: Seq[VPath], stats: Option[DirStats], dryRun: Boolean): Try[Boolean] = {
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
     val progressDialog = UIUtils.mkModalDialog[IOTaskSummary](appController.mainStage, contentPane)
@@ -72,7 +72,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
     val jobs = paths.map(p => DeleteJobDef(p))
 
-    val deleteService = new BackgroundService(new RecursiveDeleteTask(jobs, stats, true))
+    val deleteService = new BackgroundService(new RecursiveDeleteTask(jobs, stats, dryRun))
 
     ctrl.init(s"Delete", s"Delete selected $pathType\n$pathName", // TODO: i18
               s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big), // TODO: i18
@@ -95,7 +95,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
     Success(false) // FIXME: evaluate the result of operation and return proper value
   }
 
-  private def askForDecision(targetPaths: Seq[VPath]): Option[(ButtonType, Option[DirStats])] = {
+  private def askForDecision(targetPaths: Seq[VPath]): Option[(ButtonType, Option[DirStats], Boolean)] = {
     val (contentPane, contentCtrl) = UILoader.loadScene[DeletePanelController](deleteLayout)
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
 
@@ -110,6 +110,6 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
     result
       .map(jfxbt => new ButtonType(jfxbt.asInstanceOf[control.ButtonType]))
-      .map(bt => (bt, stats))
+      .map(bt => (bt, stats, contentCtrl.dryRunSelected))
   }
 }
