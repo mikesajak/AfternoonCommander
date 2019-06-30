@@ -63,7 +63,7 @@ class OperationMgr(statusMgr: StatusMgr,
   }
 
   def handleFindAction(): Unit = {
-    val findDialogLayout = "/layout/ops/search-files-dialog.fxml"
+    val findDialogLayout = "/layout/ops/search-files-dialog2.fxml"
 
     val (contentPane, contentCtrl) = UILoader.loadScene[FindFilesPanelController](findDialogLayout)
 

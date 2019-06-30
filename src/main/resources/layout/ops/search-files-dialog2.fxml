@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.geometry.*?><?import javafx.scene.control.*?><?import javafx.scene.image.ImageView?><?import javafx.scene.layout.*?><?import javafx.scene.text.*?>
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" spacing="5.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.FindFilesPanelControllerImpl">
+   <children>
+      <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="15.0" VBox.vgrow="NEVER">
+         <children>
+            <ImageView fx:id="headerImageView" fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" />
+            <Label alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Find files">
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+            </Label>
+         </children>
+      </HBox>
+      <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+        <tabs>
+          <Tab text="General">
+            <content>
+                  <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="200.0" spacing="5.0">
+                     <children>
+                        <VBox>
+                           <children>
+                              <Label text="Search for">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </Label>
+                              <ComboBox fx:id="filenameSearchTextCombo" editable="true" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" />
+                           </children>
+                        </VBox>
+                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                           <children>
+                              <Label text="Search in">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </Label>
+                              <TextField fx:id="searchInTextField" />
+                           </children>
+                        </VBox>
+                        <HBox spacing="5.0">
+                           <children>
+                              <CheckBox fx:id="filenameCaseCheckbox" mnemonicParsing="false" text="Case sensitive">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </CheckBox>
+                              <CheckBox fx:id="filenameRegexCheckbox" mnemonicParsing="false" text="Regular expression">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </CheckBox>
+                              <CheckBox fx:id="filenameInverseCheckbox" mnemonicParsing="false" text="Find NOT containing the text">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </CheckBox>
+                           </children>
+                        </HBox>
+                        <Separator maxHeight="-Infinity" maxWidth="1.7976931348623157E308">
+                           <VBox.margin>
+                              <Insets bottom="15.0" top="15.0" />
+                           </VBox.margin>
+                        </Separator>
+                        <CheckBox fx:id="searchTextCheckbox" mnemonicParsing="false" text="Search text">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </CheckBox>
+                        <ComboBox fx:id="contentSearchTextCombo" disable="true" editable="true" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" />
+                        <HBox spacing="5.0">
+                           <children>
+                              <CheckBox fx:id="contentCaseCheckbox" disable="true" mnemonicParsing="false" text="Case sensitive">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </CheckBox>
+                              <CheckBox fx:id="contentRegexCheckbox" disable="true" mnemonicParsing="false" text="Regular expression">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </CheckBox>
+                              <CheckBox fx:id="contentInverseCheckbox" disable="true" mnemonicParsing="false" text="Find NOT containing the text">
+                                 <font>
+                                    <Font size="11.0" />
+                                 </font>
+                              </CheckBox>
+                           </children>
+                        </HBox>
+                        <Separator maxHeight="-Infinity" maxWidth="1.7976931348623157E308">
+                           <VBox.margin>
+                              <Insets bottom="15.0" top="15.0" />
+                           </VBox.margin>
+                        </Separator>
+                        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" VBox.vgrow="ALWAYS">
+                           <children>
+                              <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" VBox.vgrow="NEVER">
+                                 <children>
+                                    <Label text="Search results:">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="searchResultsValueLabel" text="[No files found]">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </HBox>
+                              <HBox spacing="5.0">
+                                 <children>
+                                    <ListView fx:id="searchResultsListView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
+                                    <VBox spacing="5.0">
+                                       <children>
+                                          <Button fx:id="startSearchButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Starch search" />
+                                          <Button fx:id="stopSearchButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Stop" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                           </children>
+                           <VBox.margin>
+                              <Insets top="15.0" />
+                           </VBox.margin>
+                        </VBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="5.0" top="5.0" />
+                     </padding>
+                  </VBox>
+            </content>
+          </Tab>
+          <Tab text="Advanced">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
+</VBox>
