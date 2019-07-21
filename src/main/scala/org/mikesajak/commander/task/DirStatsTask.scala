@@ -17,7 +17,7 @@ object DirStats {
   val Empty = DirStats(0,0,0,0)
 }
 
-class DirStatsTask(paths: Seq[VPath]) extends scalafx.concurrent.Task(new jfxc.Task[DirStats] {
+class DirStatsTask(paths: Seq[VPath]) extends jfxc.Task[DirStats] {
   private val logger = Logger("DirStatsTask")
 
   updateTitle(s"DirStatsTask($paths)")
@@ -67,5 +67,4 @@ class DirStatsTask(paths: Seq[VPath]) extends scalafx.concurrent.Task(new jfxc.T
     updateValue(totalCounts)
     totalCounts
   }
-})
-
+}

@@ -1,7 +1,6 @@
 package org.mikesajak.commander.fs.local
 
 import java.io.File
-import java.net.{URI, URLEncoder}
 import java.nio.file.{Files, Paths}
 import java.{io => jio}
 
@@ -29,8 +28,7 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
   override def exists(path: VPath): Boolean = new jio.File(path.absolutePath).exists
 
   override def delete(path: VPath): Try[Boolean] = Try {
-    val normalizedPath = URLEncoder.encode(path.absolutePath, "UTF-8")
-    val fsPath = Paths.get(new URI(s"file:///$normalizedPath"))
+    val fsPath = Paths.get(path.absolutePath)
     Files.deleteIfExists(fsPath)
   }
 
@@ -48,18 +46,22 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
 
   override def resolvePath(path: String): Option[VPath] =
     path match {
-      case LocalFS.PathPattern(p) =>
-        val file = new File(p)
-
-        if (isChild(file, rootFile)) {
-          val resolved =
-            if (file.isDirectory) new LocalDirectory(file, this)
-            else new LocalFile(file, this)
-          Some(resolved)
-        } else None
+      case LocalFS.PathPattern(p) => resolve(p)
+      case p => resolve(p) // try also to resolve raw path
 
       case _ => None
     }
+
+  private def resolve(pathname: String) = {
+    val file = new File(pathname)
+
+    if (isChild(file, rootFile)) {
+      val resolved =
+        if (file.isDirectory) new LocalDirectory(file, this)
+        else new LocalFile(file, this)
+      Some(resolved)
+    } else None
+  }
 
   private def isChild(childFile: File, parentFile: File) = {
     val parentPath = parentFile.getAbsolutePath
