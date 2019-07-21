@@ -72,7 +72,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
     val jobs = paths.map(p => DeleteJobDef(p))
 
-    val deleteService = new BackgroundService(new RecursiveDeleteTask(jobs, stats, dryRun))
+    val deleteService = new BackgroundService(new RecursiveDeleteTask(jobs, stats, dryRun, resourceMgr))
 
     ctrl.init(s"Delete", s"Delete selected $pathType\n$pathName", // TODO: i18
               s"Deleting $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big), // TODO: i18

@@ -3,19 +3,6 @@ package org.mikesajak.commander.task
 import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
-import org.mikesajak.commander.util.DataUnit
-
-case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
-  def +(other: DirStats): DirStats =
-    DirStats(numFiles + other.numFiles, numDirs + other.numDirs, size + other.size, math.max(depth, other.depth))
-
-  override def toString: String =
-    s"DirCounts(numFiles=$numFiles, numDirs=$numDirs, size=${DataUnit.formatDataSize(size)}, depth=$depth)}"
-}
-
-object DirStats {
-  val Empty = DirStats(0,0,0,0)
-}
 
 class DirStatsTask(paths: Seq[VPath]) extends jfxc.Task[DirStats] {
   private val logger = Logger("DirStatsTask")
@@ -31,7 +18,7 @@ class DirStatsTask(paths: Seq[VPath]) extends jfxc.Task[DirStats] {
     updateProgress(1, 1)
     total
   } catch {
-    case c: CancelledException =>
+    case c: CancelledException[Nothing] =>
       logger.info(s"Task $this has been cancelled.")
       updateMessage(s"Operation has been cancelled.") // TODO: i18
       null
@@ -40,19 +27,10 @@ class DirStatsTask(paths: Seq[VPath]) extends jfxc.Task[DirStats] {
       throw e
   }
 
-  private def dirCounts(dir: VDirectory, level: Int) = {
-    val subDirs = dir.childDirs
-    val files = dir.childFiles
-    val filesSize = files.map(_.size).sum
-    val dirsSize = subDirs.map(_.size).sum
-
-    DirStats(files.size, subDirs.size, filesSize + dirsSize, level)
-  }
-
   private def countStats(path: VPath): DirStats = {
     path match {
       case d: VDirectory => countStats(d, DirStats(0, 1, 0, 1), 0)
-      case f: VFile => DirStats(1, 0, f.size, 0)
+      case f: VFile => DirStats.ofFile(f)
     }
   }
 
@@ -60,7 +38,7 @@ class DirStatsTask(paths: Seq[VPath]) extends jfxc.Task[DirStats] {
     if (isCancelled)
       throw new CancelledException
 
-    val curCounts = globalCounts + dirCounts(dir, level)
+    val curCounts = globalCounts + DirStats.ofDir(dir, level)
     val totalCounts = (dir.childDirs foldLeft curCounts) ((accCounts, subDir) =>
                                                             countStats(subDir, accCounts, level + 1))
 

@@ -61,7 +61,7 @@ object Utils {
       log(s"$name finished in $stopwatch", finishLogLevel)
       result
     } catch {
-      case e: CancelledException =>
+      case e: CancelledException[Any] =>
         log(s"$name cancelled after $stopwatch", finishLogLevel)
         throw e
       case e: Exception =>
@@ -90,5 +90,63 @@ object Utils {
 
   implicit class MyRichBoolean(val b: Boolean) extends AnyVal {
     final def option[A](a: => A): Option[A] = if (b) Some(a) else None
+  }
+
+  implicit class AnyRefExtension[A <: AnyRef](underlying: A) {
+    def let[B](func: A => B): B = { func(underlying) }
+  }
+
+  trait Scope {
+    def up(): Scope
+    def down(): Scope
+    def level: Int
+
+    override def toString = s"Scope(level=$level)"
+  }
+
+  class IndentScope extends Scope {
+    private var level0 = 0
+
+    def up(): Scope = {
+      level0 += 1
+      this
+    }
+    def down(): Scope = {
+      level0 -= 1
+      this
+    }
+
+    def level: Int = level0
+
+    def indent(step: Int = 2): String = " " * (step * level)
+
+    override def toString: String = indent()
+  }
+
+  def scope[A, B](name: String, curScope: Scope, arg: A)(f: (Scope, A) => B)(implicit logger: Logger): B = {
+    val scope = if (curScope == null) new IndentScope() else curScope.up()
+    logger.debug(s"${scope}Entering $name")
+    try {
+      val res = f(scope, arg)
+      scope.down()
+      logger.debug(s"${scope}Exitting $name")
+      res
+    } catch {
+      case e: Exception =>
+        scope.down()
+        logger.debug(s"${scope}Exitting with exception $name")
+        throw e
+    }
+  }
+
+  def logScope[A](name: String)(func: () => A)(implicit logger: Logger): A = try {
+    logger.debug(s"Entering $name")
+    val res = func()
+    logger.debug(s"Exitting $name")
+    res
+  } catch {
+    case e: Exception =>
+      logger.debug(s"Exitting with exception $name")
+      throw e
   }
 }

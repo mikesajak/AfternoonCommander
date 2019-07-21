@@ -67,6 +67,8 @@ class OperationMgr(statusMgr: StatusMgr,
 
     val (contentPane, contentCtrl) = UILoader.loadScene[FindFilesPanelController](findDialogLayout)
 
+    contentCtrl.init(statusMgr.selectedTabManager.selectedTab.dir)
+
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
     dialog.title = "Find files..."
     val window = dialog.getDialogPane.getScene.getWindow.asInstanceOf[stage.Stage]

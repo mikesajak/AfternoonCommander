@@ -26,7 +26,7 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
 
     reportProgress(result)
   } catch {
-    case _: CancelledException =>
+    case _: CancelledException[Nothing] =>
       logger.info(s"Task $this has been cancelled.")
       updateMessage(resourceMgr.getMessage("task.cancelled"))
       null

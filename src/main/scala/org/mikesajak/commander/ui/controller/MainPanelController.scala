@@ -3,6 +3,8 @@ package org.mikesajak.commander.ui.controller
 import org.mikesajak.commander.OperationMgr
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
+import org.mikesajak.commander.util.Keys
+import org.mikesajak.commander.util.Keys.Modifier.{Alt, Ctrl}
 import scalafx.Includes._
 import scalafx.scene.control.{SplitPane, TabPane}
 import scalafx.scene.input.{KeyCode, KeyEvent}
@@ -28,22 +30,37 @@ class MainPanelController(dirsSplitPane: SplitPane,
   statusMgr.selectedPanel = LeftPanel
 
   mainPane.filterEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
-    ke.code match {
-      case KeyCode.F3  => operationMgr.handleView()
-      case KeyCode.F4  => operationMgr.handleEdit()
-      case KeyCode.F5  => operationMgr.handleCopy()
-      case KeyCode.F6  => operationMgr.handleMove()
-      case KeyCode.F7  => operationMgr.handleMkDir()
-      case KeyCode.F8  => operationMgr.handleDelete()
-      case KeyCode.F10 => operationMgr.handleExit()
+    var handled = true
+    if (Keys.hasNoModifiers(ke)) {
+      ke.code match {
+        case KeyCode.F3 => operationMgr.handleView()
+        case KeyCode.F4 => operationMgr.handleEdit()
+        case KeyCode.F5 => operationMgr.handleCopy()
+        case KeyCode.F6 => operationMgr.handleMove()
+        case KeyCode.F7 => operationMgr.handleMkDir()
+        case KeyCode.F8 => operationMgr.handleDelete()
+        case KeyCode.F10 => operationMgr.handleExit()
+        // Debug: temporary
+        case KeyCode.F2 => operationMgr.handleCountDirStats()
 
-      // Debug: temporary
-      case KeyCode.F2 => operationMgr.handleCountDirStats()
+        case KeyCode.Tab => // todo
 
-      case KeyCode.Tab => // todo
+        case _ => handled = false
+      }
+    } else {
+      ke.code match {
+        case KeyCode.R if Keys.hasOnlyModifiers(ke, Ctrl) => operationMgr.handleRefreshAction()
 
-      case KeyCode.R if ke.controlDown => operationMgr.handleRefreshAction()
-      case _ => // do nothing
+        case KeyCode.F7 if Keys.hasOnlyModifiers(ke, Alt) =>operationMgr.handleFindAction()
+
+        case _ => handled = false
+      }
     }
+
+    if (handled)
+      ke.consume()
   }
+
 }
+
+
