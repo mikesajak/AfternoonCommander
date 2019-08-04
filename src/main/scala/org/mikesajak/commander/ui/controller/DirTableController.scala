@@ -9,20 +9,15 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
-import org.mikesajak.commander.util.{DataUnit, PathUtils, ReentrantGuard}
-import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager}
+import org.mikesajak.commander.util.{DataUnit, PathUtils}
+import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager, HistoryMgr}
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
 import scalafx.geometry.Insets
 import scalafx.scene.control._
-import scalafx.scene.effect.BlendMode
-import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
-import scalafx.scene.paint.Color
-import scalafx.scene.shape.Circle
-import scalafx.scene.{CacheHint, Group, Node}
 import scalafx.stage.Popup
 import scalafxml.core.macros.sfxml
 
@@ -45,10 +40,10 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
 
   def formatSize(vFile: VPath): String =
     path match {
-      case p: PathToParent => resourceMgr.getMessage("file_row.parent")
-      case p: VDirectory => resourceMgr.getMessageWithArgs("file_row.num_elements",
+      case _: PathToParent => resourceMgr.getMessage("file_row.parent")
+      case _: VDirectory => resourceMgr.getMessageWithArgs("file_row.num_elements",
                                                            Array(path.directory.children.size))
-      case p: VFile => DataUnit.formatDataSize(path.size)
+      case _: VFile => DataUnit.formatDataSize(path.size)
     }
 
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifyDate, $attributes)"
@@ -75,7 +70,9 @@ trait DirTableControllerIntf {
   def focusedPath: VPath
   def selectedPaths: Seq[VPath]
   def reload(): Unit
-  def select(fileName: String): Unit
+  def setTableFocusOn(pathOption: Option[VPath])
+  def setTableFocusOn(pathName: String) // TODO: change to some matcher, or first occurrence, or startsWith etc.
+  def historyMgr: HistoryMgr
 }
 
 @sfxml
@@ -94,6 +91,7 @@ class DirTableController(curDirField: TextField,
                          panelId: PanelId,
                          fileTypeMgr: FileTypeManager,
                          resourceMgr: ResourceManager,
+                         fileIconResolver: FileIconResolver,
                          config: Configuration,
                          eventBus: EventBus,
                          panelController: DirPanelControllerIntf,
@@ -109,6 +107,8 @@ class DirTableController(curDirField: TextField,
   private val tableRows = ObservableBuffer[FileRow]()
   private val filteredRows = new FilteredBuffer(tableRows)
   private val sortedRows = new SortedBuffer(filteredRows)
+
+  override val historyMgr = new HistoryMgr()
 
   addTabButton.padding = Insets.Empty
   curDirField.prefHeight <== addTabButton.height
@@ -144,7 +144,9 @@ class DirTableController(curDirField: TextField,
     idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
       new TableCell[FileRow, VPath]() {
         item.onChange { (_, _, newValue) =>
-          graphic = Option(newValue).flatMap(findIconFor).orNull
+          graphic = Option(newValue)
+              .flatMap(cellPath => fileIconResolver.findIconFor(cellPath))
+              .orNull
         }
       }
     }
@@ -201,7 +203,7 @@ class DirTableController(curDirField: TextField,
 
     dirTableView.items = sortedRows
 
-    addTabButton.onAction = e => eventBus.publish(NewTabRequest(panelId, curDir))//dirPanelController.addNewTab()
+    addTabButton.onAction = _ => eventBus.publish(NewTabRequest(panelId, curDir))
 
     setCurrentDirectory(path)
   }
@@ -217,24 +219,23 @@ class DirTableController(curDirField: TextField,
         !row.path.attributes.contains(Attrib.Hidden) || showHidden
   }
 
-  private val curDirReentrantUpdate = new ReentrantGuard
-  private var pending = false
-  override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit =
-//    curDirReentrantUpdate.guard { () =>
-    if (!pending) {
-      pending = true
-      val dir = resolveDir(directory)
-      curDir = dir
-      curDirField.text = curDir.absolutePath
-      initTable(dir, focusedPath)
-      updateStatusBar(dir)
-      eventBus.publish(CurrentDirChange(panelId, dir))
-      pending = false
+  override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit = {
+    if (curDir != null)
+      historyMgr.add(curDir)
+    val prevDir = curDir
+    val newDir = directory match {
+      case p: PathToParent => p.targetDir
+      case _ => directory
     }
+    curDir = newDir
+    curDirField.text = newDir.absolutePath
+    initTable(newDir)
 
-  private def resolveDir(dir: VDirectory) = dir match {
-    case p: PathToParent => p.targetDir
-    case _ => dir
+    setTableFocusOn(focusedPath)
+
+    updateStatusBar(newDir)
+
+    eventBus.publish(CurrentDirChange(panelId, Option(prevDir), newDir))
   }
 
   private def updateStatusBar(directory: VDirectory): Unit =
@@ -259,59 +260,20 @@ class DirTableController(curDirField: TextField,
     setCurrentDirectory(curDir, Some(focusedPath))
   }
 
-  override def select(target: String): Unit = {
-    val selIndex = {
-      val idx = dirTableView.items.value.map(fileRow => fileRow.path.name).indexOf(target)
-      if (idx > 0) idx else 0
-    }
+  override def setTableFocusOn(pathOption: Option[VPath]): Unit = {
+    val selIndex = pathOption.map { path =>
+      math.max(0, dirTableView.items.value.indexWhere(row => row.path.name == path.name))
+    }.getOrElse(0)
+
     selectIndex(selIndex)
   }
 
-  private def findIconFor(path: VPath): Option[Node] = {
-    var icon = findIcon(path)
-    if (fileTypeMgr.isExecutable(path))
-      icon = icon.map(i => new Group(i, execOverlayIcon))
-    if (path.attributes.contains(Attrib.Symlink))
-      icon = icon.map(i => new Group(i, symlinkOverlayIcon))
-    icon
+  override def setTableFocusOn(pathName: String): Unit = {
+    val selIndex =
+      math.max(0, dirTableView.items.value.indexWhere(row => row.path.name == pathName))
+
+    selectIndex(selIndex)
   }
-
-  private def findIcon(path: VPath): Option[Node] = {
-    val fileType = fileTypeMgr.detectFileType(path)
-    fileType.icon.map { iconFile =>
-      val imageView = new ImageView(resourceMgr.getIcon(iconFile, 18, 18))
-      imageView.preserveRatio = true
-      imageView.cache = true
-      imageView.cacheHint = CacheHint.Speed
-      imageView
-    }
-  }
-
-  private def execOverlayIcon: Node =
-    createOverlayBadge(10, 11, 10, Color.DarkGreen, "asterisk-light.png")
-
-  private def symlinkOverlayIcon =
-    createOverlayBadge(0, 11, 10, Color.DarkBlue, "icons8-right-2-48.png")
-
-  private def createOverlayBadge(posX: Double, posY: Double, size: Double, color: Color,
-                                 iconName: String) = {
-    val icon = new ImageView(resourceMgr.getIcon(iconName, size, size))
-    icon.cache = true
-    icon.cacheHint = CacheHint.Speed
-    icon.x = posX
-    icon.y = posY
-    icon.blendMode = BlendMode.SrcAtop
-    val rad = size / 2 + 0.5
-    new Group(circle(posX + rad, posY + rad, rad, color), icon)
-  }
-
-  private def circle(posX: Double, posY: Double, radius0: Double, color: Color) =
-    new Circle {
-      radius = radius0
-      centerX = posX
-      centerY = posY
-      fill = color
-    }
 
   private def handleKeyEvent(event: KeyEvent) {
     logger.debug(s"handleKeyEvent: $event")
@@ -346,23 +308,14 @@ class DirTableController(curDirField: TextField,
   }
 
   private def changeDir(directory: VDirectory): Unit = {
-    var prevDir = curDir
+    val prevDir = curDir
     curDir = directory
-//    updateParentTab(directory)
     val selection = directory match {
       case p: PathToParent => Some(prevDir)
       case _ => None
     }
     setCurrentDirectory(directory, selection)
   }
-
-//  private def updateParentTab(directory: VDirectory): Unit = {
-//    val targetDir = directory match {
-//      case p: PathToParent => p.targetDir
-//      case _ => directory
-//    }
-//    panelController.updateCurTab(targetDir)
-//  }
 
   private def showFilterPopup(): Unit = {
     val tf = new TextField() {
@@ -384,7 +337,7 @@ class DirTableController(curDirField: TextField,
             case KeyCode.Escape =>
               popup.hide()
             case KeyCode.Up | KeyCode.Down | KeyCode.Enter =>
-              select(dirTableView.selectionModel.value.getSelectedItem.path.name)
+              setTableFocusOn(Some(dirTableView.selectionModel.value.getSelectedItem.path))
 //              dirTableView.fireEvent(ke)
               popup.hide()
             case _ =>
@@ -402,7 +355,7 @@ class DirTableController(curDirField: TextField,
     popup.show(appController.mainStage, bounds.minX, bounds.maxY)
   }
 
-  private def initTable(directory: VDirectory, selection: Option[VPath]) {
+  private def initTable(directory: VDirectory) {
     val (dirs0, files0) = directory.children.partition(p => p.isDirectory)
 
     val dirs =
@@ -415,15 +368,6 @@ class DirTableController(curDirField: TextField,
       .toList
 
     tableRows.setAll(fileRows.asJava)
-
-    val fromDir = selection
-
-    val selIndex = fromDir.map { prevDir =>
-      val idx = sortedRows.indexWhere(row => row.path.name == prevDir.name)
-      if (idx > 0) idx else 0
-    }.getOrElse(0)
-
-    selectIndex(selIndex)
   }
 
   private def selectIndex(selIndex: Int): Unit = {
@@ -436,7 +380,7 @@ class DirTableController(curDirField: TextField,
 
   private def registerCurDirFieldUpdater(): Unit = {
     var pending = false
-    curDirField.text.onChange { (observable, oldVal, newVal) =>
+    curDirField.text.onChange { (_, _, _) =>
       try {
         if (!pending) {
           pending = true
@@ -445,7 +389,7 @@ class DirTableController(curDirField: TextField,
           while (textWidth > componentWidth) {
             curDirField.text = shortenDirText(curDirField.text.value)
             textWidth = UIUtils.calcTextBounds(curDirField).getWidth
-            curDirField.insets
+            curDirField.insets // FIXME: ???
           }
         }
       } finally {
@@ -453,8 +397,8 @@ class DirTableController(curDirField: TextField,
       }
     }
 
-    curDirField.width.onChange { (_, oldVal, newVal) =>
-      curDirField.text = curDir.absolutePath
+    curDirField.width.onChange { (_, _, _) =>
+      curDirField.text = curDir.absolutePath // FIXME: ??? shortenDirText?
     }
   }
 
@@ -465,6 +409,6 @@ class DirTableController(curDirField: TextField,
 }
 
 object DirViewEvents {
-  case class CurrentDirChange(panelId: PanelId, curDir: VDirectory)
+  case class CurrentDirChange(panelId: PanelId, prevDir: Option[VDirectory], curDir: VDirectory)
   case class NewTabRequest(panelId: PanelId, curDir: VDirectory)
 }

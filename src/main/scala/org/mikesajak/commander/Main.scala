@@ -23,7 +23,6 @@ object Main extends JFXApp {
   private val injector = ApplicationContext.globalInjector.createChildInjector()
   private val config = injector.getInstance(classOf[Configuration])
   private val appController= injector.getInstance(classOf[ApplicationController])
-
   private val resourceMgr: ResourceManager = injector.getInstance(Key.get(classOf[ResourceManager]))
 
   val (root, _) = UILoader.loadScene(mainPanelDef)

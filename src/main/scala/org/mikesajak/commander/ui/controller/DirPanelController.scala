@@ -19,7 +19,6 @@ import org.mikesajak.commander.ui.{FSUIHelper, IconSize, ResourceManager, UILoad
 import org.mikesajak.commander.util.{DataUnit, PathUtils}
 import scalafx.Includes._
 import scalafx.application.Platform
-import scalafx.geometry.Insets
 import scalafx.scene.Node
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
@@ -40,8 +39,6 @@ object PanelId {
 
 trait DirPanelControllerIntf {
   def init(panelId: PanelId)
-  def updateCurTab(path: VDirectory)
-  def addNewTab(dir: Option[VDirectory] = None)
 }
 /**
   * Created by mike on 14.04.17.
@@ -71,30 +68,16 @@ class DirPanelController(tabPane: TabPane,
   private var panelId: PanelId = _
   private var dirTabManager: DirTabManager = _
 
-  private val localHistoryMgr = new HistoryMgr
+  private val panelHistoryMgr = new HistoryMgr()
 
   override def init(panelId: PanelId) {
     this.panelId = panelId
-    // TODO: better way of getting dependency - use injection!!
+
     dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
                                                                           Names.named(panelId.toString)))
 
-    topUIPane.setStyle("-fx-border-color: Transparent")
-    eventBus.register(new AnyRef() {
-      @Subscribe def handle(event: PanelSelected) = {
-        val style = if (event.newPanelId == panelId) "-fx-border-color: Blue" else "-fx-border-color: Transparent"
-        topUIPane.setStyle(style)
-      }
-    })
-
-    topUIPane.filterEvent(MouseEvent.MousePressed) {
-      (me: MouseEvent) => statusMgr.selectedPanel = panelId
-    }
-
     tabPane.tabs.clear()
     dirTabManager.clearTabs()
-
-    val numTabs = config.intProperty("tabs", s"$panelId.numTabs").getOrElse(0)
 
     val tabPathNames = config.stringSeqProperty("tabs", s"$panelId.tabs").getOrElse(List(fsMgr.homePath))
 
@@ -111,16 +94,44 @@ class DirPanelController(tabPane: TabPane,
     }
 
     val selectedPath = tabPaths.head
-
     updateDriveSelection(selectedPath)
 
     tabPane.getSelectionModel.selectFirst()
 
-    registerListeners()
+    updateButtons()
+
+    registerUIListeners()
+
+    registerEventBusSubscribers()
 
     startPeriodicTasks()
+  }
 
-    prevDirButton.disable = true
+  private def registerUIListeners(): Unit = {
+    topUIPane.filterEvent(MouseEvent.MousePressed) { _: MouseEvent => statusMgr.selectedPanel = panelId }
+
+    tabPane.selectionModel().selectedIndexProperty().addListener { (_, _, newIdx) =>
+      val tabIdx = newIdx.intValue
+      // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
+      logger.debug(s"$panelId - reloading tab: $tabIdx: ${dirTabManager.tab(tabIdx).dir}")
+      dirTabManager.tab(tabIdx).controller.reload()
+
+      if (tabIdx < tabPane.tabs.size) {
+        statusMgr.selectedTabManager.selectedTabIdx = tabIdx
+      }
+    }
+  }
+
+  private def registerEventBusSubscribers(): Unit = {
+    eventBus.register(new PanelHistoryUpdater(panelId, panelHistoryMgr))
+
+    topUIPane.setStyle("-fx-border-color: Transparent")
+    eventBus.register(new AnyRef() {
+      @Subscribe def handle(event: PanelSelected): Unit = {
+        val style = if (event.newPanelId == panelId) "-fx-border-color: Blue" else "-fx-border-color: Transparent"
+        topUIPane.setStyle(style)
+      }
+    })
 
     eventBus.register(this)
   }
@@ -140,7 +151,7 @@ class DirPanelController(tabPane: TabPane,
           s" [${DataUnit.mkDataSize(fs.freeSpace)} / ${DataUnit.mkDataSize(fs.totalSpace)}]"
         graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))//, 24)))
 
-        onAction = ae => setCurrentTabDir(fs.rootDirectory)
+        onAction = _ => setCurrentTabDir(fs.rootDirectory)
       })
 
     val ctxMenu = new ContextMenu(fsItems: _*)
@@ -162,23 +173,23 @@ class DirPanelController(tabPane: TabPane,
       val selectedDirText = PathUtils.shortenPathTo(selectedDirRep, 50)
       new MenuItem() {
         text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
-        onAction = ae => bookmarkMgr.addBookmark(selectedDir)
+        onAction = _ => bookmarkMgr.addBookmark(selectedDir)
       }
     }
 
     def mkPathMenuItem(path: VPath): MenuItem = new MenuItem {
       text = path.toString
-      onAction = ae => setCurrentTabDir(path.directory)
+      onAction = _ => setCurrentTabDir(path.directory)
     }
 
     val bookmarks = bookmarkMgr.bookmarks.map(mkPathMenuItem)
 
-    val localHistoryItems = localHistoryMgr.getAll
-      .take(5)
-      .map(mkPathMenuItem)
+    val localHistoryItems = panelHistoryMgr.getAll
+                                           .take(5)
+                                           .map(mkPathMenuItem)
 
     val globalHistoryItems = globalHistoryMgr.getAll
-      .filter(i => !localHistoryMgr.getAll.contains(i))
+      .filter(i => !panelHistoryMgr.getAll.contains(i))
       .take(5)
       .map(mkPathMenuItem)
 
@@ -207,8 +218,8 @@ class DirPanelController(tabPane: TabPane,
   }
 
   def handlePrevDirButton(): Unit = {
-    logger.warn("Prev dir button action not yet implemented")
-    // TODO: implement
+    dirTabManager.selectedTab.controller.historyMgr.last
+      .foreach(setCurrentTabDir)
   }
 
   def handleParentDirButton(): Unit = {
@@ -227,12 +238,15 @@ class DirPanelController(tabPane: TabPane,
   }
 
   private def setCurrentTabDir(dir: VDirectory): Unit = {
-    if (dir.fileSystem.exists(dir)) {
-//      dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
-      updateCurTab(dir)
-    } else {
+    if (dir.fileSystem.exists(dir))
+      dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
+    else
       logger.info(s"Cannot set current tab directory $dir. The target directory does not exist.")
-    }
+  }
+
+  private def updateButtons(): Unit = {
+    prevDirButton.disable = dirTabManager.selectedTab.controller.historyMgr.isEmpty
+    parentDirButton.disable = dirTabManager.selectedTab.dir.parent.isEmpty
   }
 
   @Subscribe
@@ -240,7 +254,7 @@ class DirPanelController(tabPane: TabPane,
     if (request.panelId == panelId)
       addNewTab(Some(request.curDir))
 
-  override def addNewTab(newTabDir: Option[VDirectory]): Unit = {
+  private def addNewTab(newTabDir: Option[VDirectory]): Unit = {
     fsMgr.resolvePath(newTabDir.getOrElse(fsMgr.homeDir).toString)
       .map(_.directory)
       .foreach { dir =>
@@ -251,42 +265,23 @@ class DirPanelController(tabPane: TabPane,
       }
   }
 
-  private def registerListeners(): Unit = {
-    tabPane.selectionModel().selectedIndexProperty().addListener { (ov, oldIdx, newIdx) =>
-      val tabIdx = newIdx.intValue
-      // todo: do not reload synchronously, just schedule async reload (important when dir is remote and reloading will take some time)
-      logger.debug(s"$panelId - reloading tab: $tabIdx: ${dirTabManager.tab(tabIdx).dir}")
-      dirTabManager.tab(tabIdx).controller.reload()
-
-      if (tabIdx < tabPane.tabs.size) {
-        statusMgr.selectedTabManager.selectedTabIdx = tabIdx
-      }
-    }
-  }
-
   private def createTab(path: VDirectory) = {
     new DirTab(panelId, path)
   }
 
   @Subscribe
-  def updateCurTab(event: CurrentDirChange): Unit =
+  def updateCurTabUIAfterDirChange(event: CurrentDirChange): Unit = {
     if (event.panelId == panelId)
-      updateCurTab(event.curDir)
+      updateCurTabUIAfterDirChange(event.curDir)
+  }
 
-  override def updateCurTab(dir: VDirectory): Unit = {
-    val selectionModel = tabPane.selectionModel.value
-    val curTab = selectionModel.getSelectedItem
+  private def updateCurTabUIAfterDirChange(dir: VDirectory) {
+    updateButtons()
 
-    // TODO: Hide this inside DirTabManager!
-    dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
-    dirTabManager.tab(selectionModel.getSelectedIndex).dir = dir
+    val curTab = tabPane.selectionModel.value.getSelectedItem
     DirTab.updateTab(curTab, dir)
 
     updateDriveSelection(dir)
-
-    // TODO: #eventbus Use publish event, and let any subscribers (global, local history managers etc.) listen and react
-    localHistoryMgr.add(dir)
-    globalHistoryMgr.add(dir)
   }
 
   private def updateDriveSelection(dir: VDirectory): Unit = {
@@ -297,19 +292,6 @@ class DirPanelController(tabPane: TabPane,
     driveSelectionButton.graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))
   }
 
-  private def createNewTabTab() = {
-    new Tab {
-      closable = false
-//      disable = true
-      val button = new Button()
-      button.graphic = new ImageView(resourceMgr.getIcon("plus-box.png", IconSize.Small))
-      button.padding = Insets.Empty
-      graphic = button
-
-      text = null
-    }
-  }
-
   val scheduler = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).build())
   private def startPeriodicTasks(): Unit = {
     val task: Runnable = { () =>
@@ -318,8 +300,7 @@ class DirPanelController(tabPane: TabPane,
 //      dirTabManager.selectedTab.controller.reload()
       updateFreeSpace()
     }
-    val f = scheduler.scheduleAtFixedRate(task, 1, 5, TimeUnit.SECONDS)
-
+    scheduler.scheduleAtFixedRate(task, 1, 5, TimeUnit.SECONDS)
   }
 
   private def updateFreeSpace(): Unit = {

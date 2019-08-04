@@ -9,13 +9,13 @@ import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
-import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
+import org.mikesajak.commander.ui.controller.{DirTabManager, FileIconResolver, PanelId}
 
 /**
   * Created by mike on 09.04.17.
   */
 class ApplicationContext extends AbstractModule with ScalaModule {
-  def configure(): Unit = {
+  override def configure(): Unit = {
     install(new PanelContext(LeftPanel))
     install(new PanelContext(RightPanel))
 
@@ -98,11 +98,24 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideHistoryMgr() = new HistoryMgr
+  def provideGlobalHistoryMgr(eventBus: EventBus): HistoryMgr = {
+    val historyMgr = new HistoryMgr()
+    eventBus.register(new HistoryUpdater(historyMgr))
+    historyMgr
+  }
 
   @Provides
   @Singleton
   def provideEventBus() = new EventBus
+
+  @Provides
+  @Singleton
+  def provideResourceManager() = new ResourceManager
+
+  @Provides
+  @Singleton
+  def provideIconResolver(fileTypeManager: FileTypeManager, resourceMgr: ResourceManager) =
+    new FileIconResolver(fileTypeManager, resourceMgr)
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {

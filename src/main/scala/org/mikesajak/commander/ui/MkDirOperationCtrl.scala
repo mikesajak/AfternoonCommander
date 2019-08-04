@@ -4,7 +4,6 @@ import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.controller.ops.MkDirPanelController
-
 import scalafx.Includes._
 
 class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController) {
@@ -25,9 +24,9 @@ class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControl
     result foreach { newDirName =>
       try {
         logger.debug(s"Creating directory $newDirName, in parent directory: ${selectedTab.dir}")
-        selectedTab.dir.mkChildDir(newDirName)
+        val newDir = selectedTab.dir.mkChildDir(newDirName)
         selectedTab.controller.reload()
-        selectedTab.controller.select(newDirName)
+        selectedTab.controller.setTableFocusOn(Some(newDir))
       } catch {
         case e: Exception =>
           logger.info(s"Error during creating directory $newDirName in parent dir ${selectedTab.dir}", e)

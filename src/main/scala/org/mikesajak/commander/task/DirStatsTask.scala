@@ -18,7 +18,7 @@ class DirStatsTask(paths: Seq[VPath]) extends jfxc.Task[DirStats] {
     updateProgress(1, 1)
     total
   } catch {
-    case c: CancelledException[Nothing] =>
+    case _: CancelledException[Nothing] =>
       logger.info(s"Task $this has been cancelled.")
       updateMessage(s"Operation has been cancelled.") // TODO: i18
       null
