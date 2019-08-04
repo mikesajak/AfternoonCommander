@@ -1,13 +1,8 @@
 package org.mikesajak.commander.ui
 
-import javafx.geometry.{BoundingBox, Bounds}
-import javafx.scene.control.IndexedCell
-import javafx.scene.text.Text
-
-import com.sun.javafx.scene.control.skin.{TableViewSkin, VirtualFlow}
+import javafx.scene.{control => jfxctrl, text => jfxtext}
+import javafx.{geometry => jfxgeom}
 import org.mikesajak.commander.util.Utils
-
-import scala.language.implicitConversions
 import scalafx.Includes._
 import scalafx.geometry.Insets
 import scalafx.scene.control.Alert.AlertType
@@ -22,14 +17,6 @@ object UIParams {
 }
 
 object UIUtils {
-  def getNumVisibleRows[S](tableView: TableView[S]): Int = {
-    val skin = tableView.delegate.getSkin.asInstanceOf[TableViewSkin[S]]
-    if (skin != null) {
-      val vflow = skin.getChildren.get(1).asInstanceOf[VirtualFlow[IndexedCell[S]]]
-      vflow.getLastVisibleCell.getIndex
-    } else -1
-  }
-
   def prepareExceptionAlert(ownerWindow: Stage,
                             alertTitle: String,
                             alertHeader: String,
@@ -70,21 +57,36 @@ object UIUtils {
     dialogPane().content = content
   }
 
-  implicit def jfxButton2SfxButton(button: javafx.scene.control.Button): Button = new Button(button)
+  def mkModalDialogNoButtonOrder[ResultType](owner: Stage, content: Parent): Dialog[ResultType] = new Dialog[ResultType]() {
+    initOwner(owner)
+    initStyle(StageStyle.Utility)
+    initModality(Modality.ApplicationModal)
+    dialogPane = mkDialogPaneWithNoButtonOrder()
+    dialogPane().content = content
+  }
 
-  def calcTextBounds(control: TextInputControl): Bounds =
+  def mkDialogPaneWithNoButtonOrder() =
+    new DialogPane(new jfxctrl.DialogPane() {
+      override def createButtonBar(): jfxctrl.ButtonBar = {
+        val bar = super.createButtonBar().asInstanceOf[jfxctrl.ButtonBar]
+        bar.setButtonOrder(jfxctrl.ButtonBar.BUTTON_ORDER_NONE)
+        bar
+      }
+    })
+
+  def calcTextBounds(control: TextInputControl): jfxgeom.Bounds =
     calcTextBounds(control.text.value, control.font.value, Option(control.insets))
 
-  def calcTextBounds(text: String, font: Font, padding: Option[Insets] = None): Bounds = {
-    val textElement = new Text(text)
+  def calcTextBounds(text: String, font: Font, padding: Option[Insets] = None): jfxgeom.Bounds = {
+    val textElement = new jfxtext.Text(text)
     textElement.font = font
     textElement.applyCss()
     val textBounds = textElement.getLayoutBounds
 
-    padding.map(p => new BoundingBox(textBounds.getMinX - p.left, textBounds.getMinY - p.top,
-                                     textBounds.getWidth + p.left + p.right,
-                                     textBounds.getHeight + p.top + p.bottom))
-      .getOrElse(textBounds)
+    padding.map(p => new jfxgeom.BoundingBox(textBounds.getMinX - p.left, textBounds.getMinY - p.top,
+                                             textBounds.getWidth + p.left + p.right,
+                                             textBounds.getHeight + p.top + p.bottom))
+           .getOrElse(textBounds)
   }
 
   def showButtonCtxMenu(button: Button, ctxMenu: ContextMenu, owner: Node): Unit = {

@@ -1,6 +1,7 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import com.typesafe.scalalogging.Logger
+import javafx.scene.{control => jfxctrl}
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.task._
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
@@ -13,7 +14,14 @@ import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
 trait FindFilesPanelController {
-  def init(startDir: VDirectory)
+  def init(startDir: VDirectory, dialog: Dialog[ButtonType])
+  def getSelectedResult: Option[VPath]
+  def getAllResults: Seq[VPath]
+}
+
+object FindFilesPanelController {
+  val GoToPattButtonType = new ButtonType("Go to path")
+  val ShowAsListButtonType = new ButtonType("Show as list")
 }
 
 @sfxml
@@ -34,24 +42,29 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
                                    curPathLabel: Label,
                                    searchStatsLabel: Label,
                                    startSearchButton: Button,
-                                   goToPathButton: Button,
-                                   showAsListButton: Button,
 
                                    resourceMgr: ResourceManager,
                                    fsMgr: FilesystemsManager)
     extends FindFilesPanelController {
   private val logger = Logger[FindFilesPanelControllerImpl]
 
-  private var pending = false
+  private var goToPathButton: Button = _
+  private var showAsListButton: Button = _
+  private var searchIsPending = false
 
   headerImageView.image = resourceMgr.getIcon("file-find.png", IconSize.Big)
   curPathLabel.text = null
   searchStatsLabel.text = null
 
-  def init(startDir: VDirectory): Unit = {
+  def init(startDir: VDirectory, dialog: Dialog[ButtonType]): Unit = {
     searchInTextField.text = startDir.absolutePath
 
-    searchResultsListView.cellFactory = { p =>
+    goToPathButton = dialog.dialogPane.value.lookupButton(FindFilesPanelController.GoToPattButtonType).asInstanceOf[jfxctrl.Button]
+    showAsListButton = dialog.dialogPane.value.lookupButton(FindFilesPanelController.ShowAsListButtonType).asInstanceOf[jfxctrl.Button]
+    goToPathButton.disable = true
+    showAsListButton.disable = true
+
+    searchResultsListView.cellFactory = { _ =>
       val cell = new ListCell[VPath]
       cell.item.onChange { (_,_,elem) => cell.text = if (elem != null) elem.absolutePath else null }
       cell
@@ -77,7 +90,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     }
 
     startSearchButton.onAction = { _ =>
-        if (!pending) startSearch()
+        if (!searchIsPending) startSearch()
         else stopSearch()
     }
 
@@ -89,32 +102,37 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     Platform.runLater { filenameSearchTextCombo.requestFocus() }
   }
 
+  override def getAllResults: Seq[VPath] = List(searchResultsListView.items.value: _*)
+
+  override def getSelectedResult: Option[VPath] =
+    Option(searchResultsListView.selectionModel.value.getSelectedItem)
+
   private def prepareSearchService(searchService: Service[SearchProgress]): Unit = {
     searchService.onRunning = _ => searchStarted()
-    searchService.onFailed = e => searchStopped(e.getSource.getValue.asInstanceOf[SearchProgress], true)
-    searchService.onSucceeded = e => { searchStopped(e.getSource.getValue.asInstanceOf[SearchProgress], false);  }
-    searchService.onCancelled = e => searchStopped(e.getSource.getValue.asInstanceOf[SearchProgress], true)
+    searchService.onFailed = e => searchStopped(e.getSource.getValue.asInstanceOf[SearchProgress], cancelled = true)
+    searchService.onSucceeded = e => { searchStopped(e.getSource.getValue.asInstanceOf[SearchProgress], cancelled = false);  }
+    searchService.onCancelled = e => searchStopped(e.getSource.getValue.asInstanceOf[SearchProgress], cancelled = true)
 
-    searchService.value.onChange { if (pending) updateProgress(searchService.value.value, false, false) }
+    searchService.value.onChange { if (searchIsPending) updateProgress(searchService.value.value, finished = false, cancelled = false) }
   }
 
   private def searchStarted(): Unit = {
-    pending = true
+    searchIsPending = true
     updateButtons()
     progressImageView.image = resourceMgr.getIcon("loading-chasing-arrows.gif")
     progressImageView.visible = true
   }
 
   private def searchStopped(finalStatus: SearchProgress, cancelled: Boolean): Unit = {
-    pending = false
+    searchIsPending = false
     updateButtons()
     progressImageView.image = null
     progressImageView.visible = false
-    updateProgress(finalStatus, true, cancelled)
+    updateProgress(finalStatus, finished = true, cancelled = cancelled)
   }
 
   private def updateButtons(): Unit = {
-    startSearchButton.text = if (pending) "Stop" else "Start search"
+    startSearchButton.text = if (searchIsPending) "Stop" else "Start search"
   }
 
   private def updateProgress(searchProgress: SearchProgress, finished: Boolean, cancelled: Boolean): Unit = {

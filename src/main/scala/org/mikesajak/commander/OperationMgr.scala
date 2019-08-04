@@ -1,9 +1,9 @@
 package org.mikesajak.commander
 
 import com.typesafe.scalalogging.Logger
-import javafx.stage
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.ops.FindFilesPanelController
 import scalafx.Includes._
@@ -67,18 +67,36 @@ class OperationMgr(statusMgr: StatusMgr,
 
     val (contentPane, contentCtrl) = UILoader.loadScene[FindFilesPanelController](findDialogLayout)
 
-    contentCtrl.init(statusMgr.selectedTabManager.selectedTab.dir)
-
-    val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
+    val dialog = UIUtils.mkModalDialogNoButtonOrder[ButtonType](appController.mainStage, contentPane)
     dialog.title = "Find files..."
-    val window = dialog.getDialogPane.getScene.getWindow.asInstanceOf[stage.Stage]
-    window.setMinHeight(600)
-    window.setMinWidth(400)
+    dialog.dialogPane.value.buttonTypes = Seq(FindFilesPanelController.GoToPattButtonType,
+                                              FindFilesPanelController.ShowAsListButtonType,
+                                              ButtonType.Close)
 
-    dialog.dialogPane.value.buttonTypes = Seq(ButtonType.Close)
+    contentCtrl.init(statusMgr.selectedTabManager.selectedTab.dir, dialog)
+
+    dialog.setWindowSize(600, 400)
+
     val result = dialog.showAndWait()
-
     println(s"Find action result: $result")
+
+    result match {
+      case Some(FindFilesPanelController.GoToPattButtonType) =>
+        val selectedResult = contentCtrl.getSelectedResult
+        logger.debug(s"Go to path: selected result=$selectedResult")
+        selectedResult.foreach { result =>
+          val directory = if (result.isDirectory) result.parent.getOrElse(result.directory)
+                          else result.directory
+          statusMgr.selectedTabManager.selectedTab.controller.setCurrentDirectory(directory, Some(directory))
+        }
+
+
+      case Some(FindFilesPanelController.ShowAsListButtonType) =>
+        val searchResults = contentCtrl.getAllResults
+        logger.debug(s"Show as list: all results=$searchResults")
+      case Some(ButtonType.Close) => // do nothing
+    }
+
   }
 
 }
