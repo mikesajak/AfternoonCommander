@@ -7,12 +7,12 @@ scalaVersion := "2.12.8"
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
 // scalafx (and fxml)
-libraryDependencies += "org.scalafx" %% "scalafxml-core-sfx8" % "0.3"
-libraryDependencies += "org.scalafx" % "scalafxml-guice-sfx8_2.12" % "0.3"
+libraryDependencies += "org.scalafx" %% "scalafxml-core-sfx8" % "0.4"
+libraryDependencies += "org.scalafx" %% "scalafxml-guice-sfx8" % "0.4"
 
 // guice dependency injection
-libraryDependencies += "com.google.inject" % "guice" % "4.1.0"
-libraryDependencies += "net.codingwell" %% "scala-guice" % "4.1.0"
+libraryDependencies += "com.google.inject" % "guice" % "4.2.2"
+libraryDependencies += "net.codingwell" %% "scala-guice" % "4.2.6"
 
 // https://mvnrepository.com/artifact/com.google.guava/guava
 libraryDependencies += "com.google.guava" % "guava" % "26.0-jre"
