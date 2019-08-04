@@ -11,6 +11,7 @@ import scala.language.implicitConversions
 sealed abstract class IconSize(val size: Double)
 
 object IconSize {
+  case object Tiny extends IconSize(16)
   case object Small extends IconSize(24)
   case object Medium extends IconSize(36)
   case object Big extends IconSize(48)

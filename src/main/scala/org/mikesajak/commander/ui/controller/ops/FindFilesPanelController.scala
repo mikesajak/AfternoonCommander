@@ -7,16 +7,19 @@ import org.mikesajak.commander.task._
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import scalafx.Includes._
 import scalafx.application.Platform
-import scalafx.collections.ObservableBuffer
 import scalafx.concurrent.Service
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
+import scala.collection.JavaConverters._
+
 trait FindFilesPanelController {
   def init(startDir: VDirectory, dialog: Dialog[ButtonType])
   def getSelectedResult: Option[VPath]
   def getAllResults: Seq[VPath]
+
+  def stopSearch(): Unit
 }
 
 object FindFilesPanelController {
@@ -50,7 +53,10 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
 
   private var goToPathButton: Button = _
   private var showAsListButton: Button = _
+  private var closeButton: Button = _
+
   private var searchIsPending = false
+  private var searchService: Service[SearchProgress] = _
 
   headerImageView.image = resourceMgr.getIcon("file-find.png", IconSize.Big)
   curPathLabel.text = null
@@ -61,6 +67,8 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
 
     goToPathButton = dialog.dialogPane.value.lookupButton(FindFilesPanelController.GoToPattButtonType).asInstanceOf[jfxctrl.Button]
     showAsListButton = dialog.dialogPane.value.lookupButton(FindFilesPanelController.ShowAsListButtonType).asInstanceOf[jfxctrl.Button]
+    closeButton = dialog.dialogPane.value.lookupButton(ButtonType.Close).asInstanceOf[jfxctrl.Button]
+
     goToPathButton.disable = true
     showAsListButton.disable = true
 
@@ -70,24 +78,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
       cell
     }
 
-    var searchService: Service[SearchProgress] = null
     startSearchButton.disable = false
-
-    def startSearch(): Unit = {
-      fsMgr.resolvePath(searchInTextField.text.value).foreach { startDir =>
-        val criteria = mkSearchCriteria()
-        logger.info(s"Starting search  in: $startDir, criteria=$criteria")
-        searchService = new BackgroundService(new FindFilesTask(criteria, startDir.directory, resourceMgr))
-        prepareSearchService(searchService)
-        searchResultsListView.items.value.clear()
-        searchService.start()
-      }
-      // TODO: error/info if directory is not valid
-    }
-
-    def stopSearch(): Unit = {
-      searchService.cancel()
-    }
 
     startSearchButton.onAction = { _ =>
         if (!searchIsPending) startSearch()
@@ -96,10 +87,30 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
 
     filenameSearchTextCombo.onAction = _ => startSearchButton.fire()
 
-    searchResultsListView.selectionModel.value.selectedIndex.onChange { goToPathButton.disable = searchResultsListView.selectionModel.value.getSelectedIndex < 0 }
-    searchResultsListView.items.value.onChange { showAsListButton.disable = searchResultsListView.items.value.size == 0 }
+    searchResultsListView.selectionModel.value.selectedIndex.onChange {
+      goToPathButton.disable = searchResultsListView.selectionModel.value.getSelectedIndex < 0
+    }
+    searchResultsListView.items.value.onChange {
+      showAsListButton.disable = searchResultsListView.items.value.size == 0
+    }
 
     Platform.runLater { filenameSearchTextCombo.requestFocus() }
+  }
+
+  def startSearch(): Unit = {
+    fsMgr.resolvePath(searchInTextField.text.value).foreach { startDir =>
+      val criteria = mkSearchCriteria()
+      logger.info(s"Starting search  in: $startDir, criteria=$criteria")
+      searchService = new BackgroundService(new FindFilesTask(criteria, startDir.directory, resourceMgr))
+      prepareSearchService(searchService)
+      searchResultsListView.items.value.clear()
+      searchService.start()
+    }
+    // TODO: error/info if directory is not valid
+  }
+
+  def stopSearch(): Unit = {
+    searchService.cancel()
   }
 
   override def getAllResults: Seq[VPath] = List(searchResultsListView.items.value: _*)
@@ -136,8 +147,16 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
   }
 
   private def updateProgress(searchProgress: SearchProgress, finished: Boolean, cancelled: Boolean): Unit = {
-    searchResultsValueLabel.text = s"[${searchProgress.results.size} elements]"
-    searchResultsListView.items = ObservableBuffer(searchProgress.results)
+    val results = searchResultsListView.items.value
+    val resultsSelectionModel = searchResultsListView.selectionModel.value
+    if (results.size() != searchProgress.results.size) {
+      searchResultsValueLabel.text = s"[${searchProgress.results.size} elements]"
+
+      val prevSelection = resultsSelectionModel.getSelectedIndex
+      results.clear()
+      results.addAll(searchProgress.results.asJava)
+      resultsSelectionModel.selectIndices(prevSelection)
+    }
 
     if (cancelled) curPathLabel.text = s"Search cancelled. Found ${searchProgress.results.size} items."
     else if (finished) curPathLabel.text = s"Search finished. Found ${searchProgress.results.size} items."

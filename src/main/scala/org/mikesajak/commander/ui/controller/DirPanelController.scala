@@ -123,6 +123,8 @@ class DirPanelController(tabPane: TabPane,
   }
 
   private def registerEventBusSubscribers(): Unit = {
+    eventBus.register(dirTabManager)
+
     eventBus.register(new PanelHistoryUpdater(panelId, panelHistoryMgr))
 
     topUIPane.setStyle("-fx-border-color: Transparent")
@@ -173,6 +175,7 @@ class DirPanelController(tabPane: TabPane,
       val selectedDirText = PathUtils.shortenPathTo(selectedDirRep, 50)
       new MenuItem() {
         text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
+        graphic = new ImageView(resourceMgr.getIcon("icons8-add-tag-48.png", IconSize.Tiny))
         onAction = _ => bookmarkMgr.addBookmark(selectedDir)
       }
     }
@@ -184,14 +187,12 @@ class DirPanelController(tabPane: TabPane,
 
     val bookmarks = bookmarkMgr.bookmarks.map(mkPathMenuItem)
 
-    val localHistoryItems = panelHistoryMgr.getAll
+    val panelHistoryItems = panelHistoryMgr.getAll
                                            .take(5)
-                                           .map(mkPathMenuItem)
 
     val globalHistoryItems = globalHistoryMgr.getAll
       .filter(i => !panelHistoryMgr.getAll.contains(i))
       .take(5)
-      .map(mkPathMenuItem)
 
     val ctxMenu = new ContextMenu() {
       items.add(titleMenuItem("file_group_panel.bookmarks_menu.title"))
@@ -201,16 +202,18 @@ class DirPanelController(tabPane: TabPane,
         bookmarks.foreach(b => items.add(b))
       }
 
-      if (localHistoryItems.nonEmpty) {
+      if (panelHistoryItems.nonEmpty) {
         items.add(new SeparatorMenuItem())
         items.add(titleMenuItem("file_group_panel.local_history_menu.title"))
-        localHistoryItems.foreach(i => items.add(i))
+        panelHistoryItems.map(mkPathMenuItem)
+            .foreach(i => items.add(i))
       }
 
       if (globalHistoryItems.nonEmpty) {
         items.add(new SeparatorMenuItem())
         items.add(titleMenuItem("file_group_panel.global_history_menu.title"))
-        globalHistoryItems.foreach(i => items.add(i))
+        globalHistoryItems.map(mkPathMenuItem)
+            .foreach(i => items.add(i))
       }
     }
 

@@ -22,13 +22,15 @@ class HistoryMgr(limit: Int = 15) {
     dir
   }
 
-  def last: Option[VDirectory] = if (dirList.nonEmpty) Some(dirList.front) else None
+  def last: Option[VDirectory] = dirList.lastOption
 
   def isEmpty: Boolean = dirList.isEmpty
   def nonEmpty: Boolean = dirList.nonEmpty
 
   def getAll: Seq[VDirectory] = dirList.reverse
   def clear(): Unit = dirList.clear()
+
+  override def toString = s"HistoryMgr($dirList)"
 }
 
 class HistoryUpdater(historyMgr: HistoryMgr) {

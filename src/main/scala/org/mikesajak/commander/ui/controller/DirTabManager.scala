@@ -1,8 +1,10 @@
 package org.mikesajak.commander.ui.controller
 
+import com.google.common.eventbus.Subscribe
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.EventBus
 import org.mikesajak.commander.fs.VDirectory
+import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
 import org.mikesajak.commander.ui.controller.TabEvents._
 
 /**
@@ -52,6 +54,11 @@ class DirTabManager(panelId: PanelId, eventBus: EventBus) {
     selectedTabIdx0 = newIdx
 
     eventBus.publish(TabSelected(panelId, newIdx))
+  }
+
+  @Subscribe
+  def onCurrentDirChange(event: CurrentDirChange): Unit = {
+    selectedTab.dir = event.curDir
   }
 }
 

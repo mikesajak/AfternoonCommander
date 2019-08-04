@@ -221,12 +221,9 @@ class DirTableController(curDirField: TextField,
 
   override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit = {
     if (curDir != null)
-      historyMgr.add(curDir)
+      historyMgr.add(resolveTargetDir(curDir))
     val prevDir = curDir
-    val newDir = directory match {
-      case p: PathToParent => p.targetDir
-      case _ => directory
-    }
+    val newDir = resolveTargetDir(directory)
     curDir = newDir
     curDirField.text = newDir.absolutePath
     initTable(newDir)
@@ -236,6 +233,13 @@ class DirTableController(curDirField: TextField,
     updateStatusBar(newDir)
 
     eventBus.publish(CurrentDirChange(panelId, Option(prevDir), newDir))
+  }
+
+  private def resolveTargetDir(directory: VDirectory) = {
+    directory match {
+      case p: PathToParent => p.targetDir
+      case _ => directory
+    }
   }
 
   private def updateStatusBar(directory: VDirectory): Unit =
@@ -308,10 +312,8 @@ class DirTableController(curDirField: TextField,
   }
 
   private def changeDir(directory: VDirectory): Unit = {
-    val prevDir = curDir
-    curDir = directory
     val selection = directory match {
-      case p: PathToParent => Some(prevDir)
+      case _: PathToParent => Some(curDir)
       case _ => None
     }
     setCurrentDirectory(directory, selection)

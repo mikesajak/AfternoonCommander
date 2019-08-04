@@ -80,6 +80,8 @@ class OperationMgr(statusMgr: StatusMgr,
     val result = dialog.showAndWait()
     println(s"Find action result: $result")
 
+    contentCtrl.stopSearch()
+
     result match {
       case Some(FindFilesPanelController.GoToPattButtonType) =>
         val selectedResult = contentCtrl.getSelectedResult
@@ -89,7 +91,6 @@ class OperationMgr(statusMgr: StatusMgr,
                           else result.directory
           statusMgr.selectedTabManager.selectedTab.controller.setCurrentDirectory(directory, Some(directory))
         }
-
 
       case Some(FindFilesPanelController.ShowAsListButtonType) =>
         val searchResults = contentCtrl.getAllResults
