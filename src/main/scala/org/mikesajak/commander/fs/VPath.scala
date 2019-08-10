@@ -75,7 +75,7 @@ trait VFile extends VPath {
 }
 
 trait VDirectory extends VPath {
-  def children: Seq[VPath]
+  def children: Seq[VPath] = childDirs ++ childFiles
   def childDirs: Seq[VDirectory]
   def childFiles: Seq[VFile]
 

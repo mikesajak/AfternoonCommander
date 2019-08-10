@@ -76,7 +76,6 @@ class ZipDir(parentDir: VDirectory, zipFile: jZipFile, zipEntry: jZipEntry) exte
 
   override def size: Long = 0
 
-  override def children: Seq[VPath] = ??? // TODO
   override def childDirs: Seq[VDirectory] = ??? // TODO
   override def childFiles: Seq[VFile] = ??? // TODO
 

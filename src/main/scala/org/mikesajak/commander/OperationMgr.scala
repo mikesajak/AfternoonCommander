@@ -2,6 +2,7 @@ package org.mikesajak.commander
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.FilesystemsManager
+import org.mikesajak.commander.fs.custom.CustomListAsDirectory
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui._
@@ -73,7 +74,8 @@ class OperationMgr(statusMgr: StatusMgr,
                                               FindFilesPanelController.ShowAsListButtonType,
                                               ButtonType.Close)
 
-    contentCtrl.init(statusMgr.selectedTabManager.selectedTab.dir, dialog)
+    val selectedPanelDir = statusMgr.selectedTabManager.selectedTab.dir
+    contentCtrl.init(selectedPanelDir, dialog)
 
     dialog.setWindowSize(600, 400)
 
@@ -95,6 +97,10 @@ class OperationMgr(statusMgr: StatusMgr,
       case Some(FindFilesPanelController.ShowAsListButtonType) =>
         val searchResults = contentCtrl.getAllResults
         logger.debug(s"Show as list: all results=$searchResults")
+        val resultsListDir = new CustomListAsDirectory("Search results", selectedPanelDir, searchResults)
+
+        statusMgr.selectedTabManager.selectedTab.controller.setCurrentDirectory(resultsListDir)
+
       case Some(ButtonType.Close) => // do nothing
     }
 

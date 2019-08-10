@@ -66,6 +66,7 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
 trait DirTableControllerIntf {
   def init(path: VDirectory)
   def dispose()
+  def currentDirectory: VDirectory
   def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None)
   def focusedPath: VPath
   def selectedPaths: Seq[VPath]
@@ -218,6 +219,8 @@ class DirTableController(curDirField: TextField,
       row.path.isInstanceOf[PathToParent] ||
         !row.path.attributes.contains(Attrib.Hidden) || showHidden
   }
+
+  override def currentDirectory: VDirectory = curDir
 
   override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit = {
     if (curDir != null)

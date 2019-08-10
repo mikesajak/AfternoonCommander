@@ -47,8 +47,7 @@ class FilesystemsManager(osResolver: OSResolver) {
       }
 
     val fsView = FileSystemView.getFileSystemView
-    val fss2 =
-    filesystems
+    val fss2 = filesystems
         .filter { case (rootDir, attribs) => attribs.get("type").forall(isInternalFs) }
         .filter { case (rootDir, attribs) => new File(rootDir).exists }
         .map { case (rootDir, attribs) =>
