@@ -48,8 +48,6 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
     path match {
       case LocalFS.PathPattern(p) => resolve(p)
       case p => resolve(p) // try also to resolve raw path
-
-      case _ => None
     }
 
   private def resolve(pathname: String) = {

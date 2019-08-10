@@ -102,6 +102,8 @@ class OperationMgr(statusMgr: StatusMgr,
         statusMgr.selectedTabManager.selectedTab.controller.setCurrentDirectory(resultsListDir)
 
       case Some(ButtonType.Close) => // do nothing
+
+      case _ => // should not even get here
     }
 
   }
