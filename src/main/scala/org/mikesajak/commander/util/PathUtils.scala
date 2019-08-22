@@ -1,6 +1,5 @@
 package org.mikesajak.commander.util
 
-import com.google.common.io.Files
 import org.mikesajak.commander.fs.VPath
 
 import scala.annotation.tailrec
@@ -26,18 +25,11 @@ object PathUtils {
   }
 
   @tailrec
-  def collectParents(p: VPath, result: List[String] = Nil): List[String] = {
-    val segment = p.parent.map(par => p.absolutePath.substring(par.absolutePath.length+1))
-                  .getOrElse(p.absolutePath)
-
+  def depthToRoot(p: VPath, depth: Int = 0): Int =
     p.parent match {
-      case Some(par) =>
-        val segment = p.absolutePath.substring(par.absolutePath.length+1)
-        collectParents(par, segment :: result)
-      case None =>
-        p.absolutePath :: result
+      case Some(par) => depthToRoot(par, depth + 1)
+      case _ => depth
     }
-  }
 
   @tailrec
   def findParent(path: VPath, parent: VPath): Option[VPath] = {
@@ -47,4 +39,6 @@ object PathUtils {
       case None => None
     }
   }
+
+  def pathSegments(name: String): Array[String] = name.split("[/\\\\]")
 }

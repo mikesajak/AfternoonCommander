@@ -54,3 +54,9 @@ libraryDependencies += "net.samuelcampos" % "usbdrivedetector" % "2.0.2"
 libraryDependencies += "com.beachape" %% "enumeratum" % "1.5.13"
 
 libraryDependencies += "com.typesafe.akka" % "akka-actor-typed_2.12" % "2.5.9"
+
+// for apache commons archive formats
+libraryDependencies += "org.apache.commons" % "commons-compress" % "1.18"
+
+// for xz,7z
+libraryDependencies += "org.tukaani" % "xz" % "1.8"

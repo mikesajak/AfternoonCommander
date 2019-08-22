@@ -22,8 +22,9 @@ object Main extends JFXApp {
 
   private val injector = ApplicationContext.globalInjector.createChildInjector()
   private val config = injector.getInstance(classOf[Configuration])
-  private val appController= injector.getInstance(classOf[ApplicationController])
-  private val resourceMgr: ResourceManager = injector.getInstance(Key.get(classOf[ResourceManager]))
+  private val appController = injector.getInstance(classOf[ApplicationController])
+  private val resourceMgr = injector.getInstance(Key.get(classOf[ResourceManager]))
+  private val pluginManager = injector.getInstance(Key.get(classOf[PluginManager]))
 
   val (root, _) = UILoader.loadScene(mainPanelDef)
 
@@ -46,6 +47,7 @@ object Main extends JFXApp {
   }
 
   appController.init(stage, this)
+  pluginManager.init()
 
   stage.width = config.intProperty("window", "width").getOrElse(1000): Int
   stage.height = config.intProperty("window", "height").getOrElse(600): Int

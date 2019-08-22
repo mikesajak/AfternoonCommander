@@ -4,7 +4,6 @@ import java.io.{InputStream, OutputStream}
 import java.time.Instant
 
 import enumeratum._
-import org.mikesajak.commander.util.PathUtils
 
 import scala.collection.immutable
 import scala.language.implicitConversions
@@ -53,7 +52,6 @@ trait VPath {
   def parent: Option[VDirectory]
   def directory: VDirectory
   def absolutePath: String
-  def segments: Seq[String] = PathUtils.collectParents(this)
   def modificationDate: Instant
   def attributes: Attribs
   def isDirectory: Boolean
@@ -69,6 +67,8 @@ trait VFile extends VPath {
       Some(name.slice(extPos+1, name.length))
     } else None
   }
+
+  override val isDirectory: Boolean = false
 
   def inStream: InputStream
   def outStream: OutputStream

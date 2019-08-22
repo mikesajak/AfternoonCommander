@@ -1,11 +1,11 @@
 package org.mikesajak.commander.ui.controller
 
-import java.io.IOException
 import java.util.function.Predicate
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
+import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import org.mikesajak.commander.util.TextUtil._
@@ -91,6 +91,7 @@ class DirTableController(curDirField: TextField,
 
                          panelId: PanelId,
                          fileTypeMgr: FileTypeManager,
+                         fileHandlerFactory: FileHandlerFactory,
                          resourceMgr: ResourceManager,
                          fileIconResolver: FileIconResolver,
                          config: Configuration,
@@ -299,18 +300,10 @@ class DirTableController(curDirField: TextField,
   }
 
   private def handleAction(path: VPath): Unit = {
-    if (path.isDirectory)
-      changeDir(path.asInstanceOf[VDirectory])
-    else {
-      val fileType = fileTypeMgr.detectFileType(path)
-      val maybeHandler = fileTypeMgr.fileTypeHandler(path)
-      logger.debug(s"file action $path, fileType=$fileType, fileTypeActionHandler=$maybeHandler")
-      for (handler <- maybeHandler) try {
-        handler.handle(path)
-      } catch {
-        case e: IOException => logger.info(s"Error while opening file $path by default OS/Desktop environment application. Most probably there's no association defined for this file.", e)
-      }
-
+    fileHandlerFactory.getFileHandler(path).foreach {
+      case containerHandler: ContainerFileHandler => changeDir(containerHandler.getContainerDir)
+      case actionHandler: ActionFileHandler => actionHandler.handle()
+      case _ => logger.debug(s"File handler couldn't be found for path $path.")
     }
   }
 

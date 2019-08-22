@@ -4,8 +4,10 @@ import com.google.inject._
 import com.google.inject.name.{Named, Names}
 import com.typesafe.scalalogging.Logger
 import net.codingwell.scalaguice.ScalaModule
+import org.mikesajak.commander.archive.ArchiveManager
 import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
+import org.mikesajak.commander.handler.FileHandlerFactory
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
@@ -15,6 +17,8 @@ import org.mikesajak.commander.ui.controller.{DirTabManager, FileIconResolver, P
   * Created by mike on 09.04.17.
   */
 class ApplicationContext extends AbstractModule with ScalaModule {
+  private val logger = Logger[ApplicationContext]
+
   override def configure(): Unit = {
     install(new PanelContext(LeftPanel))
     install(new PanelContext(RightPanel))
@@ -47,7 +51,13 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideArchiveManager() = new ArchiveManager()
+  def provideArchiveManager(): ArchiveManager = new ArchiveManager()
+
+  @Provides
+  @Singleton
+  def provideFileHandlerFactory(appCtrl: ApplicationController, archiveManager: ArchiveManager): FileHandlerFactory = {
+    new FileHandlerFactory(appCtrl, archiveManager)
+  }
 
   @Provides
   @Singleton
@@ -60,11 +70,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def providePluginManager(filesystemsManager: FilesystemsManager,
-                           archiveManager: ArchiveManager): PluginManager = {
-    val pluginMgr = new PluginManager(filesystemsManager, archiveManager)
-    pluginMgr.init()
-    pluginMgr
-  }
+                           archiveManager: ArchiveManager): PluginManager =
+    new PluginManager(filesystemsManager, archiveManager)
 
   @Provides
   @Singleton
@@ -114,8 +121,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideIconResolver(fileTypeManager: FileTypeManager, resourceMgr: ResourceManager) =
-    new FileIconResolver(fileTypeManager, resourceMgr)
+  def provideIconResolver(fileTypeManager: FileTypeManager, archiveManager: ArchiveManager, resourceMgr: ResourceManager) =
+    new FileIconResolver(fileTypeManager, archiveManager, resourceMgr)
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {

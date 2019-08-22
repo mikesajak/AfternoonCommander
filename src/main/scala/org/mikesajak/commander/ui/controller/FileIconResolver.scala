@@ -1,7 +1,8 @@
 package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.FileTypeManager
-import org.mikesajak.commander.fs.{Attrib, VPath}
+import org.mikesajak.commander.archive.ArchiveManager
+import org.mikesajak.commander.fs.{Attrib, VFile, VPath}
 import org.mikesajak.commander.ui.ResourceManager
 import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.ImageView
@@ -10,16 +11,29 @@ import scalafx.scene.shape.Circle
 import scalafx.scene.{CacheHint, Group, Node}
 
 class FileIconResolver(fileTypeMgr: FileTypeManager,
+                       archiveManager: ArchiveManager,
                        resourceMgr: ResourceManager) {
 
-  def findIconFor(path: VPath): Option[Node] = {
-    var icon = findIcon(path)
-    if (fileTypeMgr.isExecutable(path))
-      icon = icon.map(i => new Group(i, execOverlayIcon))
-    if (path.attributes.contains(Attrib.Symlink))
-      icon = icon.map(i => new Group(i, symlinkOverlayIcon))
-    icon
-  }
+  def findIconFor(path: VPath): Option[Node] =
+    findIcon(path)
+        .map(i => addBottomLeftBadge(i, path))
+        .map(i => addBottomRightBadge(i, path))
+
+  private def addBottomLeftBadge(icon: Node, path: VPath) =
+    path match {
+      case f: VFile if archiveManager.findArchiveHandler(f).isDefined =>
+        new Group(icon, archiveOverlayIconBottomRight)
+      case f: VFile if fileTypeMgr.isExecutable(f) =>
+        new Group(icon, execOverlayIconBottomRight)
+      case _ => icon
+    }
+
+  private def addBottomRightBadge(icon: Node, path: VPath) =
+    path match {
+      case p if p.attributes.contains(Attrib.Symlink) =>
+        new Group(icon, symlinkOverlayIconBottomLeft)
+      case _ => icon
+    }
 
   private def findIcon(path: VPath): Option[Node] = {
     val fileType = fileTypeMgr.detectFileType(path)
@@ -32,11 +46,20 @@ class FileIconResolver(fileTypeMgr: FileTypeManager,
     }
   }
 
-  private def execOverlayIcon: Node =
-    createOverlayBadge(10, 11, 10, Color.DarkGreen, "asterisk-light.png")
+  private val execOverlayIconBottomRight: Node =
+    createOverlayBadgeBottomRight(Color.DarkGreen, "asterisk-light.png")
 
-  private def symlinkOverlayIcon =
-    createOverlayBadge(0, 11, 10, Color.DarkBlue, "icons8-right-2-48.png")
+  private val archiveOverlayIconBottomRight: Node =
+    createOverlayBadgeBottomRight(Color.DarkGreen, "icons8-package-48.png")
+
+  private val symlinkOverlayIconBottomLeft =
+    createOverlayBadgeBottomLeft(Color.DarkBlue, "icons8-right-2-48.png")
+
+  private def createOverlayBadgeBottomRight(color: Color, iconName: String) =
+    createOverlayBadge(0, 11, 10, color, iconName)
+
+  private def createOverlayBadgeBottomLeft(color: Color, iconName: String) =
+    createOverlayBadge(10, 11, 10, color, iconName)
 
   private def createOverlayBadge(posX: Double, posY: Double, size: Double, color: Color,
                                  iconName: String) = {

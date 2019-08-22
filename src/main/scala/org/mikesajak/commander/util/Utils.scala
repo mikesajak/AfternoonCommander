@@ -88,14 +88,6 @@ object Utils {
     }
   }
 
-  implicit class MyRichBoolean(val b: Boolean) extends AnyVal {
-    final def option[A](a: => A): Option[A] = if (b) Some(a) else None
-  }
-
-  implicit class AnyRefExtension[A <: AnyRef](underlying: A) {
-    def let[B](func: A => B): B = { func(underlying) }
-  }
-
   trait Scope {
     def up(): Scope
     def down(): Scope

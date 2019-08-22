@@ -290,7 +290,8 @@ class DirPanelController(tabPane: TabPane,
   private def updateDriveSelection(dir: VDirectory): Unit = {
     val matchingFss = fsMgr.discoverFilesystems().filter(fs => PathUtils.findParent(dir, fs.rootDirectory).isDefined)
     val fs =
-      (matchingFss foldLeft dir.fileSystem)((a,b) => if (a.rootDirectory.segments.size > b.rootDirectory.segments.size) a else b)
+      (matchingFss foldLeft dir.fileSystem)((a,b) =>
+        if (PathUtils.depthToRoot(a.rootDirectory) > PathUtils.depthToRoot(b.rootDirectory)) a else b)
     driveSelectionButton.text = s"${fs.rootDirectory.absolutePath}"
     driveSelectionButton.graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))
   }

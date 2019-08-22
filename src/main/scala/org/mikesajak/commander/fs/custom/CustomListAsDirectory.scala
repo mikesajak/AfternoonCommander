@@ -24,6 +24,6 @@ class CustomListAsDirectory(override val name: String, parentDir: VDirectory,
     else childDirs.collectFirst { case d => d.isParent(path) }
                   .getOrElse(false)
 
-  def mkChildDir(child: String): VDirectory = { this }
-  def mkChildFile(child: String): VFile = { null }
+  override def mkChildDir(child: String): VDirectory = throw new IllegalStateException("Creating child directory not supported")
+  override def mkChildFile(child: String): VFile = throw new IllegalStateException("Creating child file not supported")
 }

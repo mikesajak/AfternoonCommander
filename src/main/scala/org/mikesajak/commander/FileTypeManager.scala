@@ -1,14 +1,8 @@
 package org.mikesajak.commander
 
-import java.awt.Desktop
-import java.util.concurrent.Executors
-
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.OSType.Windows
+import org.mikesajak.commander.archive.ArchiveManager
 import org.mikesajak.commander.fs._
-import org.mikesajak.commander.fs.local.LocalFile
-
-import scala.concurrent.{ExecutionContext, Future}
 
 sealed abstract class FileType(val icon: Option[String]) {
   def this(icon: String) = this(Some(icon))
@@ -44,60 +38,41 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
 
   private val defaultFileTypeDetector = new DefaultFileTypeDetector
   private var fileTypeDetectors = List[FileTypeDetector]()
-  private var handlersMap = Map[FileType, FileHandler]()
-  private val defaultFileHandler = new DefaultFileHandler(appController)
+  registerFileTypeDetector(archiveManager)
+  registerFileTypeDetector(SimpleByExtensionFileDetector(ArchiveFile, "zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"))
 
-//  registerFileTypeDetector(archiveManager)
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"), ArchiveFile))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(GraphicFile, "jpg", "jpeg", "png", "gif"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(VideoFile, "avi", "mkv", "mov", "mpg", "mpv", "mp4"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(MusicFile, "mp3", "ogg", "wav"))
 
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("jpg", "jpeg", "png", "gif"), GraphicFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("avi", "mkv", "mov", "mpg", "mpv", "mp4"), VideoFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("mp3", "ogg", "wav"), MusicFile))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(XmlFile, "xml"))
 
-  registerFileTypeDetector(new SimpleByExtensionFileDetector("xml", XmlFile))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(WordFile, "doc", "docx"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(DocumentFile, "odt"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(PdfFile, "pdf"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(TextFile, "txt"))
 
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("doc", "docx"), WordFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("odt"), DocumentFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector("pdf", PdfFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("txt"), TextFile))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(EbookFile, "epub", "mobi"))
 
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("epub", "mobi"), EbookFile))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(ExcelFile, "xls", "xlsx"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(SpreadsheetFile, "ods"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(DelimitedFile, "csv", "tsv"))
 
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("xls", "xlsx"), ExcelFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("ods"), SpreadsheetFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("csv", "tsv"), DelimitedFile))
-
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("ppt", "pptx"), PowerpointFile))
-  registerFileTypeDetector(new SimpleByExtensionFileDetector(List("odp", "pptx"), PresentationFile))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(PowerpointFile, "ppt", "pptx"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(PresentationFile, "odp", "pptx"))
 
   def registerFileTypeDetector(detector: FileTypeDetector): Unit =
     fileTypeDetectors ::= detector
 
   def detectFileType(path: VPath): FileType = {
+    val maybeFileType = fileTypeDetectors.view
+                                         .map(_.detect(path))
+                                         .collectFirst { case Some(x) => x }
 
-    def detect(detectors: Seq[FileTypeDetector]): Option[FileType] = {
-      var remaining = detectors
-      while (remaining.nonEmpty) {
-        val ft = remaining.head.detect(path)
-        if (ft.isDefined) return ft
-        remaining = remaining.tail
-      }
-      None
-    }
-
-    detect(fileTypeDetectors)
+    maybeFileType
       .orElse(defaultFileTypeDetector.detect(path))
       .getOrElse(OtherFile)
   }
-
-  def registerFileTypeHandler(fileType: FileType, fileHandler: FileHandler): Unit =
-    handlersMap += fileType -> fileHandler
-
-  def fileTypeHandler(path: VPath): Option[FileHandler] =
-    detectFileType(path) match {
-      case OtherFile => Some(defaultFileHandler)//None
-      case t @ _ => handlersMap.get(t).orElse(Some(defaultFileHandler))
-    }
 
   def isExecutable(path: VPath): Boolean = {
     val execAttrib = path.attributes.contains(Attrib.Executable) && !path.attributes.contains(Attrib.Directory)
@@ -130,44 +105,11 @@ class DefaultFileTypeDetector extends FileTypeDetector {
   }
 }
 
-class SimpleByExtensionFileDetector(extensions: Seq[String], fileType: FileType) extends FileTypeDetector {
-  def this(extension: String, fileType: FileType) = this(List(extension), fileType)
-
+case class SimpleByExtensionFileDetector(fileType: FileType, extensions: String*) extends FileTypeDetector {
   override def detect(path: VPath): Option[FileType] = path match {
     case p if p.isFile =>
       val f = p.asInstanceOf[VFile]
       f.extension.flatMap(ext => if (extensions.contains(ext.toLowerCase)) Some(fileType) else None)
     case _ => None
-  }
-}
-
-trait FileHandler {
-  def handle(path: VPath)
-}
-
-class DefaultFileHandler(appCtrl: ApplicationController) extends FileHandler {
-  val logger = Logger[DefaultFileHandler]
-
-  private implicit val ec = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
-
-  override def handle(path: VPath): Unit = {
-    if (Desktop.isDesktopSupported) path match {
-      case file: LocalFile => Future {
-          try {
-            logger.debug(s"Executing default (defined in desktop) action for file $file")
-            Desktop.getDesktop.open(file.file)
-            logger.debug(s"Finished Executing default (defined in desktop) action for file $file")
-          } catch {
-            case e: Exception => logger.warn(s"An error occurred while executing (desktop) action for file $file")
-          }
-        }
-
-      case file: VFile => logger.info(s"The file $file is not a local file, skipping desktop action.")
-
-      case dir: VDirectory => logger.info(s"The file $dir is a directory. Skipping desktop action.")
-
-      case file@_ => logger.info(s"Unknown file $file. Skipping desktop action.")
-    }
-    else logger.warn(s"Cannot execute default action for $path. Desktop action is not supported by OS.")
   }
 }
