@@ -2,9 +2,8 @@ package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.OperationMgr
 import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.ui.Keys
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
-import org.mikesajak.commander.util.Keys
-import org.mikesajak.commander.util.Keys.Modifier.{Alt, Ctrl}
 import scalafx.Includes._
 import scalafx.scene.control.{SplitPane, TabPane}
 import scalafx.scene.input.{KeyCode, KeyEvent}

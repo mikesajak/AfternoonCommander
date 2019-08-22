@@ -1,4 +1,4 @@
-package org.mikesajak.commander.util
+package org.mikesajak.commander.ui
 
 import enumeratum.{Enum, EnumEntry}
 import scalafx.scene.input.KeyEvent
