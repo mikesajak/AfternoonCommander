@@ -6,7 +6,7 @@ import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.ui.controller.ops.StatsUtils.ContentType
 import org.mikesajak.commander.ui.controller.ops.StatsUtils.ContentType.ContentType
-import org.mikesajak.commander.util.DataUnit
+import org.mikesajak.commander.units.DataUnit
 import scalafx.application.Platform
 import scalafx.scene.control.Label
 import scalafx.scene.image.ImageView

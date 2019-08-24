@@ -1,7 +1,7 @@
 package org.mikesajak.commander.task
 
 import org.mikesajak.commander.fs.{VDirectory, VFile}
-import org.mikesajak.commander.util.DataUnit
+import org.mikesajak.commander.units.DataUnit
 
 case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
   def +(other: DirStats): DirStats =

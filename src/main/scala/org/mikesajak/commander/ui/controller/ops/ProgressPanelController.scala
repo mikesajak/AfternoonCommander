@@ -5,7 +5,7 @@ import java.util.{Timer, TimerTask}
 import com.typesafe.scalalogging.Logger
 import javafx.scene.control
 import org.mikesajak.commander.task.{BackgroundService, IOProgress, IOTaskSummary}
-import org.mikesajak.commander.util.{DataUnit, TimeInterval}
+import org.mikesajak.commander.units.{DataUnit, TimeInterval}
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control._

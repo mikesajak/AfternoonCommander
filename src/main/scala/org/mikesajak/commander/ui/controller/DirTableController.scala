@@ -8,8 +8,9 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
+import org.mikesajak.commander.units.DataUnit
+import org.mikesajak.commander.util.PathUtils
 import org.mikesajak.commander.util.TextUtil._
-import org.mikesajak.commander.util.{DataUnit, PathUtils}
 import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager, HistoryMgr}
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}

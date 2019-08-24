@@ -3,6 +3,8 @@ package org.mikesajak.commander.util
 import java.io.BufferedOutputStream
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
+import org.mikesajak.commander.units.DataUnit
+
 sealed abstract class SizeUnit(val multiplier: Long)
 object SizeUnit {
   case object B extends SizeUnit(1)

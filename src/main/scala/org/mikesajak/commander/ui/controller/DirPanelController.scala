@@ -16,7 +16,9 @@ import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
 import org.mikesajak.commander.ui.{FSUIHelper, IconSize, ResourceManager, UILoader}
-import org.mikesajak.commander.util.{DataUnit, PathUtils}
+import org.mikesajak.commander.units.DataUnit
+import org.mikesajak.commander.util.Implicits._
+import org.mikesajak.commander.util.PathUtils
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.Node
@@ -82,9 +84,9 @@ class DirPanelController(tabPane: TabPane,
     val tabPathNames = config.stringSeqProperty("tabs", s"$panelId.tabs").getOrElse(List(fsMgr.homePath))
 
     val tabPaths = tabPathNames
-      .flatMap(path => fsMgr.resolvePath(path))
-      // todo log problem with path
-      .map(vpath => vpath.directory)
+      .flatMap(path => fsMgr.resolvePath(path)
+                            .runIfEmpty(logger.info(s"Cannot resolve path tab path $path")))
+      .map(_.directory)
 
     tabPaths.foreach { t =>
       val tab = createTab(t)

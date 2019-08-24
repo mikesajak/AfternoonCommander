@@ -1,4 +1,4 @@
-package org.mikesajak.commander.util
+package org.mikesajak.commander.units
 
 import enumeratum._
 
