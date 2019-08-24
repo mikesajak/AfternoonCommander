@@ -14,12 +14,13 @@ class FileIconResolver(fileTypeMgr: FileTypeManager,
                        archiveManager: ArchiveManager,
                        resourceMgr: ResourceManager) {
 
-  def findIconFor(path: VPath): Option[Node] =
+  def findIconFor(path: VPath): Option[Node] = {
     findIcon(path)
         .map(i => addBottomLeftBadge(i, path))
         .map(i => addBottomRightBadge(i, path))
+  }
 
-  private def addBottomLeftBadge(icon: Node, path: VPath) =
+  private def addBottomLeftBadge(icon: Node, path: VPath) = {
     path match {
       case f: VFile if archiveManager.findArchiveHandler(f).isDefined =>
         new Group(icon, archiveOverlayIconBottomRight)
@@ -27,6 +28,7 @@ class FileIconResolver(fileTypeMgr: FileTypeManager,
         new Group(icon, execOverlayIconBottomRight)
       case _ => icon
     }
+  }
 
   private def addBottomRightBadge(icon: Node, path: VPath) =
     path match {
@@ -46,13 +48,13 @@ class FileIconResolver(fileTypeMgr: FileTypeManager,
     }
   }
 
-  private val execOverlayIconBottomRight: Node =
+  private def execOverlayIconBottomRight: Node =
     createOverlayBadgeBottomRight(Color.DarkGreen, "asterisk-light.png")
 
-  private val archiveOverlayIconBottomRight: Node =
+  private def archiveOverlayIconBottomRight: Node =
     createOverlayBadgeBottomRight(Color.DarkGreen, "icons8-package-48.png")
 
-  private val symlinkOverlayIconBottomLeft =
+  private def symlinkOverlayIconBottomLeft =
     createOverlayBadgeBottomLeft(Color.DarkBlue, "icons8-right-2-48.png")
 
   private def createOverlayBadgeBottomRight(color: Color, iconName: String) =
