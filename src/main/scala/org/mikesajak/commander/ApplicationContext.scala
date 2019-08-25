@@ -87,9 +87,12 @@ class ApplicationContext extends AbstractModule with ScalaModule {
                               copyOperationCtrl: CopyOperationCtrl,
                               mkDirOperationCtrl: MkDirOperationCtrl,
                               deleteOperationCtrl: DeleteOperationCtrl,
-                              countDirStatsOperationCtrl: CountDirStatsOperationCtrl): OperationMgr = {
+                              countDirStatsOperationCtrl: CountDirStatsOperationCtrl,
+                              settingsCtrl: SettingsCtrl,
+                              findFilesCtrl: FindFilesCtrl): OperationMgr = {
     new OperationMgr(statusMgr, resourceMgr, fsMgr, appController,
-      copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl, countDirStatsOperationCtrl)
+                     copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl,
+                     countDirStatsOperationCtrl, settingsCtrl, findFilesCtrl)
   }
 
   @Provides
@@ -164,6 +167,16 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   def provideCountDirStatsOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                                         resourceMgr: ResourceManager) =
     new CountDirStatsOperationCtrl(statusMgr, appController, resourceMgr)
+
+  @Provides
+  @Singleton
+  def provideSettingsCtrl(appController: ApplicationController) =
+    new SettingsCtrl(appController)
+
+  @Provides
+  @Singleton
+  def provideFindFilesCtrl(appController: ApplicationController, statusMgr: StatusMgr) =
+    new FindFilesCtrl(appController, statusMgr)
 }
 
 object ApplicationContext {
