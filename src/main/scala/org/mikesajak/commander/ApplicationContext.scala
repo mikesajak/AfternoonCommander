@@ -11,14 +11,12 @@ import org.mikesajak.commander.handler.FileHandlerFactory
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
-import org.mikesajak.commander.ui.controller.{DirTabManager, FileIconResolver, PanelId}
+import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
 
 /**
   * Created by mike on 09.04.17.
   */
 class ApplicationContext extends AbstractModule with ScalaModule {
-  private val logger = Logger[ApplicationContext]
-
   override def configure(): Unit = {
     install(new PanelContext(LeftPanel))
     install(new PanelContext(RightPanel))
@@ -122,7 +120,7 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideIconResolver(fileTypeManager: FileTypeManager, archiveManager: ArchiveManager, resourceMgr: ResourceManager) =
-    new FileIconResolver(fileTypeManager, archiveManager, resourceMgr)
+    new IconResolver(fileTypeManager, archiveManager, resourceMgr)
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {

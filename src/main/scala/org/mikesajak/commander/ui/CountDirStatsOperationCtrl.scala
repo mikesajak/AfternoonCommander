@@ -4,16 +4,15 @@ import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.{DirStats, DirStatsTask}
+import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.controller.ops.CountStatsPanelController
 import scalafx.Includes._
 
 import scala.concurrent.Future
 
 trait OperationController[A] {
-  //    def status: A
   def finalStatus: Future[Option[A]]
-  def requestAbort(): Unit // Future
+  def requestAbort(): Unit
 }
 
 class CountDirStatsOperationCtrl(statusMgr: StatusMgr,
@@ -37,9 +36,7 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr,
     val dialog = UIUtils.mkModalDialog[DirStats](appController.mainStage, contentPane)
     dialog.title = resourceMgr.getMessage("app.name")
 
-    val dirStatsTask = new DirStatsTask(selectedDirs)
-
-    contentCtrl.init(selectedDirs, dialog, autoClose)//, showClose = true, showCancel = true, showSkip = false)
+    contentCtrl.init(selectedDirs, dialog, autoClose)
 
     dialog.showAndWait().asInstanceOf[Option[DirStats]]
   }

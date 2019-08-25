@@ -13,14 +13,14 @@ import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.status.StatusChangeEvents.PanelSelected
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.ui.UIUtils._
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
-import org.mikesajak.commander.ui.{FSUIHelper, IconSize, ResourceManager, UILoader}
+import org.mikesajak.commander.ui.{IconResolver, IconSize, ResourceManager, UILoader}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.Implicits._
 import org.mikesajak.commander.util.PathUtils
 import scalafx.Includes._
 import scalafx.application.Platform
+import scalafx.geometry.Side
 import scalafx.scene.Node
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
@@ -61,6 +61,7 @@ class DirPanelController(tabPane: TabPane,
                          statusMgr: StatusMgr,
                          bookmarkMgr: BookmarkMgr,
                          globalHistoryMgr: HistoryMgr,
+                         iconResolver: IconResolver,
                          resourceMgr: ResourceManager,
                          appController: ApplicationController,
                          eventBus: EventBus)
@@ -141,8 +142,6 @@ class DirPanelController(tabPane: TabPane,
   }
 
   def handleDriveSelectionButton(): Unit = {
-    logger.warn(s"Drive selection not yet implemented1!!")
-
     val fsItems =
       fsMgr.discoverFilesystems().map(fs => new MenuItem() {
         text = s"${fs.rootDirectory.absolutePath} " +
@@ -153,13 +152,13 @@ class DirPanelController(tabPane: TabPane,
             .flatten
             .reduce((a,b) => s"$a, $b") +
           s" [${DataUnit.mkDataSize(fs.freeSpace)} / ${DataUnit.mkDataSize(fs.totalSpace)}]"
-        graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))//, 24)))
+        graphic = iconResolver.findIconFor(fs, IconSize.Small)//, 24)))
 
         onAction = _ => setCurrentTabDir(fs.rootDirectory)
       })
 
     val ctxMenu = new ContextMenu(fsItems: _*)
-    showButtonCtxMenu(driveSelectionButton, ctxMenu, appController.mainStage)
+    ctxMenu.show(driveSelectionButton, Side.Bottom, 0, 0)
   }
 
   def handleFavDirsButton(): Unit = {
@@ -219,7 +218,7 @@ class DirPanelController(tabPane: TabPane,
       }
     }
 
-    showButtonCtxMenu(favDirsButton, ctxMenu, appController.mainStage)
+    ctxMenu.show(favDirsButton, Side.Bottom, 0, 0)
   }
 
   def handlePrevDirButton(): Unit = {
@@ -295,7 +294,7 @@ class DirPanelController(tabPane: TabPane,
       (matchingFss foldLeft dir.fileSystem)((a,b) =>
         if (PathUtils.depthToRoot(a.rootDirectory) > PathUtils.depthToRoot(b.rootDirectory)) a else b)
     driveSelectionButton.text = s"${fs.rootDirectory.absolutePath}"
-    driveSelectionButton.graphic = new ImageView(resourceMgr.getIcon(FSUIHelper.findIconFor(fs), IconSize.Small))
+    driveSelectionButton.graphic = iconResolver.findIconFor(fs, IconSize.Small)
   }
 
   val scheduler = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setDaemon(true).build())

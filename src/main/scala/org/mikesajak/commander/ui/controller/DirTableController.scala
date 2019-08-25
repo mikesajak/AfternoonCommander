@@ -7,7 +7,7 @@ import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
-import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
+import org.mikesajak.commander.ui.{IconResolver, ResourceManager, UIUtils}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
 import org.mikesajak.commander.util.TextUtil._
@@ -16,7 +16,7 @@ import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
-import scalafx.geometry.Insets
+import scalafx.geometry.{Insets, Side}
 import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
 import scalafx.stage.Popup
@@ -94,7 +94,7 @@ class DirTableController(curDirField: TextField,
                          fileTypeMgr: FileTypeManager,
                          fileHandlerFactory: FileHandlerFactory,
                          resourceMgr: ResourceManager,
-                         fileIconResolver: FileIconResolver,
+                         iconResolver: IconResolver,
                          config: Configuration,
                          eventBus: EventBus,
                          panelController: DirPanelControllerIntf,
@@ -144,18 +144,18 @@ class DirTableController(curDirField: TextField,
     }
 
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
-    idColumn.cellFactory = { tc: TableColumn[FileRow, VPath] =>
+    idColumn.cellFactory = { _: TableColumn[FileRow, VPath] =>
       new TableCell[FileRow, VPath]() {
         item.onChange { (_, _, newValue) =>
           graphic = Option(newValue)
-              .flatMap(cellPath => fileIconResolver.findIconFor(cellPath))
+              .flatMap(cellPath => iconResolver.findIconFor(cellPath))
               .orNull
         }
       }
     }
 
     nameColumn.cellValueFactory = { _.value.name }
-    nameColumn.cellFactory = { tc: TableColumn[FileRow, String] =>
+    nameColumn.cellFactory = { _: TableColumn[FileRow, String] =>
       new TableCell[FileRow, String] {
         item.onChange { (_, _, newValue) =>
           text = newValue
@@ -181,7 +181,7 @@ class DirTableController(curDirField: TextField,
     sizeColumn.cellValueFactory = { _.value.size }
     dateColumn.cellValueFactory = { _.value.modifyDate }
     attribsColumn.cellValueFactory = { _.value.attributes }
-    dirTableView.rowFactory = { tableView =>
+    dirTableView.rowFactory = { _: TableView[FileRow] =>
       val row = new TableRow[FileRow]()
 
       row.handleEvent(MouseEvent.MouseClicked) { event: MouseEvent =>
@@ -191,6 +191,7 @@ class DirTableController(curDirField: TextField,
             case MouseButton.Primary if event.clickCount == 2 =>
               handleAction(rowPath)
             case MouseButton.Secondary =>
+              showContextMenu(row, event)
             case MouseButton.Middle =>
             case _ =>
           }
@@ -316,6 +317,31 @@ class DirTableController(curDirField: TextField,
     setCurrentDirectory(directory, selection)
   }
 
+  private def showContextMenu(row: TableRow[FileRow], event: MouseEvent): Unit = {
+    val rowPath = row.item.value.path
+
+    val menuItems = Seq(
+      new MenuItem() {
+        text = "Run OS/desktop action"
+        graphic = null
+        onAction = _ => {
+          logger.debug(s"Running OS/desktop action for $rowPath")
+          handleAction(rowPath)
+        }
+      },
+      new SeparatorMenuItem(),
+      new MenuItem() {
+        text = "Properties"
+        graphic = null
+        onAction = _ => {
+          logger.debug(s"TODO: Show properties for $rowPath")
+        }
+      })
+
+    val cm = new ContextMenu(menuItems: _*)
+    cm.show(row, Side.Bottom, event.x, 0)
+  }
+
   private def showFilterPopup(): Unit = {
     val tf = new TextField() {
       prefWidth = dirTableView.width.value
@@ -324,7 +350,7 @@ class DirTableController(curDirField: TextField,
       content += tf
       autoHide = true
       // TODO: disable configuration changes while popup is opened? is it necessary?
-      onHiding = e => filteredRows.predicate = createShowHiddenFilesPredicate()
+      onHiding = _ => filteredRows.predicate = createShowHiddenFilesPredicate()
     }
     var pending = false
     tf.handleEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>

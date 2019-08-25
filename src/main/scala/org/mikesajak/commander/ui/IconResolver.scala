@@ -1,23 +1,41 @@
-package org.mikesajak.commander.ui.controller
+package org.mikesajak.commander.ui
 
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.archive.ArchiveManager
-import org.mikesajak.commander.fs.{Attrib, VFile, VPath}
-import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.fs.{Attrib, FS, VFile, VPath}
 import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.ImageView
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.Circle
 import scalafx.scene.{CacheHint, Group, Node}
 
-class FileIconResolver(fileTypeMgr: FileTypeManager,
-                       archiveManager: ArchiveManager,
-                       resourceMgr: ResourceManager) {
+class IconResolver(fileTypeMgr: FileTypeManager,
+                   archiveManager: ArchiveManager,
+                   resourceMgr: ResourceManager) {
 
   def findIconFor(path: VPath): Option[Node] = {
     findIcon(path)
         .map(i => addBottomLeftBadge(i, path))
         .map(i => addBottomRightBadge(i, path))
+  }
+
+  def findIconFor(fs: FS, size: IconSize): Node =
+    new ImageView(resourceMgr.getIcon(findIconNameFor(fs), size))
+
+  private def findIconNameFor(fs: FS/*, size: Int*/): String = {
+    val basename = fs.attributes.get("usb").map(_ => "usb")
+                     .orElse(fs.attributes.get("removable").map(_ => "usb"))
+                     .getOrElse {
+                       fs.attributes.get("type").orNull match {
+                         case "vfat" | "fat" | "fat16" | "fat32" | "fat64" | "exfat" => "usb"
+                         case "iso9660" => "disk"
+                         case "ext2" | "ext3" | "ext4" | "btrfs" | "reiserfs" | "zfs" | "xfs" | "jfs"
+                              | "ntfs" => "harddisk"
+                         case _ => "harddisk"
+                       }
+                     }
+    //    s"$basename-$size.png"
+    s"$basename.png"
   }
 
   private def addBottomLeftBadge(icon: Node, path: VPath) = {
