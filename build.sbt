@@ -32,15 +32,19 @@ libraryDependencies ++= { // scalafx (and fxml)
 }
 
 // guice dependency injection
-libraryDependencies += "com.google.inject" % "guice" % "4.2.2"
-libraryDependencies += "net.codingwell" %% "scala-guice" % "4.2.6"
+libraryDependencies ++= Seq(
+  "com.google.inject" % "guice" % "4.2.2",
+  "net.codingwell" %% "scala-guice" % "4.2.6"
+)
 
 // https://mvnrepository.com/artifact/com.google.guava/guava
 libraryDependencies += "com.google.guava" % "guava" % "26.0-jre"
 
 // logging
-libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
+libraryDependencies ++= Seq(
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "ch.qos.logback" % "logback-classic" % "1.2.3"
+)
 
 // config
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"
@@ -54,6 +58,14 @@ libraryDependencies += "net.samuelcampos" % "usbdrivedetector" % "2.0.2"
 libraryDependencies += "com.beachape" %% "enumeratum" % "1.5.13"
 
 libraryDependencies += "com.typesafe.akka" % "akka-actor-typed_2.12" % "2.5.9"
+
+// Apache Tika - mime type detection lib
+libraryDependencies ++= Seq(
+  "org.apache.tika" % "tika-core" % "1.18",
+  "org.apache.tika" % "tika-parsers" % "1.18",
+  "org.xerial" % "sqlite-jdbc" % "3.8.10.1",
+  "org.apache.pdfbox" % "jbig2-imageio" % "3.0.0"
+)
 
 // for apache commons archive formats
 libraryDependencies += "org.apache.commons" % "commons-compress" % "1.18"

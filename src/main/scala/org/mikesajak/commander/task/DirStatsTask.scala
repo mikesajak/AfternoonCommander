@@ -5,7 +5,7 @@ import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 
 class DirStatsTask(paths: Seq[VPath]) extends jfxc.Task[DirStats] {
-  private val logger = Logger("DirStatsTask")
+  private val logger = Logger[DirStatsTask]
 
   updateTitle(s"DirStatsTask($paths)")
 

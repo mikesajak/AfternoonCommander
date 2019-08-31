@@ -1,8 +1,14 @@
 package org.mikesajak.commander
 
+import org.apache.tika.Tika
+import org.apache.tika.metadata.{Metadata, TikaCoreProperties}
+import org.apache.tika.parser.AutoDetectParser
+import org.apache.tika.sax.BodyContentHandler
 import org.mikesajak.commander.OSType.Windows
 import org.mikesajak.commander.archive.ArchiveManager
 import org.mikesajak.commander.fs._
+import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.util.TextUtil.camelToSnake
 
 sealed abstract class FileType(val icon: Option[String]) {
   def this(icon: String) = this(Some(icon))
@@ -33,12 +39,12 @@ object FileType {
 }
 
 class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
-                      appController: ApplicationController) {
+                      resourceMgr: ResourceManager, appController: ApplicationController) {
   import FileType._
 
   private val defaultFileTypeDetector = new DefaultFileTypeDetector
   private var fileTypeDetectors = List[FileTypeDetector]()
-  registerFileTypeDetector(archiveManager)
+//  registerFileTypeDetector(archiveManager) // parsing file by AM is time consuming - think of async way of doing it
   registerFileTypeDetector(SimpleByExtensionFileDetector(ArchiveFile, "zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"))
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(GraphicFile, "jpg", "jpeg", "png", "gif"))
@@ -74,12 +80,51 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
       .getOrElse(OtherFile)
   }
 
+  def descriptionOf(fileType: FileType): String = {
+    resourceMgr.getMessageOpt(s"file_type_manager.${camelToSnake(fileType.toString)}")
+               .getOrElse(fileType.toString)
+  }
+
+  def mimeTypeOf(path: VPath): String = {
+    val tika = new Tika()
+    path match {
+      case _: VDirectory => "application/x-directory"
+      case f: VFile => tika.detect(f.inStream)
+    }
+  }
+
+  def readMetadataOf(file: VFile): Map[String, Seq[String]] = {
+    val meta = if (file.fileSystem.exists(file)) {
+      val contentHandler = new BodyContentHandler(Int.MaxValue)
+      val metadata = new Metadata()
+      metadata.set(TikaCoreProperties.ORIGINAL_RESOURCE_NAME, file.name)
+      val parser = new AutoDetectParser()
+      parser.parse(file.inStream, contentHandler, metadata)
+
+      metadata.names()
+              .map(name => (name, metadata.getValues(name).toSeq))
+    } else Array[(String, Seq[String])]()
+
+    (meta :+ ("name" -> Seq(file.name))
+          :+ ("type" -> Seq("file")))
+        .toMap
+  }
+
+  def metadataOf(path: VPath): Map[String, Seq[String]] = {
+    path match {
+      case f: VFile => readMetadataOf(f)
+      case d: VDirectory =>
+        List("name" -> Seq(d.name),
+             "type" -> Seq("directory")).toMap
+    }
+  }
+
+  private val execExtensions = Set("exe", "bat", "cmd")
   def isExecutable(path: VPath): Boolean = {
     val execAttrib = path.attributes.contains(Attrib.Executable) && !path.attributes.contains(Attrib.Directory)
 
     if (osResolver.getOSType != Windows) execAttrib
     else {
-      val execExtensions = List("exe", "bat", "cmd")
       val knownExtension = path match {
         case f: VFile if f.extension.isDefined => execExtensions.contains(f.extension.get)
         case _ => false
@@ -96,10 +141,10 @@ trait FileTypeDetector {
 class DefaultFileTypeDetector extends FileTypeDetector {
 
   override def detect(path: VPath): Option[FileType] = path match {
-    case d: PathToParent => Some(FileType.ParentDirectoryType)
+    case _: PathToParent => Some(FileType.ParentDirectoryType)
 //    case s: SymlinkFile => Some(FileType.SymbolicLinkType)
 //    case s: SymlinkDir => Some(FileType.SymbolicLinkType)
-    case d: VDirectory=> Some(FileType.DirectoryType)
+    case _: VDirectory=> Some(FileType.DirectoryType)
 //    case f: VFile if f.attribs contains 'x' => Some(ExecutableFile)
     case _ => None
   }

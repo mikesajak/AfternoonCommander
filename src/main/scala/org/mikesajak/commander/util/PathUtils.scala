@@ -41,4 +41,12 @@ object PathUtils {
   }
 
   def pathSegments(name: String): Array[String] = name.split("[/\\\\]")
+
+  private val Pathname = """(.*?/\\)([^/^\\]+)(:?/\\)?""".r
+  def pathname(path: VPath): (String, String) = {
+    path.absolutePath match {
+      case Pathname(dir, name) => (dir, name)
+      case p@_ => ("", p)
+    }
+  }
 }

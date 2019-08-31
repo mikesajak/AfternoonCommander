@@ -44,8 +44,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideFileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
-                             appController: ApplicationController) =
-    new FileTypeManager(archiveManager, osResolver, appController)
+                             resourceMgr: ResourceManager, appController: ApplicationController) =
+    new FileTypeManager(archiveManager, osResolver, resourceMgr, appController)
 
   @Provides
   @Singleton
@@ -89,10 +89,11 @@ class ApplicationContext extends AbstractModule with ScalaModule {
                               deleteOperationCtrl: DeleteOperationCtrl,
                               countDirStatsOperationCtrl: CountDirStatsOperationCtrl,
                               settingsCtrl: SettingsCtrl,
-                              findFilesCtrl: FindFilesCtrl): OperationMgr = {
+                              findFilesCtrl: FindFilesCtrl,
+                              propertiesCtrl: PropertiesCtrl): OperationMgr = {
     new OperationMgr(statusMgr, resourceMgr, fsMgr, appController,
                      copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl,
-                     countDirStatsOperationCtrl, settingsCtrl, findFilesCtrl)
+                     countDirStatsOperationCtrl, settingsCtrl, findFilesCtrl, propertiesCtrl)
   }
 
   @Provides
@@ -177,6 +178,11 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideFindFilesCtrl(appController: ApplicationController, statusMgr: StatusMgr) =
     new FindFilesCtrl(appController, statusMgr)
+
+  @Provides
+  @Singleton
+  def providePropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController) =
+    new PropertiesCtrl(statusMgr, appController)
 }
 
 object ApplicationContext {

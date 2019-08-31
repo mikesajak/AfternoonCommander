@@ -20,7 +20,7 @@ case class CopyJobDef(source: VPath, target: VPath)
 class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dryRun: Boolean)
     extends jfxc.Task[IOProgress] {
 
-  private implicit val logger = Logger[RecursiveCopyTask]
+  private implicit val logger: Logger = Logger[RecursiveCopyTask]
 
   private var overwriteDecision: Option[Boolean] = None
 

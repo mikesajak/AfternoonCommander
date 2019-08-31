@@ -13,8 +13,8 @@ class IconResolver(fileTypeMgr: FileTypeManager,
                    archiveManager: ArchiveManager,
                    resourceMgr: ResourceManager) {
 
-  def findIconFor(path: VPath): Option[Node] = {
-    findIcon(path)
+  def findIconFor(path: VPath, iconSize: IconSize = IconSize(18)): Option[Node] = {
+    findIcon(path, iconSize)
         .map(i => addBottomLeftBadge(i, path))
         .map(i => addBottomRightBadge(i, path))
   }
@@ -40,8 +40,10 @@ class IconResolver(fileTypeMgr: FileTypeManager,
 
   private def addBottomLeftBadge(icon: Node, path: VPath) = {
     path match {
-      case f: VFile if archiveManager.findArchiveHandler(f).isDefined =>
-        new Group(icon, archiveOverlayIconBottomRight)
+      case f: VFile if archiveManager.findArchiveHandlerByExt(f).isDefined =>
+        if (archiveManager.findArchiveHandler(f).isDefined)
+          new Group(icon, archiveOverlayIconBottomRight)
+        else icon
       case f: VFile if fileTypeMgr.isExecutable(f) =>
         new Group(icon, execOverlayIconBottomRight)
       case _ => icon
@@ -55,10 +57,10 @@ class IconResolver(fileTypeMgr: FileTypeManager,
       case _ => icon
     }
 
-  private def findIcon(path: VPath): Option[Node] = {
+  private def findIcon(path: VPath, iconSize: IconSize): Option[Node] = {
     val fileType = fileTypeMgr.detectFileType(path)
     fileType.icon.map { iconFile =>
-      val imageView = new ImageView(resourceMgr.getIcon(iconFile, 18, 18))
+      val imageView = new ImageView(resourceMgr.getIcon(iconFile, iconSize.size, iconSize.size))
       imageView.preserveRatio = true
       imageView.cache = true
       imageView.cacheHint = CacheHint.Speed

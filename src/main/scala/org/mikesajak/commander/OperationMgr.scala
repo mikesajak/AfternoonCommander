@@ -14,7 +14,8 @@ class OperationMgr(statusMgr: StatusMgr,
                    deleteOperationCtrl: DeleteOperationCtrl,
                    countDirStatsCtrl: CountDirStatsOperationCtrl,
                    settingsCtrl: SettingsCtrl,
-                   findFilesCtrl: FindFilesCtrl) {
+                   findFilesCtrl: FindFilesCtrl,
+                   propertiesCtrl: PropertiesCtrl) {
   private val logger = Logger(this.getClass)
 
   def handleView(): Unit = {
@@ -49,5 +50,7 @@ class OperationMgr(statusMgr: StatusMgr,
   def handleSettingsAction(): Unit = settingsCtrl.handleSettingsAction()
 
   def handleFindAction(): Unit = findFilesCtrl.handleFindAction()
+
+  def handlePropertiesAction(): Unit = propertiesCtrl.handlePropertiesAction()
 
 }

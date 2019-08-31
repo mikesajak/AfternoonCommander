@@ -9,8 +9,8 @@ object MyScalaFxImplicits {
   implicit class RichDialog[A](val self: Dialog[A]) {
     def setWindowSize(width: Int, height: Int): Unit = {
       val window = self.getDialogPane.getScene.getWindow.asInstanceOf[stage.Stage]
-      window.setMinHeight(width)
-      window.setMinWidth(height)
+      window.setMinWidth(width)
+      window.setMinHeight(height)
     }
   }
 }

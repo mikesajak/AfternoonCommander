@@ -55,8 +55,6 @@ class StatsPanelControllerImpl(messageLabel: Label,
     extends StatsPanelController {
   private val logger = Logger[StatsPanelControllerImpl]
 
-  logger.debug("StatsPanelControllerImpl contructor")
-
   override def init(targetPaths: Seq[VPath]): Unit = {
     val contentType = StatsUtils.resolveContentType(targetPaths)
     setupLabels(contentType)

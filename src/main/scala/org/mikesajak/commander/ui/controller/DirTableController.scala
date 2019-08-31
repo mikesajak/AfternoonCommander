@@ -7,10 +7,9 @@ import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
-import org.mikesajak.commander.ui.{IconResolver, ResourceManager, UIUtils}
+import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager, UIUtils}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
-import org.mikesajak.commander.util.TextUtil._
 import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager, HistoryMgr}
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
@@ -98,7 +97,8 @@ class DirTableController(curDirField: TextField,
                          config: Configuration,
                          eventBus: EventBus,
                          panelController: DirPanelControllerIntf,
-                         appController: ApplicationController)
+                         appController: ApplicationController,
+                         propertiesCtrl: PropertiesCtrl)
     extends DirTableControllerIntf {
 
   import org.mikesajak.commander.ui.UIParams._
@@ -165,8 +165,7 @@ class DirTableController(curDirField: TextField,
                            else None
           tooltip = fileRowOpt.map { fileRow =>
             val fileType = fileTypeMgr.detectFileType(fileRow.path)
-            val fileTypeName = resourceMgr.getMessageOpt(s"file_type_manager.${camelToSnake(fileType.toString)}")
-              .getOrElse(fileType.toString)
+            val fileTypeName = fileTypeMgr.descriptionOf(fileType)
 
             new Tooltip() {
               text = resourceMgr.getMessageWithArgs("file_table_panel.row_tooltip",
@@ -333,9 +332,7 @@ class DirTableController(curDirField: TextField,
       new MenuItem() {
         text = "Properties"
         graphic = null
-        onAction = _ => {
-          logger.debug(s"TODO: Show properties for $rowPath")
-        }
+        onAction = _ => { propertiesCtrl.showPropertiesOf(rowPath) }
       })
 
     val cm = new ContextMenu(menuItems: _*)
