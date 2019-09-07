@@ -1,10 +1,11 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import com.typesafe.scalalogging.Logger
+import javafx.concurrent.Worker.State
 import org.mikesajak.commander.fs.{VDirectory, VPath}
-import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsTask}
+import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
-import org.mikesajak.commander.util.PathUtils
+import org.mikesajak.commander.util.{PathUtils, Throttler}
 import scalafx.Includes._
 import scalafx.collections.ObservableBuffer
 import scalafx.concurrent.Service
@@ -70,13 +71,20 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
     statsPanelController.init(sourcePaths)
 
-    val statsService = new BackgroundService(new DirStatsTask(sourcePaths))
-    statsService.onRunning = e => statsPanelController.notifyStarted()
-    statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
-    statsService.onSucceeded = e => notifyFinished(statsService.value.value, None)
-    statsService.value.onChange { (_, _, stats) => statsPanelController.updateStats(stats, None)}
+    val statsService = new BackgroundService(new DirWalkerTask(sourcePaths, new DirStatsProcessor()))
+    statsService.state.onChange { (_, _, state) =>
+      state match {
+        case State.RUNNING => statsPanelController.notifyStarted()
+        case State.FAILED => notifyError(Option(statsService.value.value), statsService.message.value)
+        case State.SUCCEEDED => notifyFinished(statsService.value.value, None)
+        case _ =>
+      }
+    }
 
-    dialog.onShown = e => statsService.start()
+    val throttler = new Throttler[DirStats](100, s => statsPanelController.updateStats(s, None))
+    statsService.value.onChange { (_, _, stats) => throttler.update(stats) }
+
+    dialog.onShown = _ => statsService.start()
 
     statsService
   }
@@ -87,7 +95,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     targetPaths match {
       case p if p.size == 1 && p.head.isDirectory => SingleDir
       case p if p.size == 1 => SingleFile
-      case p => MultiPaths
+      case _ => MultiPaths
     }
 
   private def notifyFinished(stats: DirStats, message: Option[String]): Unit = {

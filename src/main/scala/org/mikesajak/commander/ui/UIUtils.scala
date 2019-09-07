@@ -74,6 +74,9 @@ object UIUtils {
       }
     })
 
+  def dialogButton[R](dialog: Dialog[R], buttonType: ButtonType): Button =
+    dialog.dialogPane.value.lookupButton(buttonType).asInstanceOf[jfxctrl.Button]
+
   def calcTextBounds(control: TextInputControl): jfxgeom.Bounds =
     calcTextBounds(control.text.value, control.font.value, Option(control.insets))
 

@@ -23,8 +23,8 @@
             <Label fx:id="modifiedLabel" text="%stats_panel.modified.label" GridPane.columnIndex="3" GridPane.rowIndex="1" />
             <Label fx:id="attribsLabel" text="%stats_panel.attributes.label" GridPane.columnIndex="3" GridPane.rowIndex="2" />
             <Label fx:id="sizeLabel" text="%stats_panel.size.label" GridPane.rowIndex="3" />
-            <Label fx:id="directoriesLabel" text="%stats_panel.directories.label" GridPane.rowIndex="1" />
-            <Label fx:id="filesLabel" text="%stats_panel.files.label" GridPane.rowIndex="2" />
+            <Label fx:id="directoriesLabel" text="%stats_panel.num_directories.label" GridPane.rowIndex="1" />
+            <Label fx:id="filesLabel" text="%stats_panel.num_files.label" GridPane.rowIndex="2" />
             <Label fx:id="modifiedValueLabel" text="Label" GridPane.columnIndex="4" GridPane.rowIndex="1" />
             <Label fx:id="attribsValueLabel" text="Label" GridPane.columnIndex="4" GridPane.rowIndex="2" />
             <Label fx:id="sizeValueLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />

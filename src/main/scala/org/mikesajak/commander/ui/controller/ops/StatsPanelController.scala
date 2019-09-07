@@ -96,7 +96,7 @@ class StatsPanelControllerImpl(messageLabel: Label,
 
   override def notifyStarted(): Unit = {
     messageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
-    messageLabel.text = resourceMgr.getMessage("count_stats_dialog.counting.label")
+    messageLabel.text = resourceMgr.getMessage("stats_panel.counting.message.label")
   }
 
   override def notifyFinished(stats: DirStats, message: Option[String] = None): Unit = {
@@ -126,10 +126,10 @@ class StatsPanelControllerImpl(messageLabel: Label,
     Platform.runLater {
       message.foreach(msg => messageLabel.text = msg)
 
-      directoriesValueLabel.text = resourceMgr.getMessageWithArgs("count_stats.num_directories",
+      directoriesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_directories.value.label",
         Array(stats.numDirs, stats.depth))
       val unit = DataUnit.findDataSizeUnit(stats.size)
-      filesValueLabel.text = resourceMgr.getMessageWithArgs("count_stats.num_files",
+      filesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_files.value.label",
         Array(stats.numFiles, unit.convert(stats.size), unit.symbol))
     }
   }

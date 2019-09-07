@@ -8,7 +8,7 @@ import org.mikesajak.commander.fs.VFile
 class LocalFile(inputFile: File, override val fileSystem: LocalFS) extends LocalPath with VFile {
 
   if (inputFile.isDirectory)
-    throw new IllegalArgumentException(s"Cannot create LocalFile for param file=$file that IS a directory")
+    throw new IllegalArgumentException(s"Cannot create LocalFile for param file=${inputFile.getAbsolutePath} that IS a directory")
 
   override val file: File = Paths.get(inputFile.getAbsolutePath).toFile
 

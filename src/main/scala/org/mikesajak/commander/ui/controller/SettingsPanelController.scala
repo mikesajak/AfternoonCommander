@@ -15,7 +15,7 @@ case class SettingsCategory(name: String,
                        panelLayout: Option[String],
                        children: Seq[SettingsCategory]) {
   lazy val panel: Option[Node] = panelLayout.map(layout =>
-    new Node(UILoader.loadScene2(s"/layout/settings/$layout")){})
+    new Node(UILoader.loadScene(s"/layout/settings/$layout")._1){})
 }
 object SettingsCategory {
   def apply(name: String, layoutFile: String, children: Seq[SettingsCategory]) =

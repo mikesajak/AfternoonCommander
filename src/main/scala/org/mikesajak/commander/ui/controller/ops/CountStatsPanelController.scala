@@ -1,9 +1,11 @@
 package org.mikesajak.commander.ui.controller.ops
 
+import javafx.concurrent.Worker.State
 import javafx.scene.{control => jfxctrl}
 import org.mikesajak.commander.fs.VPath
-import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsTask}
+import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
+import org.mikesajak.commander.util.Throttler
 import scalafx.Includes._
 import scalafx.concurrent.Service
 import scalafx.scene.control.{ButtonType, Dialog, Label}
@@ -44,13 +46,21 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
     statsPanelController.init(paths)
 
-    val statsService = new BackgroundService(new DirStatsTask(paths))
-    statsService.onRunning = e => statsPanelController.notifyStarted()
-    statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
-    statsService.onSucceeded = e => notifyFinished(statsService.value.value)
-    statsService.value.onChange { (_, _, stats) => statsPanelController.updateStats(stats, None)}
+    val statsService = new BackgroundService(new DirWalkerTask(paths, new DirStatsProcessor()))
 
-    dialog.onShown = e => statsService.start()
+    statsService.state.onChange { (_, _, state) =>
+      state match {
+        case State.RUNNING => statsPanelController.notifyStarted()
+        case State.FAILED => notifyError(Option(statsService.value.value), statsService.message.value)
+        case State.SUCCEEDED => notifyFinished(statsService.value.value)
+        case _ =>
+      }
+    }
+
+    val throttler = new Throttler[DirStats](100, s => statsPanelController.updateStats(s, None))
+    statsService.value.onChange { (_, _, stats) => throttler.update(stats) }
+
+    dialog.onShown = _ => statsService.start()
 
     dialog.dialogPane().buttonTypes = List(ButtonType.Close, ButtonType.Cancel)
 

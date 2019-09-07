@@ -1,9 +1,9 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import com.typesafe.scalalogging.Logger
-import javafx.scene.{control => jfxctrl}
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.task._
+import org.mikesajak.commander.ui.UIUtils.dialogButton
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import scalafx.Includes._
 import scalafx.application.Platform
@@ -65,9 +65,14 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
   def init(startDir: VDirectory, dialog: Dialog[ButtonType]): Unit = {
     searchInTextField.text = startDir.absolutePath
 
-    goToPathButton = dialog.dialogPane.value.lookupButton(FindFilesPanelController.GoToPattButtonType).asInstanceOf[jfxctrl.Button]
-    showAsListButton = dialog.dialogPane.value.lookupButton(FindFilesPanelController.ShowAsListButtonType).asInstanceOf[jfxctrl.Button]
-    closeButton = dialog.dialogPane.value.lookupButton(ButtonType.Close).asInstanceOf[jfxctrl.Button]
+    dialog.title = "Find files..."
+    dialog.dialogPane.value.buttonTypes = Seq(FindFilesPanelController.GoToPattButtonType,
+                                              FindFilesPanelController.ShowAsListButtonType,
+                                              ButtonType.Close)
+
+    goToPathButton = dialogButton(dialog, FindFilesPanelController.GoToPattButtonType)
+    showAsListButton = dialogButton(dialog, FindFilesPanelController.ShowAsListButtonType)
+    closeButton = dialogButton(dialog, ButtonType.Close)
 
     goToPathButton.disable = true
     showAsListButton.disable = true

@@ -12,7 +12,6 @@ import org.mikesajak.commander.util.TextUtil.camelToSnake
 
 sealed abstract class FileType(val icon: Option[String]) {
   def this(icon: String) = this(Some(icon))
-  def this() = this(None)
 }
 
 object FileType {
@@ -35,6 +34,7 @@ object FileType {
   case object PresentationFile extends FileType("file-presentation-box.png")
   case object XmlFile extends FileType("file-xml.png")
   case object EbookFile extends FileType("book-open-variant.png")
+  case object SourceCodeFile extends FileType("icons8-source-code64.png")
   case object OtherFile extends FileType("file-outline.png")
 }
 
@@ -66,6 +66,9 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(PowerpointFile, "ppt", "pptx"))
   registerFileTypeDetector(SimpleByExtensionFileDetector(PresentationFile, "odp", "pptx"))
+
+  registerFileTypeDetector(SimpleByExtensionFileDetector(SourceCodeFile, "java", "net", "py", "c", "cpp", "c++", "scala", "kt", "html", "css", "xml", "json", "yml", "yaml"))
+
 
   def registerFileTypeDetector(detector: FileTypeDetector): Unit =
     fileTypeDetectors ::= detector
@@ -150,11 +153,15 @@ class DefaultFileTypeDetector extends FileTypeDetector {
   }
 }
 
-case class SimpleByExtensionFileDetector(fileType: FileType, extensions: String*) extends FileTypeDetector {
+case class SimpleByExtensionFileDetector(fileType: FileType, extensions: Set[String]) extends FileTypeDetector {
   override def detect(path: VPath): Option[FileType] = path match {
     case p if p.isFile =>
       val f = p.asInstanceOf[VFile]
       f.extension.flatMap(ext => if (extensions.contains(ext.toLowerCase)) Some(fileType) else None)
     case _ => None
   }
+}
+
+object SimpleByExtensionFileDetector {
+  def apply(fileType: FileType, extensions: String*) = new SimpleByExtensionFileDetector(fileType, Set(extensions:_*))
 }

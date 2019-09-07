@@ -61,7 +61,7 @@ object Utils {
       log(s"$name finished in $stopwatch", finishLogLevel)
       result
     } catch {
-      case e: CancelledException[Any] =>
+      case e: CancelledException[_] =>
         log(s"$name cancelled after $stopwatch", finishLogLevel)
         throw e
       case e: Exception =>

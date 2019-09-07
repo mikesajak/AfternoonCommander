@@ -19,10 +19,6 @@ class FindFilesCtrl(appController: ApplicationController,
     val (contentPane, contentCtrl) = UILoader.loadScene[FindFilesPanelController](findDialogLayout)
 
     val dialog = UIUtils.mkModalDialogNoButtonOrder[ButtonType](appController.mainStage, contentPane)
-    dialog.title = "Find files..."
-    dialog.dialogPane.value.buttonTypes = Seq(FindFilesPanelController.GoToPattButtonType,
-                                              FindFilesPanelController.ShowAsListButtonType,
-                                              ButtonType.Close)
 
     val selectedPanelDir = statusMgr.selectedTabManager.selectedTab.dir
     contentCtrl.init(selectedPanelDir, dialog)

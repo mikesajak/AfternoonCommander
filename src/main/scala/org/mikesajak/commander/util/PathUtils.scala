@@ -1,10 +1,15 @@
 package org.mikesajak.commander.util
 
-import org.mikesajak.commander.fs.VPath
+import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 
 import scala.annotation.tailrec
 
 object PathUtils {
+
+  def splitDirsAndFiles(paths: Seq[VPath]): (Seq[VDirectory], Seq[VFile]) = {
+    val (pathDirs, pathFiles) = paths.partition(_.isDirectory)
+    (pathDirs.view.map(_.asInstanceOf[VDirectory]), pathFiles.view.map(_.asInstanceOf[VFile]))
+  }
 
   def shortenPathBy(path: String, length: Option[Int] = None): String = {
     val wishLen = length.getOrElse(10)

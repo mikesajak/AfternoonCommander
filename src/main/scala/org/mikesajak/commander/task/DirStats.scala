@@ -23,13 +23,23 @@ object DirStats {
     DirStats(files.size, subDirs.size, filesSize + dirsSize, level)
   }
 
+  def ofDirs(dirs: Seq[VDirectory], level: Int = 0): DirStats =
+    dirs.map(DirStats.ofDir(_)).foldLeft(Empty)((acc, dir) => acc + dir)
+
   def ofFile(file: VFile, level: Int= 0): DirStats =
     DirStats(1, 0, file.size, level)
 
   def ofFiles(files: Seq[VFile], level: Int = 0): DirStats =
     DirStats(files.size, 0, files.map(_.size).sum, level)
+}
 
-  def ofDirs(dirs: Seq[VDirectory], level: Int = 0): DirStats = {
-    dirs.map(DirStats.ofDir(_)).foldLeft(Empty)((acc, dir) => acc + dir)
-  }
+class DirStatsProcessor extends PathProcessor[DirStats] {
+  override val title = "Count directory statistics"
+
+  override def process(files: Seq[VFile], dirs: Seq[VDirectory], level: Int): DirStats =
+    DirStats.ofFiles(files, level) + DirStats.ofDirs(dirs, level)
+
+  override def Empty: DirStats = DirStats.Empty
+
+  override def merge(res1: DirStats, res2: DirStats): DirStats = res1 + res2
 }

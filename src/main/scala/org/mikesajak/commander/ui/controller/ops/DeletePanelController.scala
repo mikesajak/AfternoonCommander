@@ -1,7 +1,7 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import org.mikesajak.commander.fs.VPath
-import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsTask}
+import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.PathUtils
 import scalafx.Includes._
@@ -59,13 +59,13 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     statsPanelController.init(targetPaths)
 
-    val statsService = new BackgroundService(new DirStatsTask(targetPaths))
-    statsService.onRunning = e => statsPanelController.notifyStarted()
-    statsService.onFailed = e => notifyError(Option(statsService.value.value), statsService.message.value)
-    statsService.onSucceeded = e => notifyFinished(statsService.value.value, None)
+    val statsService = new BackgroundService(new DirWalkerTask(targetPaths, new DirStatsProcessor()))
+    statsService.onRunning = _ => statsPanelController.notifyStarted()
+    statsService.onFailed = _ => notifyError(Option(statsService.value.value), statsService.message.value)
+    statsService.onSucceeded = _ => notifyFinished(statsService.value.value, None)
     statsService.value.onChange { (_, _, stats) => statsPanelController.updateStats(stats, None)}
 
-    dialog.onShown = e => statsService.start()
+    dialog.onShown = _ => statsService.start()
 
     statsService
   }
@@ -76,7 +76,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     targetPaths match {
       case p if p.size == 1 && p.head.isDirectory => SingleDir
       case p if p.size == 1 => SingleFile
-      case p => MultiPaths
+      case _ => MultiPaths
     }
 
   private def notifyFinished(stats: DirStats, message: Option[String]): Unit = {

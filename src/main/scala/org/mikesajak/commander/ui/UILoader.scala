@@ -14,24 +14,19 @@ import scalafxml.guice.GuiceDependencyResolver
   */
 object UILoader {
 
-  def loadScene[CtrlType](layout: String, additionalContexts: Module*): (Parent, CtrlType) =
-    loadScene[CtrlType](layout, "ui.css", "ui", additionalContexts: _*)
+  val defaultStyles = List("ui.css", "piechart.css")
+  val defaultResource = "ui"
 
-  def loadScene[CtrlType](layout: String, css: String, resourceBundle: String, additionalContexts: Module*): (Parent, CtrlType) = {
-    val (root, loader)= loadSceneImpl(layout, css, resourceBundle, additionalContexts: _*)
+  def loadScene[CtrlType](layout: String, additionalContexts: Module*): (Parent, CtrlType) =
+    loadScene[CtrlType](layout, defaultStyles, defaultResource, additionalContexts: _*)
+
+  def loadScene[CtrlType](layout: String, styles: Seq[String], resourceBundle: String, additionalContexts: Module*): (Parent, CtrlType) = {
+    val (root, loader)= loadSceneImpl(layout, styles, resourceBundle, additionalContexts: _*)
     val controller = loader.getController[CtrlType]()
     (root, controller)
   }
 
-  def loadScene2(layout: String, additionalContexts: Module*): Parent =
-    loadScene2(layout, "ui.css", "ui", additionalContexts: _*)
-
-  def loadScene2(layout: String, css: String, resourceBundle: String, additionalContexts: Module*): Parent = {
-    val (root, _) = loadSceneImpl(layout, css, resourceBundle, additionalContexts: _*)
-    root
-  }
-
-  private def loadSceneImpl(layout: String, css: String, resourceBundle: String, additionalContexts: Module*) = {
+  private def loadSceneImpl(layout: String, styles: Seq[String], resourceBundle: String, additionalContexts: Module*) = {
     implicit val injector: Injector = ApplicationContext.globalInjector.createChildInjector(additionalContexts: _*)
 
     val resource = getClass.getResource(layout)
@@ -43,7 +38,7 @@ object UILoader {
     loader.load()
 
     val root = loader.getRoot[Parent]()
-    root.getStylesheets.add(getClass.getResource(s"/$css").toExternalForm)
+    styles.foreach(css => root.getStylesheets.add(getClass.getResource(s"/$css").toExternalForm))
 
     (root,loader)
   }
