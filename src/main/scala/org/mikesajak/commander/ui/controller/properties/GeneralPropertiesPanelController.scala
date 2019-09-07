@@ -55,7 +55,7 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
       (sizeLabel, numDirsLabel, numFilesLabel).text = ""
     }
 
-    val throttler = new Throttler[DirStats](100, stats => Platform.runLater(updateStats(stats)))
+    val throttler = new Throttler[DirStats](50, stats => Platform.runLater(updateStats(stats)))
     statsService.value.onChange { (_, _, stats) => throttler.update(stats._1) }
 
     statsService.state.onChange { (_, _, state) =>

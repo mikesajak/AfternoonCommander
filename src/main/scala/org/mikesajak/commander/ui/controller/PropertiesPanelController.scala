@@ -63,7 +63,7 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
     statusMessageLabel.text = null
     statusDetailMessageLabel.text = null
 
-    val msgThrottler = new Throttler[String](100, str => Platform.runLater(statusDetailMessageLabel.text = str))
+    val msgThrottler = new Throttler[String](50, str => Platform.runLater(statusDetailMessageLabel.text = str))
     statsService.message.onChange { (_, _, msg) => msgThrottler.update(msg) }
 
 

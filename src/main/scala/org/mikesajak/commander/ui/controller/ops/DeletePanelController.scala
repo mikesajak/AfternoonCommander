@@ -1,10 +1,12 @@
 package org.mikesajak.commander.ui.controller.ops
 
+import javafx.concurrent.Worker.State
 import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
-import org.mikesajak.commander.util.PathUtils
+import org.mikesajak.commander.util.{PathUtils, Throttler}
 import scalafx.Includes._
+import scalafx.application.Platform
 import scalafx.collections.ObservableBuffer
 import scalafx.concurrent.Service
 import scalafx.scene.control._
@@ -60,10 +62,24 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     statsPanelController.init(targetPaths)
 
     val statsService = new BackgroundService(new DirWalkerTask(targetPaths, new DirStatsProcessor()))
-    statsService.onRunning = _ => statsPanelController.notifyStarted()
-    statsService.onFailed = _ => notifyError(Option(statsService.value.value), statsService.message.value)
-    statsService.onSucceeded = _ => notifyFinished(statsService.value.value, None)
-    statsService.value.onChange { (_, _, stats) => statsPanelController.updateStats(stats, None)}
+
+    val throttler = new Throttler[DirStats](50,
+                                            stats => Platform.runLater(statsPanelController.updateStats(stats, None)))
+    statsService.value.onChange { (_, _, stats) => throttler.update(stats) }
+
+    statsService.state.onChange { (_, _, state) => state match {
+      case State.RUNNING =>
+        throttler.cancel()
+        statsPanelController.notifyStarted()
+      case State.FAILED =>
+        throttler.cancel()
+        notifyError(Option(statsService.value.value), statsService.message.value)
+      case State.SUCCEEDED =>
+        throttler.cancel()
+        notifyFinished(statsService.value.value, None)
+      case State.CANCELLED => throttler.cancel()
+      case _ =>
+    }}
 
     dialog.onShown = _ => statsService.start()
 

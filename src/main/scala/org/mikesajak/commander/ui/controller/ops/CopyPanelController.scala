@@ -7,6 +7,7 @@ import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProces
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.{PathUtils, Throttler}
 import scalafx.Includes._
+import scalafx.application.Platform
 import scalafx.collections.ObservableBuffer
 import scalafx.concurrent.Service
 import scalafx.scene.control._
@@ -81,7 +82,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       }
     }
 
-    val throttler = new Throttler[DirStats](100, s => statsPanelController.updateStats(s, None))
+    val throttler = new Throttler[DirStats](50, s => Platform.runLater(statsPanelController.updateStats(s, None)))
     statsService.value.onChange { (_, _, stats) => throttler.update(stats) }
 
     dialog.onShown = _ => statsService.start()

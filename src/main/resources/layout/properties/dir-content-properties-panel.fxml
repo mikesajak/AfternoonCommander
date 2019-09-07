@@ -3,7 +3,7 @@
 <?import javafx.scene.chart.PieChart?><?import javafx.scene.control.TableColumn?><?import javafx.scene.control.TableView?><?import javafx.scene.layout.VBox?>
 <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.properties.DirContentPropertiesPanelControllerImpl">
    <children>
-      <PieChart fx:id="fileTypesPieChart" animated="false" maxWidth="1.7976931348623157E308" minHeight="100.0" minWidth="200.0" prefHeight="300.0" title="File types" />
+      <PieChart fx:id="fileTypesPieChart" animated="false" maxWidth="1.7976931348623157E308" minHeight="100.0" minWidth="200.0" prefHeight="300.0" title="File types" VBox.vgrow="ALWAYS" />
       <TableView fx:id="extensionTableView" maxWidth="1.7976931348623157E308" minHeight="100.0" minWidth="200.0" prefHeight="200.0">
         <columns>
           <TableColumn fx:id="extensionColumn" prefWidth="75.0" text="Extension" />

@@ -101,10 +101,8 @@ class StatsPanelControllerImpl(messageLabel: Label,
 
   override def notifyFinished(stats: DirStats, message: Option[String] = None): Unit = {
     updateStats(stats, message)
-    Platform.runLater {
-      messageLabel.graphic = null
-      messageLabel.text = null
-    }
+    messageLabel.graphic = null
+    messageLabel.text = null
   }
 
   override def notifyError(stats: Option[DirStats], message: String): Unit = {
@@ -112,26 +110,21 @@ class StatsPanelControllerImpl(messageLabel: Label,
       case Some(s) => updateStats(s, Some(message))
       case _ => updateMessage(message)
     }
-    Platform.runLater {
-      messageLabel.graphic = null
-    }
+    messageLabel.graphic = null
   }
 
-  override def updateMessage(message: String): Unit =
-    Platform.runLater {
-      messageLabel.text = message
-    }
+  override def updateMessage(message: String): Unit = {
+    messageLabel.text = message
+  }
 
   override def updateStats(stats: DirStats, message: Option[String]): Unit = {
-    Platform.runLater {
-      message.foreach(msg => messageLabel.text = msg)
+    message.foreach(msg => messageLabel.text = msg)
 
-      directoriesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_directories.value.label",
-        Array(stats.numDirs, stats.depth))
-      val unit = DataUnit.findDataSizeUnit(stats.size)
-      filesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_files.value.label",
-        Array(stats.numFiles, unit.convert(stats.size), unit.symbol))
-    }
+    directoriesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_directories.value.label",
+      Array(stats.numDirs, stats.depth))
+    val unit = DataUnit.findDataSizeUnit(stats.size)
+    filesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_files.value.label",
+      Array(stats.numFiles, unit.convert(stats.size), unit.symbol))
   }
 }
 

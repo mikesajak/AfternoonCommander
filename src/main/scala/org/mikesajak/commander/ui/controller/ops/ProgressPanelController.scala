@@ -134,7 +134,5 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     val interval = TimeInterval.apply(millis)
     elapsedTimeLabel.text = interval.format()
     estimatedTimeLabel.text = "n/a"
-
-    println("updateTimes()")
   }
 }

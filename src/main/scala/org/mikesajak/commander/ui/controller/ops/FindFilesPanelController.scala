@@ -66,7 +66,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
 
     val goToPathButtonType = new ButtonType(resourceMgr.getMessage("find_files_dialog.go_to_path_button"))
     val showAsListButtonType = new ButtonType(resourceMgr.getMessage("find_files_dialog.show_as_list_button"))
-    val closeButtonType = new ButtonType("Zamknij")
+    val closeButtonType = new ButtonType(resourceMgr.getMessage("general.close_button"))
 
     dialog.dialogPane.value.buttonTypes = Seq(goToPathButtonType, showAsListButtonType, closeButtonType)
 
@@ -140,7 +140,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     }
   }
 
-  val throttler = new Throttler[SearchProgress](100, doUpdate)
+  val throttler = new Throttler[SearchProgress](50, doUpdate)
   private def prepareSearchService(searchService: Service[SearchProgress]): Unit = {
     searchService.state.onChange { (_, _, state) => state match {
       case State.RUNNING => searchStarted()

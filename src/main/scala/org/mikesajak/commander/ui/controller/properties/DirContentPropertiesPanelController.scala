@@ -7,6 +7,7 @@ import org.mikesajak.commander.task.{BackgroundService, DirContents, DirStats}
 import org.mikesajak.commander.ui.controller.FileRow
 import org.mikesajak.commander.util.Throttler
 import org.mikesajak.commander.{FileType, FileTypeManager}
+import scalafx.application.Platform
 import scalafx.beans.property.StringProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.chart.PieChart
@@ -53,10 +54,10 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
     extensionColumn.cellValueFactory = { _.value.name }
     countColumn.cellValueFactory = { _.value.value }
 
-    val throttler = new Throttler[DirContents](2000, updateChart)
+    val throttler = new Throttler[DirContents](200, value => Platform.runLater(updateChart(value)))
     statsService.value.onChange { (_, _, state) => throttler.update(state._2) }
 
-    statsService.state.onChange { (_, _, state) =>state match {
+    statsService.state.onChange { (_, _, state) => state match {
       case State.SUCCEEDED =>
         throttler.cancel()
         updateChart(statsService.value.value._2)
