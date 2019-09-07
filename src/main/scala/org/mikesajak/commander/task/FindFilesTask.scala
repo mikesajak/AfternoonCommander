@@ -4,12 +4,12 @@ import java.util.regex.Pattern
 
 import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
+import org.apache.commons.io.{FilenameUtils, IOCase}
 import org.mikesajak.commander.fs.{VDirectory, VPath}
 import org.mikesajak.commander.ui.ResourceManager
-import org.mikesajak.commander.util.TextUtil
 import org.mikesajak.commander.util.Utils._
 
-case class SearchCriteria(searchString: String, caseSensitive: Boolean, regex: Boolean)
+case class SearchCriteria(searchString: String, caseSensitive: Boolean, regex: Boolean, inverse: Boolean)
 case class Search(filenameCriteria: SearchCriteria, contentCriteria: Option[SearchCriteria])
 
 case class SearchProgress(curPath: VPath, dirStats: DirStats, results: Seq[VPath])
@@ -62,15 +62,20 @@ class FindFilesTask(searchDef: Search, startDirectory: VDirectory, resourceMgr: 
     // todo: content criteria
   }
 
-  private def mkTextMatchFunc(criteria: SearchCriteria): MatchFunc =
-    if (criteria.regex) {
+  private def mkTextMatchFunc(criteria: SearchCriteria): MatchFunc = {
+    val plainFunc = if (criteria.regex) {
       val pattern = if (criteria.caseSensitive) Pattern.compile(criteria.searchString)
                     else Pattern.compile(criteria.searchString, Pattern.CASE_INSENSITIVE)
       input: String => pattern.matcher(input).matches()
     } else {
-      if (criteria.caseSensitive) (input: String) => input.contains(criteria.searchString)
-      else (input: String) => TextUtil.containsIgnoreCase(input, criteria.searchString)
+      input: String =>
+        FilenameUtils.wildcardMatch(input, criteria.searchString,
+                                    if (criteria.caseSensitive) IOCase.SENSITIVE else IOCase.INSENSITIVE)
     }
+
+    if (criteria.inverse) input => !plainFunc(input)
+    else plainFunc
+  }
 
   private def checkCancelled(status: => SearchProgress): Unit = {
     if (isCancelled) {

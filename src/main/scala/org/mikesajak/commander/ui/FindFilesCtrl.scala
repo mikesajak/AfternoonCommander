@@ -21,7 +21,7 @@ class FindFilesCtrl(appController: ApplicationController,
     val dialog = UIUtils.mkModalDialogNoButtonOrder[ButtonType](appController.mainStage, contentPane)
 
     val selectedPanelDir = statusMgr.selectedTabManager.selectedTab.dir
-    contentCtrl.init(selectedPanelDir, dialog)
+    val (goToPathButtonType, showAsListButtonType, closeButtonType) = contentCtrl.init(selectedPanelDir, dialog)
 
     dialog.setWindowSize(600, 400)
 
@@ -31,7 +31,7 @@ class FindFilesCtrl(appController: ApplicationController,
     contentCtrl.stopSearch()
 
     result match {
-      case Some(FindFilesPanelController.GoToPattButtonType) =>
+      case Some(goToPathButtonType.delegate) =>
         val selectedResult = contentCtrl.getSelectedResult
         logger.debug(s"Go to path: selected result=$selectedResult")
         selectedResult.foreach { result =>
@@ -40,14 +40,14 @@ class FindFilesCtrl(appController: ApplicationController,
           statusMgr.selectedTabManager.selectedTab.controller.setCurrentDirectory(directory, Some(directory))
         }
 
-      case Some(FindFilesPanelController.ShowAsListButtonType) =>
+      case Some(showAsListButtonType.delegate) =>
         val searchResults = contentCtrl.getAllResults
         logger.debug(s"Show as list: all results=$searchResults")
         val resultsListDir = new CustomListAsDirectory("Search results", selectedPanelDir, searchResults)
 
         statusMgr.selectedTabManager.selectedTab.controller.setCurrentDirectory(resultsListDir)
 
-      case Some(ButtonType.Close) => // do nothing
+      case Some(closeButtonType.delegate) => // do nothing
 
       case _ => // should not even get here
     }

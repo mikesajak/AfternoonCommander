@@ -97,12 +97,17 @@
                            <children>
                               <HBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" spacing="5.0" VBox.vgrow="NEVER">
                                  <children>
-                                    <Label text="Search results:">
+                                    <Label fx:id="searchStatusLabel" text="Search finished.">
                                        <font>
                                           <Font size="11.0" />
                                        </font>
                                     </Label>
-                                    <Label fx:id="searchResultsValueLabel" text="[No files found]">
+                                    <Label fx:id="searchResultsLabel" text="No files found.">
+                                       <font>
+                                          <Font name="System Bold" size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="searchStatisticsLabel" text="[Searcehd 1234 directories, 34567 files.]">
                                        <font>
                                           <Font size="11.0" />
                                        </font>
@@ -116,13 +121,7 @@
                                           <ListView fx:id="searchResultsListView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
                                           <HBox alignment="CENTER_LEFT" maxHeight="1.7976931348623157E308" spacing="5.0" VBox.vgrow="ALWAYS">
                                              <children>
-                                                <ImageView fx:id="progressImageView" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true" />
-                                                <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                                                   <children>
-                                                      <Label fx:id="curPathLabel" text="Label" textOverrun="LEADING_ELLIPSIS" />
-                                                      <Label fx:id="searchStatsLabel" text="Label" />
-                                                   </children>
-                                                </VBox>
+                                                <VBox spacing="5.0" HBox.hgrow="ALWAYS" />
                                                 <Button fx:id="startSearchButton" defaultButton="true" maxWidth="1.7976931348623157E308" minWidth="0.0" mnemonicParsing="false" text="Starch search" />
                                              </children>
                                           </HBox>
@@ -132,7 +131,7 @@
                               </VBox>
                            </children>
                            <VBox.margin>
-                              <Insets top="15.0" />
+                              <Insets />
                            </VBox.margin>
                         </VBox>
                      </children>
