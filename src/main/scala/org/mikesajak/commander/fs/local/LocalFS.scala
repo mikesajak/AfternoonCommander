@@ -1,12 +1,9 @@
 package org.mikesajak.commander.fs.local
 
 import java.io.File
-import java.nio.file.{Files, Paths}
-import java.{io => jio}
 
 import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
 
-import scala.util.Try
 import scala.util.matching.Regex
 
 /**
@@ -24,19 +21,6 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
   def this(rootFile: File, attribs: Seq[(String, String)]) = this(rootFile, attribs.toMap)
 
   override val id: String = LocalFS.id
-
-  override def exists(path: VPath): Boolean = new jio.File(path.absolutePath).exists
-
-  override def delete(path: VPath): Try[Boolean] = Try {
-    val fsPath = Paths.get(path.absolutePath)
-    Files.deleteIfExists(fsPath)
-  }
-
-  override def create(path: VPath): Try[Boolean] = Try {
-    val f = new jio.File(path.absolutePath)
-    if (f.isDirectory) f.mkdirs()
-    else f.createNewFile()
-  }
 
   override def freeSpace: Long = rootFile.getFreeSpace
   override def totalSpace: Long = rootFile.getTotalSpace

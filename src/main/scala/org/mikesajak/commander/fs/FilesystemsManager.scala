@@ -129,7 +129,7 @@ class FilesystemsManager(osResolver: OSResolver) {
   def resolvePath(path: String): Option[VPath] =
     filesystems.toIterator
                .map(fs => fs.resolvePath(path)
-                            .filter(p => fs.exists(p)))
+                            .filter(_.exists))
                .collectFirst { case Some(x) => x }
 
   def homePath: String = {

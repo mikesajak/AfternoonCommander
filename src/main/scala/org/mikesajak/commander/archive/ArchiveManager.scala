@@ -45,7 +45,7 @@ class ArchiveManager extends FileTypeDetector with FileHandler {
 
   override def detect(path: VPath): Option[FileType] = {
     path match {
-      case file: VFile if file.fileSystem.exists(file) =>
+      case file: VFile if file.exists =>
         findArchiveHandler(file)
             .map(_ => FileType.ArchiveFile)
 
@@ -54,14 +54,14 @@ class ArchiveManager extends FileTypeDetector with FileHandler {
   }
 
   def findArchiveHandlerByExt(file: VFile): Option[ArchiveType] = {
-    if (file.fileSystem.exists(file))
+    if (file.exists)
       archiveHandlers.flatMap(_.supportedArchives)
         .find(at => file.extension.map(_.toUpperCase).contains(at.extension))
     else None
   }
 
   def findArchiveHandler(file: VFile): Option[ArchiveHandler] =
-    if (file.fileSystem.exists(file))
+    if (file.exists)
       archiveHandlers.find(_.archiveType(file).isDefined)
     else None
 }

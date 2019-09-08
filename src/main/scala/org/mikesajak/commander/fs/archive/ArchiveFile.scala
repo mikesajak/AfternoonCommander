@@ -1,6 +1,6 @@
 package org.mikesajak.commander.fs.archive
 
-import java.io.{InputStream, OutputStream}
+import java.io.InputStream
 import java.time.Instant
 
 import org.apache.commons.compress.archivers.ArchiveEntry
@@ -25,8 +25,10 @@ class ArchiveFile(archiveEntry: ArchiveEntry, parentDir: VDirectory) extends VFi
 
   override def inStream: InputStream = throw new UnsupportedOperationException// TODO
 
-  override def outStream: OutputStream = throw new UnsupportedOperationException // TODO
+  override val updater: Option[VFileUpdater] = None
 
-  override def toString = name
+  override val exists = true
+
+  override def toString: String = name
 
 }

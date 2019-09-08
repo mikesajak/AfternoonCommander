@@ -13,9 +13,6 @@ trait ArchiveDirectory extends VDirectory {
   override val directory: ArchiveDirectory = this
   override val size = 0
 
-  override def mkChildDir(child: String): VDirectory = throw new IllegalStateException("Creating child directory not supported")
-  override def mkChildFile(child: String): VFile = throw new IllegalStateException("Creating child file not supported")
-
   override lazy val childFiles: Seq[VFile] =
     childNodes.filter(node => archiveNode.isDirectSubNode(node))
               .filterNot { case ArchiveNode(_, Some(archiveEntry)) => archiveEntry.isDirectory }
@@ -59,9 +56,9 @@ class ArchiveRootDir(val archiveFile: VFile, archiveEntries: Seq[ArchiveEntry])
     else childDirs.collectFirst { case d => d.isParent(path) }
                   .getOrElse(false)
 
-  override def mkChildDir(child: String): VDirectory = throw new IllegalStateException("Creating child directory not supported")
-  override def mkChildFile(child: String): VFile = throw new IllegalStateException("Creating child file not supported")
+  override val updater: Option[VDirectoryUpdater] = None
 
+  override val exists: Boolean = true
 
   override def toString = s"ArchiveRootDir(${archiveFile.name})"
 }
@@ -84,8 +81,9 @@ class ArchiveSubDir(parentDir: VDirectory,
 
   override val fileSystem: FS = parentDir.fileSystem
 
-  override def mkChildDir(child: String): VDirectory = throw new IllegalStateException("Creating child directory not supported")
-  override def mkChildFile(child: String): VFile = throw new IllegalStateException("Creating child file not supported")
+  override val updater: Option[VDirectoryUpdater] = None
+
+  override val exists: Boolean = true
 
   override def toString = s"ArchiveSubDir($name)"
 }

@@ -62,7 +62,8 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
     val totalSummary = dir.childFiles.foldLeft(dirSummary)((result, childFile) => deleteFile(childFile, result))
 
     val result =
-      if (totalSummary.errors.isEmpty) performDelete(dir)
+      if (totalSummary.errors.isEmpty)
+        performDelete(dir)
       else {
         val msg = resourceMgr.getMessageWithArgs("delete_task.skipping_dir", List(dir))
         logger.info(msg)
@@ -92,8 +93,14 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
 
   private def doDelete(path: VPath): Try[Boolean] = {
     if (!dryRun) {
-      val fs = path.fileSystem
-      fs.delete(path)
+      path match {
+        case d: VDirectory =>
+          d.updater.map(_.delete())
+           .getOrElse(Failure(new DeleteException("Cannot delete read-only directory $d.")))
+        case f: VFile =>
+          f.updater.map(_.delete())
+          .getOrElse(Failure(new DeleteException("Cannot delete read-only file $f.")))
+      }
     } else Success(true)
   }
 
@@ -108,4 +115,6 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
     updateValue(progress)
     progress
   }
+
+  class DeleteException(msg: String) extends Exception(msg)
 }

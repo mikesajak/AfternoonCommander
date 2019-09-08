@@ -242,7 +242,7 @@ class DirPanelController(tabPane: TabPane,
   }
 
   private def setCurrentTabDir(dir: VDirectory): Unit = {
-    if (dir.fileSystem.exists(dir))
+    if (dir.exists)
       dirTabManager.selectedTab.controller.setCurrentDirectory(dir)
     else
       logger.info(s"Cannot set current tab directory $dir. The target directory does not exist.")

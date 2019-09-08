@@ -2,16 +2,8 @@ package org.mikesajak.commander.fs.custom
 
 import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
 
-import scala.util.{Failure, Try}
-
 class CustomListFS(val root: CustomListAsDirectory) extends FS {
   override val id: String = "custom-list"
-
-  override def exists(path: VPath): Boolean = root.children.contains(path)
-
-  override def delete(path: VPath): Try[Boolean] = Failure(new IllegalStateException("Delete operation is not supported in custom list FS"))
-
-  override def create(path: VPath): Try[Boolean] = Failure(new IllegalStateException("Create operation is not supported in custom list FS"))
 
   override def freeSpace: Long = root.parent.get.fileSystem.freeSpace
   override def totalSpace: Long = root.parent.get.fileSystem.totalSpace

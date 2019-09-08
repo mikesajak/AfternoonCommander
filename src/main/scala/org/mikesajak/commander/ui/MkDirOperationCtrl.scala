@@ -24,7 +24,9 @@ class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControl
     result foreach { newDirName =>
       try {
         logger.debug(s"Creating directory $newDirName, in parent directory: ${selectedTab.dir}")
-        val newDir = selectedTab.dir.mkChildDir(newDirName)
+        val newDir = selectedTab.dir.updater
+            .map(_.mkChildDir(newDirName))
+            .getOrElse(throw new MkDirException("Cannot create directory $newDirName. Target directory ${selectedTab.dir} is not writable."))
         selectedTab.controller.reload()
         selectedTab.controller.setTableFocusOn(Some(newDir))
       } catch {
@@ -39,4 +41,6 @@ class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControl
       }
     }
   }
+
+  class MkDirException(msg: String) extends Exception(msg)
 }

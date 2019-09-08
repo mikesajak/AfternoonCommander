@@ -7,6 +7,7 @@ import enumeratum._
 
 import scala.collection.immutable
 import scala.language.implicitConversions
+import scala.util.Try
 
 sealed abstract class Attrib(val symbol: String) extends EnumEntry
 object Attrib extends Enum[Attrib] {
@@ -58,6 +59,7 @@ trait VPath {
   def isFile: Boolean = !isDirectory
   def fileSystem: FS
   def size: Long
+  def exists: Boolean
 }
 
 trait VFile extends VPath {
@@ -71,6 +73,13 @@ trait VFile extends VPath {
   override val isDirectory: Boolean = false
 
   def inStream: InputStream
+  def updater: Option[VFileUpdater]
+}
+
+trait VFileUpdater {
+  def create(): Try[Boolean]
+  def delete(): Try[Boolean]
+  def setModificationDate(date: Instant)
   def outStream: OutputStream
 }
 
@@ -81,12 +90,18 @@ trait VDirectory extends VPath {
 
   def isParent(path: VPath): Boolean
 
-  def mkChildDir(child: String): VDirectory
-  def mkChildFile(child: String): VFile
+  def updater: Option[VDirectoryUpdater]
 
   override val isDirectory = true
   override val directory: VDirectory = this
 }
 
+trait VDirectoryUpdater {
+  def create(): Try[Boolean]
+  def delete(): Try[Boolean]
+  def setModificationDate(date: Instant)
 
+  def mkChildDir(child: String): VDirectory
+  def mkChildFile(child: String): VFile
+}
 

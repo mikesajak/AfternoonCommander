@@ -4,7 +4,7 @@ import java.nio.channels.Channels
 
 import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
-import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
+import org.mikesajak.commander.fs.{VDirectory, VFile, VFileUpdater, VPath}
 import org.mikesajak.commander.util.IO
 import org.mikesajak.commander.util.Utils.runWithTimer
 import scalafx.scene.control.Alert.AlertType
@@ -46,13 +46,16 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
   private def copyDir(source: VDirectory, target: VDirectory, summary: IOTaskSummary): IOTaskSummary = {
     reportProgress(summary, source)
 
-    val targetDir = if (!dryRun) target.mkChildDir(source.name)
-                    else target // todo: maybe create path for this dir without actually creating directory on FS
+    val targetDir = if (dryRun) target // todo: maybe create path for this dir without actually creating directory on FS
+                    else target.updater
+                               .map(_.mkChildDir(source.name))
+                               // todo: ask user if continue instead of cacelling whole copy operation
+                               .getOrElse(throw new CopyException(s"Target directory $target is not writable. Cannot create child directory ${source.name}."))
 
     val dirSummary = source.childDirs.foldLeft(summary)((result, childDir) => copyDir(childDir, targetDir, result))
     val totalSummary = source.childFiles.foldLeft(dirSummary)((result, childFile) => copyFile(childFile, targetDir, result))
 
-    val resultSummary = summary + IOTaskSummary.success(source)
+    val resultSummary = totalSummary + IOTaskSummary.success(source)
     reportProgress(resultSummary, source)
     resultSummary
   }
@@ -60,26 +63,17 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
   private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): IOTaskSummary = {
     reportProgress(summary, source)
 
-    val targetFs = target.fileSystem
-
-    val targetFile = if (!target.isDirectory) target.asInstanceOf[VFile]
-                     else target.directory.mkChildFile(source.name)
+    val targetFile =
+      if (!target.isDirectory) target.asInstanceOf[VFile]
+      else target.directory.updater
+                 .map(_.mkChildFile(source.name))
+                 // todo: ask user if continue instead of cancelling whole copy operation
+                 .getOrElse(throw new CopyException(s"Target directory ${target.directory} is not writable. Cannot create child file ${source.name}"))
 
     val doCopy = overwriteDecision.getOrElse {
-      if (targetFs.exists(targetFile)) {
-        logger.warn(s"Target file $targetFile exists. Overwriting!!!")
-        // TODO: ask if user wants to overwrite existing file!!
-        val yesToAllButtonType = new ButtonType("Yes to all")
-        val noToAllButtonType = new ButtonType("No to all")
-        val alert = new Alert(AlertType.Confirmation) {
-          initOwner(null)
-          title = "Confirm overwrite"
-          headerText = "Target file already exists"
-          contentText = s"Are you sure to overwrite ${targetFile.absolutePath}"
-          buttonTypes = Seq(ButtonType.Yes, yesToAllButtonType, ButtonType.No, noToAllButtonType, ButtonType.Cancel)
-        }
-
-        alert.showAndWait() match {
+      // TODO: refactor this!
+      if (targetFile.exists) {
+         confirmOverwriteDialog(targetFile) match {
           case Some(ButtonType.Yes) =>
             logger.debug("selected Yen")
             true
@@ -103,8 +97,13 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
     }
 
     if (doCopy && !dryRun) {
-      targetFs.create(targetFile)
-      copyFileData(source, targetFile, summary)
+      val targetFileUpdater = targetFile.updater
+      targetFileUpdater.foreach { updater =>
+        if (!targetFile.exists)
+          updater.create()
+        copyFileData(source, updater, summary)
+        updater.setModificationDate(source.modificationDate)
+      }
     }
 
     val resultSummary = summary + IOTaskSummary.success(targetFile)
@@ -112,7 +111,21 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
     resultSummary
   }
 
-  def copyFileData(source: VFile, target: VFile, curSummary: IOTaskSummary): Unit = {
+  private def confirmOverwriteDialog(targetFile: VPath) = {
+    val yesToAllButtonType = new ButtonType("Yes to all")
+    val noToAllButtonType = new ButtonType("No to all")
+    val alert = new Alert(AlertType.Confirmation) {
+      initOwner(null)
+      title = "Confirm overwrite"
+      headerText = "Target file already exists"
+      contentText = s"Are you sure to overwrite ${targetFile.absolutePath}"
+      buttonTypes = Seq(ButtonType.Yes, yesToAllButtonType, ButtonType.No, noToAllButtonType, ButtonType.Cancel)
+    }
+
+    alert.showAndWait()
+  }
+
+  def copyFileData(source: VFile, target: VFileUpdater, curSummary: IOTaskSummary): Unit = {
     val inChannel = Channels.newChannel(source.inStream)
     val outChannel = Channels.newChannel(target.outStream)
 
@@ -146,6 +159,8 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
     updateValue(progress)
     progress
   }
+
+  class CopyException(msg: String) extends Exception(msg)
 }
 
 
