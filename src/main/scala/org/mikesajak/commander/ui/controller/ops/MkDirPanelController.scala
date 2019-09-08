@@ -11,7 +11,6 @@ import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
 trait MkDirPanelController {
-//  def parentFolderLabel: Label
   def folderNameCombo: ComboBox[String]
 
   def init(parentFolder: VDirectory, parentDialog: Dialog[String]): Unit
@@ -29,11 +28,11 @@ class MkDirPanelControllerImpl(headerImageView: ImageView,
     parentFolderPathLabel.text = path + "/"
     parentFolderNameLabel.text = parentFolder.name
 
-    dialog.headerText = "Create new directory"
+    dialog.headerText = resourceMgr.getMessage("mkdir_dialog.header")
     dialog.graphic = new ImageView(resourceMgr.getIcon("folder-plus.png", IconSize.Big))
 
 
-    dialog.title ="Afternoon Commander - create directory"
+    dialog.title =resourceMgr.getMessage("mkdir_dialog.title")
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.OK, ButtonType.Cancel)
 
     // todo: fill combo suggestion list

@@ -57,11 +57,12 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
       case Failure(exception) =>
         logger.info(s"Error during copy operation $sourcePaths -> $targetDir:\n", exception)
         UIUtils.prepareExceptionAlert(appController.mainStage,
-          "Copy error", // TODO: i18
-          s"An error occurred during copy operation", // TODO: i18
-          s"Some of the paths $sourcePaths could not be copied successfully, because of an error: $exception.", // TODO: i18
-          exception)
-          .showAndWait()
+                                      resourceMgr.getMessage("copy_error_dialog.title"),
+                                      resourceMgr.getMessage("copy_error_dialog.header"),
+                                      resourceMgr.getMessageWithArgs("copy_error_dialog.message",
+                                                                     Seq(sourcePaths, exception)),
+                                      exception)
+               .showAndWait()
     }
   }
 
@@ -88,27 +89,28 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
   }
 
   private def runCopyOperation(srcPaths: Seq[VPath], targetDir: VDirectory, stats: Option[DirStats], dryRun: Boolean): Try[Boolean] = {
-//    val progressLayout = if (srcPaths.size == 1 && srcPaths.head.isFile) singleProgressLayout else multiProgressLayout
-
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
     val progressDialog = UIUtils.mkModalDialog[IOTaskSummary](appController.mainStage, contentPane)
 
     val copyJobDefs = srcPaths.map(src => CopyJobDef(src, targetDir))
 
-    // TODO: i18
-    val (pathType, pathName) =
-      srcPaths match { // TODO: i18
-        case p if p.size == 1 && p.head.isDirectory => ("directory and all its contents", s"${p.head}")
-        case p if p.size == 1 => ("file", s"${p.head}")
-        case p @ _ => (s"paths", s"${p.size} elements")
-      }
+    val (headerText, statusMessage) = srcPaths match {
+      case p if p.size == 1 && p.head.isDirectory =>
+        (resourceMgr.getMessageWithArgs("copy_progress_dialog.header.directory", Seq(p.head)),
+        resourceMgr.getMessageWithArgs("copy_progress_dialog.status.message", Seq(p.head)))
+      case p if p.size == 1 =>
+        (resourceMgr.getMessageWithArgs("copy_progress_dialog.header.file", Seq(p.head)),
+        resourceMgr.getMessageWithArgs("copy_progress_dialog.status.message", Seq(p.head)))
+      case p @ _ =>
+        (resourceMgr.getMessageWithArgs("copy_progress_dialog.header.paths", Seq(p.size)),
+        resourceMgr.getMessageWithArgs("copy_progress_dialog.status.message.paths", Seq(p.size)))
+    }
 
     val copyService = new BackgroundService(new RecursiveCopyTask(copyJobDefs, stats, dryRun))
 
-    // TODO: i18
-    ctrl.init(s"Copy", s"Copy selected $pathType\n$pathName",
-      s"Copying $pathName", s"$pathName", resourceMgr.getIcon("delete-circle.png", IconSize.Big),
+    ctrl.init(resourceMgr.getMessage("copy_progress_dialog.title"), headerText, statusMessage,
+              resourceMgr.getIcon("file-multiple.png", IconSize.Big),
       progressDialog, copyService)
 
     val result = progressDialog.showAndWait()
@@ -117,8 +119,8 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
       case Some(summary: IOTaskSummary) if summary.errors.nonEmpty =>
         new Alert(AlertType.Error) {
           initOwner(appController.mainStage)
-          title = "Error" // TODO: i18
-          headerText = "Error occurred during copy operation" // TODO: i18
+          title = resourceMgr.getMessage("copy_error_dialog.title")
+          headerText = resourceMgr.getMessage("copy_error_dialog.header")
           contentText = summary.errors.map(err => s"${err._1}: ${err._2}")
                                .reduce((a,b) => s"$a\n$b")
         }.showAndWait()

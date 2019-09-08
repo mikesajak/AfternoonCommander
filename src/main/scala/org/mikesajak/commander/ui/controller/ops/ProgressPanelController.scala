@@ -15,7 +15,7 @@ import scalafxml.core.macros.sfxml
 import scala.language.implicitConversions
 
 trait ProgressPanelController {
-  def init(operationName: String, headerText: String, details1: String, details2: String,
+  def init(title: String, headerText: String, statusMessage: String,
            operationIcon: Image, dialog: Dialog[IOTaskSummary],
            workerService: BackgroundService[IOProgress])
 }
@@ -42,38 +42,37 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
   dontCloseCheckbox.selected = true // TODO: make configurable
 
-  override def init(operationName: String, headerText: String, details1: String, details2: String,
+  override def init(title: String, headerText: String, statusMessage: String,
                     operationIcon: Image, dialog: Dialog[IOTaskSummary],
                     workerService: BackgroundService[IOProgress]): Unit = {
     this.dialog = dialog
 
-    dialog.title = s"Afternoon Commander - $operationName"
+    dialog.title = title
     dialog.headerText = headerText
     dialog.graphic = new ImageView(operationIcon)
 
-    nameLabel.text= details1
-    detailsLabel.text = details2
+    nameLabel.text= statusMessage
 
     workerService.value.onChange { (_,_,value) =>
       updateValue(value)
       updateProgress(value)
     }
 
-    workerService.onSucceeded = { e => updateFinished() }
-    workerService.onFailed = { e => updateFinished() }
+    workerService.onSucceeded = { _ => updateFinished() }
+    workerService.onFailed = { _ => updateFinished() }
 
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Cancel)
 
     val cancelButton = getButton(ButtonType.Cancel)
-    cancelButton.onAction = { ae =>
+    cancelButton.onAction = { _ =>
       logger.info(s"Cancelling operation: ${workerService.title}")
       workerService.cancel()
       timer.cancel()
     }
 
-    dialog.onShowing = e => dialog.getDialogPane.getScene.getWindow.sizeToScene()
+    dialog.onShowing = _ => dialog.getDialogPane.getScene.getWindow.sizeToScene()
 
-    dialog.onShown = { e =>
+    dialog.onShown = { _ =>
       startTime = System.currentTimeMillis()
       timer.scheduleAtFixedRate(new TimerTask {
         override def run(): Unit = {
@@ -83,7 +82,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
       workerService.start()
     }
 
-    dialog.onHidden = e => timer.cancel()
+    dialog.onHidden = _ => timer.cancel()
 
     dialog.resultConverter = {
       case ButtonType.OK => workerService.getValue.summary

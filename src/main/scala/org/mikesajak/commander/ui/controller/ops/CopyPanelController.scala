@@ -35,11 +35,9 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
   private val logger = Logger[CopyPanelControllerImpl]
 
-  logger.debug(s"CopyPanelControllerImpl - constr")
-
   override def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats] = {
     val pathType = pathTypeOf(sourcePaths)
-    dialog.title = s"${resourceMgr.getMessage("app.name")} - ${resourceMgr.getMessage(s"copy_dialog.title")}"
+    dialog.title = resourceMgr.getMessage("copy_dialog.title")
     dialog.headerText = resourceMgr.getMessage(s"copy_dialog.header.${pathType.name}")
     dialog.graphic = new ImageView(resourceMgr.getIcon("content-copy-black.png", IconSize.Big))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)

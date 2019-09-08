@@ -31,7 +31,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
   override def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Service[DirStats] = {
     val pathType = pathTypeOf(targetPaths)
-    dialog.title = s"${resourceMgr.getMessage("app.name")} - ${resourceMgr.getMessage(s"delete_dialog.title")}"
+    dialog.title = resourceMgr.getMessage(s"delete_dialog.title")
     dialog.headerText = resourceMgr.getMessage(s"delete_dialog.header.${pathType.name}")
     dialog.graphic = new ImageView(resourceMgr.getIcon("delete-circle.png", IconSize.Big))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
