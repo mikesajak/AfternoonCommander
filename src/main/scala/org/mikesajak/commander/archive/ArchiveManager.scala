@@ -24,6 +24,10 @@ class ArchiveType(val extension: String, val description: String) {
   override def toString = s"ArchiveType($extension, $description)"
 }
 
+object ArchiveType {
+  def forExtension(ext: String) = new ArchiveType(ext.toLowerCase, s"${ext.toUpperCase()} archive")
+}
+
 trait ArchiveHandler {
   def supportedArchives: Set[ArchiveType]
   def archiveType(file: VFile): Option[ArchiveType]

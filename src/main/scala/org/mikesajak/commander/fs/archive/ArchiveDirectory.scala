@@ -28,6 +28,7 @@ trait ArchiveDirectory extends VDirectory {
     }
 
     val leafDirs = childNodes.filterNot(node => subDirsMap.contains(node.pathToRoot))
+                             .filter(node => archiveNode.isDirectSubNode(node))
                              .filter { case ArchiveNode(_, Some(archiveEntry)) => archiveEntry.isDirectory }
                              .map(node => new ArchiveSubDir(this, node, Seq()))
 

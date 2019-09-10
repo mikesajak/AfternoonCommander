@@ -1,6 +1,6 @@
 package org.mikesajak.commander
 
-import org.mikesajak.commander.archive.{ApacheCommonsArchiveHandler, ArchiveHandler, ArchiveManager}
+import org.mikesajak.commander.archive.{ApacheCommonsArchiveHandler, ArchiveHandler, ArchiveManager, SevenZipArchiveHandler}
 import org.mikesajak.commander.fs.FilesystemsManager
 
 /**
@@ -19,6 +19,7 @@ class PluginManager(fsMgr: FilesystemsManager, archiveManager: ArchiveManager) {
   }
 
   def detectArchiveHandlerPlugins(): Seq[ArchiveHandler] = {
-    Seq(new ApacheCommonsArchiveHandler)
+    Seq(new ApacheCommonsArchiveHandler,
+        new SevenZipArchiveHandler)
   }
 }
