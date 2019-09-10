@@ -34,7 +34,20 @@ object FileType {
   case object PresentationFile extends FileType("file-presentation-box.png")
   case object XmlFile extends FileType("file-xml.png")
   case object EbookFile extends FileType("book-open-variant.png")
-  case object SourceCodeFile extends FileType("icons8-source-code64.png")
+
+  abstract class SourceCodeFile(override val icon: Option[String]) extends FileType(icon) {
+    def this(icon: String) = this(Some(icon))
+  }
+
+  case object GenericSourceCodeFile extends SourceCodeFile("icons8-source-code-64.png")
+  case object ScalaSourceCodeFile extends SourceCodeFile("Scala.png")
+  case object JavaSourceCodeFile extends SourceCodeFile("icons8-java-50.png")
+  case object CppSourceCodeFile extends SourceCodeFile("icons8-c++-50.png")
+  case object CSourceCodeFile extends SourceCodeFile("icons8-c-programming-64.png")
+  case object PythonSourceCodeFile extends SourceCodeFile("icons8-python-50.png")
+
+  case object LogFile extends FileType("icons8-log-48.png")
+  case object PropertiesFile extends FileType("icons8-view-details-50.png")
   case object OtherFile extends FileType("file-outline.png")
 }
 
@@ -65,9 +78,28 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
   registerFileTypeDetector(SimpleByExtensionFileDetector(DelimitedFile, "csv", "tsv"))
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(PowerpointFile, "ppt", "pptx"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(PresentationFile, "odp", "pptx"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(PresentationFile, "odp"))
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(SourceCodeFile, "java", "net", "py", "c", "cpp", "c++", "scala", "kt", "html", "css", "xml", "json", "yml", "yaml"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(GenericSourceCodeFile,
+                                                         // "java",
+                                                         "net",
+                                                         // "py",
+                                                         // "c", "h",
+                                                         // "cpp", "c++", "cxx", "hpp",
+                                                         // "scala", "sbt",
+                                                         "kt",
+                                                         "groovy",
+                                                         "html", "css",
+                                                         "xml", "json",
+                                                         "yml", "yaml"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(ScalaSourceCodeFile, "scala", "sbt"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(JavaSourceCodeFile, "java"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(CppSourceCodeFile, "cpp", "c++", "cxx", "hpp"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(CSourceCodeFile, "c", "h"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(PythonSourceCodeFile, "py"))
+
+  registerFileTypeDetector(SimpleByExtensionFileDetector(LogFile, "log"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(PropertiesFile, "properties"))
 
 
   def registerFileTypeDetector(detector: FileTypeDetector): Unit =
