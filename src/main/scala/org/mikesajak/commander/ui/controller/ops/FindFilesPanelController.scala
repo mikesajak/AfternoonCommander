@@ -12,6 +12,7 @@ import scalafx.application.Platform
 import scalafx.concurrent.Service
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
+import scalafx.scene.input.{KeyCode, KeyEvent}
 import scalafxml.core.macros.sfxml
 
 import scala.collection.JavaConverters._
@@ -62,13 +63,15 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
   override def init(startDir: VDirectory, dialog: Dialog[ButtonType]): (ButtonType, ButtonType, ButtonType) = {
     searchInTextField.text = startDir.absolutePath
 
+    val dialogPane: scalafx.scene.control.DialogPane = dialog.dialogPane.value
+
     dialog.title = resourceMgr.getMessage("find_files_dialog.title")
 
     val goToPathButtonType = new ButtonType(resourceMgr.getMessage("find_files_dialog.go_to_path_button"))
     val showAsListButtonType = new ButtonType(resourceMgr.getMessage("find_files_dialog.show_as_list_button"))
     val closeButtonType = new ButtonType(resourceMgr.getMessage("general.close_button"))
 
-    dialog.dialogPane.value.buttonTypes = Seq(goToPathButtonType, showAsListButtonType, closeButtonType)
+    dialogPane.buttonTypes = Seq(goToPathButtonType, showAsListButtonType, closeButtonType)
 
     goToPathButton = dialogButton(dialog, goToPathButtonType)
     showAsListButton = dialogButton(dialog, showAsListButtonType)
@@ -86,14 +89,19 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     startSearchButton.disable = true
 
     startSearchButton.onAction = { _ =>
-        if (!searchIsPending) startSearch()
-        else stopSearch()
+      if (!searchIsPending) startSearch()
+      else stopSearch()
     }
 
     filenameSearchTextCombo.editor.value.text.onChange { (_, _, searchText) =>
       if (!searchIsPending) {
         startSearchButton.disable = searchText.isBlank
       }
+    }
+
+    dialogPane.filterEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
+      if (ke.code == KeyCode.Escape)
+        closeButton.fire()
     }
 
     searchResultsListView.selectionModel.value.selectedIndex.onChange {
