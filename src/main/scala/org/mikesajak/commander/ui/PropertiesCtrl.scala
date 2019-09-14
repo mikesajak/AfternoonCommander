@@ -28,12 +28,12 @@ class PropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController)
     dialog.title = s"Properties of ${path.name}"
     dialog.dialogPane.value.buttonTypes = Seq(ButtonType.Close)
 
-    val backgroundService = ctrl.init(path)
+    val backgroundServices = ctrl.init(path)
 
-    dialog.onShown = _ => backgroundService.start()
+    dialog.onShown = _ => backgroundServices.foreach(_.start())
     dialog.setWindowSize(700, 600)
     dialog.showAndWait()
 
-    backgroundService.cancel()
+    backgroundServices.foreach(_.cancel())
   }
 }

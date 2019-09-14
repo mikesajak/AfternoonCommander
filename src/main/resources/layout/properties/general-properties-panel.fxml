@@ -20,7 +20,7 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <Label text="%properties_panel.general.size.label" GridPane.rowIndex="5" />
+            <Label text="%properties_panel.general_tab.size.label" GridPane.rowIndex="5" />
             <Label fx:id="sizeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="5" />
             <Label text="Ścieżka:" />
             <HBox GridPane.columnIndex="1">
@@ -39,8 +39,8 @@
             <Label fx:id="modifiedLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <Label text="Atrybuty:" GridPane.rowIndex="3" />
             <Label fx:id="attributesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Label fx:id="numDirsNameLabel" text="%properties_panel.general.num_directories.label" GridPane.rowIndex="7" />
-            <Label fx:id="numFilesNameLabel" text="%properties_panel.general.num_files.label" GridPane.rowIndex="8" />
+            <Label fx:id="numDirsNameLabel" text="%properties_panel.general_tab.num_directories.label" GridPane.rowIndex="7" />
+            <Label fx:id="numFilesNameLabel" text="%properties_panel.general_tab.num_files.label" GridPane.rowIndex="8" />
             <Label fx:id="numDirsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="7" />
             <Label fx:id="numFilesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="8" />
          </children>

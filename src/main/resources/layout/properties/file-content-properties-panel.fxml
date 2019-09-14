@@ -3,10 +3,10 @@
 <?import javafx.scene.control.TableColumn?><?import javafx.scene.control.TableView?><?import javafx.scene.layout.VBox?>
 <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="300.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.properties.FileContentPropertiesPanelControllerImpl">
    <children>
-      <TableView fx:id="metadataTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="200.0">
+      <TableView fx:id="metadataTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="200.0" VBox.vgrow="ALWAYS">
         <columns>
-          <TableColumn fx:id="metadataNameColumn" prefWidth="250.0" text="Name" />
-          <TableColumn fx:id="metadataValueColumn" prefWidth="75.0" text="Value" />
+          <TableColumn fx:id="metadataNameColumn" prefWidth="250.0" text="%properties_panel.file_contents_tab.name.column" />
+          <TableColumn fx:id="metadataValueColumn" prefWidth="75.0" text="%properties_panel.file_contents_tab.value.column" />
         </columns>
          <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

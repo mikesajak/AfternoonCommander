@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxconcur}
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.VFile
-import org.mikesajak.commander.task.{BackgroundService, DirContents, DirStats}
+import org.mikesajak.commander.task.BackgroundService
 import org.mikesajak.commander.ui.controller.FileRow
 import scalafx.Includes._
 import scalafx.beans.property.StringProperty
@@ -13,7 +13,7 @@ import scalafx.scene.control.{TableColumn, TableView}
 import scalafxml.core.macros.sfxml
 
 trait FileContentPropertiesPanelController {
-  def init(path: VFile, statsService: BackgroundService[(DirStats, DirContents)])
+  def init(path: VFile): BackgroundService[Map[String, Seq[String]]]
 }
 
 @sfxml
@@ -25,7 +25,7 @@ class FileContentPropertiesPanelControllerImpl(metadataTableView: TableView[Meta
     extends FileContentPropertiesPanelController {
   private val logger = Logger[FileContentPropertiesPanelControllerImpl]
 
-  override def init(path: VFile, statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
+  override def init(path: VFile): BackgroundService[Map[String, Seq[String]]] = {
     metadataNameColumn.cellValueFactory = { _.value.name }
     metadataNameColumn.prefWidth <== metadataTableView.width.multiply(0.3)
     metadataValueColumn.cellValueFactory = { _.value.value }
@@ -40,7 +40,7 @@ class FileContentPropertiesPanelControllerImpl(metadataTableView: TableView[Meta
 
         metadataTableView.items = ObservableBuffer(tableRows.sortBy(_.name.value.toLowerCase))
       }
-    }).start()
+    })
   }
 }
 

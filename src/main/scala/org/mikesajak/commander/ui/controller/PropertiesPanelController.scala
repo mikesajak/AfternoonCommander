@@ -1,6 +1,7 @@
 package org.mikesajak.commander.ui.controller
 
 import com.typesafe.scalalogging.Logger
+import javafx.concurrent.Worker
 import javafx.concurrent.Worker.State
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
@@ -16,7 +17,7 @@ import scalafx.scene.layout.BorderPane
 import scalafxml.core.macros.{nested, sfxml}
 
 trait PropertiesPanelController {
-  def init(path: VPath): BackgroundService[(DirStats, DirContents)]
+  def init(path: VPath): Seq[BackgroundService[_]]
 }
 
 @sfxml
@@ -39,7 +40,7 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
   private val fileContentsLayout = "/layout/properties/file-content-properties-panel.fxml"
   private val dirContentsLayout = "/layout/properties/dir-content-properties-panel.fxml"
 
-  override def init(path: VPath): BackgroundService[(DirStats, DirContents)] = {
+  override def init(path: VPath): Seq[BackgroundService[_]] = {
     nameLabel.text = path.name
 
     iconLabel.text = ""
@@ -54,9 +55,22 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
 
     generalPropertiesPanelController.init(path, statsService)
     prepareAccessRightsTab(path)
-    prepareContentTab(path, statsService)
+    val contentService = prepareContentTab(path, statsService)
 
-    statsService
+    val services = Seq(Some(statsService), contentService).flatten
+
+    services.foreach { srv =>
+      srv.state.onChange { (_, _, state) =>
+        state match {
+          case State.RUNNING => notifyStarted()
+          case State.FAILED => notifyError(Option(statsService.value.value._1), statsService.message.value)
+          case State.SUCCEEDED => notifyFinished(statsService.value.value._1, services)
+          case _ =>
+        }
+      }
+    }
+
+    services
   }
 
   private def prepareStatsUI(path: VPath, statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
@@ -66,36 +80,31 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
     val msgThrottler = new Throttler[String](50, str => Platform.runLater(statusDetailMessageLabel.text = str))
     Throttler.registerCancelOnServiceFinish(statsService, msgThrottler)
     statsService.message.onChange { (_, _, msg) => msgThrottler.update(msg) }
-
-    statsService.state.onChange { (_, _, state) => state match {
-      case State.RUNNING =>   notifyStarted()
-      case State.FAILED =>    notifyError(Option(statsService.value.value._1), statsService.message.value)
-      case State.SUCCEEDED => notifyFinished(statsService.value.value._1, None)
-      case _ =>
-    }}
   }
 
-  private def prepareContentTab(path: VPath, statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
-    val (title, contentPane) = path match {
+  private def prepareContentTab(path: VPath, statsService: BackgroundService[(DirStats, DirContents)]): Option[BackgroundService[_]] = {
+    val (title, contentPane, tabService) = path match {
       case f: VFile =>
         val (pane, ctrl) = UILoader.loadScene[FileContentPropertiesPanelController](fileContentsLayout)
-        ctrl.init(f, statsService)
-        ("File contents", pane)
+        val srv = ctrl.init(f)
+        (resourceMgr.getMessage("properties_panel.file_contents_tab.title"), pane, Some(srv))
       case d: VDirectory =>
         val (pane, ctrl) = UILoader.loadScene[DirContentPropertiesPanelController](dirContentsLayout)
         ctrl.init(d, statsService)
-        ("Directory contents", pane)
+        (resourceMgr.getMessage("properties_panel.dir_contents_tab.title"), pane, None)
     }
 
     propertyPanelsTabPane += new Tab() {
       text = title
       content = contentPane
     }
+
+    tabService
   }
 
   private def prepareAccessRightsTab(path: VPath): Unit = {
     propertyPanelsTabPane += new Tab() {
-      text = "Access rights"
+      text = resourceMgr.getMessage("properties_panel.access_rights_tab.title")
       content = new BorderPane() {
         top = new Label("Access rights -> TODO")
       }
@@ -105,17 +114,26 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
   def notifyStarted(): Unit = {
     logger.debug(s"notifyStarted...")
     statusMessageLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif"))
-    statusMessageLabel.text = resourceMgr.getMessage("stats_panel.counting.message.label")
+    statusMessageLabel.text = resourceMgr.getMessage("properties_panel.general_tab.status.analyze")
   }
 
-  def notifyFinished(stats: DirStats, message: Option[String] = None): Unit = {
-    logger.debug(s"notifyFinished: $stats, $message")
+  def notifyFinished(stats: DirStats, services: Seq[BackgroundService[_]]): Unit = {
+    if (services.forall(srv => isFinishedState(srv.state.value))) {
+      statusMessageLabel.graphic = null
+      statusMessageLabel.text = null
+      statusMessageLabel.visible = false
+      statusMessageLabel.maxHeight = 0
 
-    statusMessageLabel.graphic = null
-    statusMessageLabel.text = null
+      statusDetailMessageLabel.graphic = null
+      statusDetailMessageLabel.text = null
+      statusDetailMessageLabel.visible = false
+      statusDetailMessageLabel.maxHeight = 0
+    }
+  }
 
-    statusDetailMessageLabel.graphic = null
-    statusDetailMessageLabel.text = null
+  private def isFinishedState(state: Worker.State): Boolean = state match {
+    case State.SUCCEEDED | State.CANCELLED | State.FAILED => true
+    case _ => false
   }
 
   def notifyError(stats: Option[DirStats], message: String): Unit = {

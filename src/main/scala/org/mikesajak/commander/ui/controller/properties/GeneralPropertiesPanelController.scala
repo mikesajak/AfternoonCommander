@@ -71,12 +71,12 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
   }
 
   private def updateStats(stats: DirStats): Unit = {
-    numDirsLabel.text = resourceMgr.getMessageWithArgs("properties_panel.general.num_directories.value.label",
+    numDirsLabel.text = resourceMgr.getMessageWithArgs("properties_panel.general_tab.num_directories.value.label",
                                                        Array(stats.numDirs, stats.depth))
     numFilesLabel.text = s"${stats.numFiles}"
 
     val unit = DataUnit.findDataSizeUnit(stats.size)
-    sizeLabel.text = resourceMgr.getMessageWithArgs("properties_panel.general.size.value.label",
+    sizeLabel.text = resourceMgr.getMessageWithArgs("properties_panel.general_tab.size.value.label",
                                                     Array(unit.convert(stats.size), unit.symbol, stats.size))
   }
 
