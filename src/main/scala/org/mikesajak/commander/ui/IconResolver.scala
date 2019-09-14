@@ -41,9 +41,7 @@ class IconResolver(fileTypeMgr: FileTypeManager,
   private def addBottomLeftBadge(icon: Node, path: VPath) = {
     path match {
       case f: VFile if archiveManager.findArchiveHandlerByExt(f).isDefined =>
-        if (archiveManager.findArchiveHandler(f).isDefined)
-          new Group(icon, archiveOverlayIconBottomRight)
-        else icon
+        new Group(icon, archiveOverlayIconBottomRight)
       case f: VFile if fileTypeMgr.isExecutable(f) =>
         new Group(icon, execOverlayIconBottomRight)
       case _ => icon

@@ -260,9 +260,9 @@ class DirTableController(curDirField: TextField,
     val totalSize = files.map(_.size).sum
     val sizeUnit = DataUnit.findDataSizeUnit(totalSize)
     resourceMgr.getMessageWithArgs("file_table_panel.status.message",
-                                                       Array(numDirs, files.size,
-                                                             sizeUnit.convert(totalSize),
-                                                             sizeUnit.symbol))
+                                   Array(numDirs, files.size,
+                                         sizeUnit.convert(totalSize),
+                                         sizeUnit.symbol))
   }
 
   override def reload(): Unit = {
@@ -293,15 +293,17 @@ class DirTableController(curDirField: TextField,
           handleAction(items.head.path)
         }
 
-      case KeyCode.S if !event.altDown && event.controlDown =>
-        showFilterPopup()
+      case KeyCode.S if event.shortcutDown => showFilterPopup()
 
       case _ =>
     }
   }
 
-  private def handleAction(path: VPath): Unit = {
-    fileHandlerFactory.getFileHandler(path).foreach {
+  private def handleAction(path: VPath, forceOSAction: Boolean = false): Unit = {
+    val handler = if (forceOSAction) Some(fileHandlerFactory.getDefaultOSActionHandler(path))
+                  else fileHandlerFactory.getFileHandler(path)
+
+    handler.foreach {
       case containerHandler: ContainerFileHandler => changeDir(containerHandler.getContainerDir)
       case actionHandler: ActionFileHandler => actionHandler.handle()
       case _ => logger.debug(s"File handler couldn't be found for path $path.")
@@ -321,18 +323,15 @@ class DirTableController(curDirField: TextField,
 
     val menuItems = Seq(
       new MenuItem() {
-        text = "Run OS/desktop action"
+        text = resourceMgr.getMessage("file_table_panel.context_menu.run_on_action")
         graphic = null
-        onAction = _ => {
-          logger.debug(s"Running OS/desktop action for $rowPath")
-          handleAction(rowPath)
-        }
+        onAction = _ => handleAction(rowPath, forceOSAction = true)
       },
       new SeparatorMenuItem(),
       new MenuItem() {
-        text = "Properties"
+        text = resourceMgr.getMessage("file_table_panel.context_menu.properties")
         graphic = null
-        onAction = _ => { propertiesCtrl.showPropertiesOf(rowPath) }
+        onAction = _ => propertiesCtrl.showPropertiesOf(rowPath)
       })
 
     val cm = new ContextMenu(menuItems: _*)
@@ -340,50 +339,60 @@ class DirTableController(curDirField: TextField,
   }
 
   private def showFilterPopup(): Unit = {
-    val tf = new TextField() {
+    val curFilterPredicate: Predicate[_ >: FileRow] = filteredRows.predicate.value
+
+    var itemToFocusOnExit = dirTableView.focusModel.value.focusedItem.value
+
+    val textField: TextField = new TextField() {
       prefWidth = dirTableView.width.value
     }
-    val popup = new Popup() {
-      content += tf
+    val popup: Popup = new Popup() {
+      content += textField
       autoHide = true
       // TODO: disable configuration changes while popup is opened? is it necessary?
-      onHiding = _ => filteredRows.predicate = createShowHiddenFilesPredicate()
-    }
-    var pending = false
-    tf.handleEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
-      try {
-        val curFilterPredicate = filteredRows.predicate.value
-        if (!pending) {
-          pending = true
-          ke.code match {
-            case KeyCode.Escape =>
-              popup.hide()
-            case KeyCode.Up | KeyCode.Down | KeyCode.Enter =>
-              setTableFocusOn(Some(dirTableView.selectionModel.value.getSelectedItem.path))
-//              dirTableView.fireEvent(ke)
-              popup.hide()
-            case _ =>
-              val filterNamePredicate: Predicate[_ >: FileRow] = r => r.path.name.toLowerCase.contains(tf.text.value.toLowerCase)
-//              filteredRows.predicate = curFilterPredicate and filterNamePredicate
-              // TODO: combine predicates with "and"
-              filteredRows.predicate = row => curFilterPredicate.test(row) && filterNamePredicate.test(row)
-          }
-        }
-      } finally {
-        pending = false
+      onHiding = { _ =>
+        filteredRows.predicate = createShowHiddenFilesPredicate()
+        val selection =
+          dirTableView.items.value.indexWhere(row => row.path.name == itemToFocusOnExit.path.name)
+        focusIndex(selection)
       }
     }
+
+    textField.text.onChange { (_,_, textValue) =>
+      val filterNamePredicate: Predicate[_ >: FileRow] = r => r.path.name.toLowerCase.contains(textValue.toLowerCase)
+      filteredRows.predicate = row => curFilterPredicate.test(row) && filterNamePredicate.test(row)
+    }
+
+    textField.handleEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
+      ke.code match {
+        case KeyCode.Escape =>
+          popup.hide()
+        case KeyCode.Up =>
+          val sel = dirTableView.focusModel.value.focusedIndex.value - 1
+          dirTableView.focusModel.value.focus(sel)
+          ke.consume()
+        case KeyCode.Down =>
+          val sel = dirTableView.focusModel.value.focusedIndex.value + 1
+          dirTableView.focusModel.value.focus(sel)
+          ke.consume()
+        case KeyCode.Enter =>
+          if (dirTableView.focusModel.value.getFocusedIndex >= 0) {
+            itemToFocusOnExit = dirTableView.focusModel.value.focusedItem.value
+            popup.hide()
+          }
+        case _ =>
+      }
+    }
+
     val bounds = dirTableView.localToScreen(dirTableView.boundsInLocal.value)
     popup.show(appController.mainStage, bounds.minX, bounds.maxY)
   }
 
   private def initTable(directory: VDirectory) {
-    val (dirs0, files0) = directory.children.partition(p => p.isDirectory)
-
-    val dirs =
-      (if (directory.parent.isDefined) Seq(new PathToParent(directory)) else Seq()) ++
-      dirs0.sortBy(d => d.name)
-    val files = files0.sortBy(f => f.name)
+    val sortedChildDirs = directory.childDirs.sortBy(d => d.name)
+    val dirs = if (directory.parent.isDefined) new PathToParent(directory) +: sortedChildDirs
+               else sortedChildDirs
+    val files = directory.childFiles.sortBy(f => f.name)
 
     val fileRows = (dirs ++ files).view
       .map(f => new FileRow(f, resourceMgr))
@@ -392,12 +401,27 @@ class DirTableController(curDirField: TextField,
     tableRows.setAll(fileRows.asJava)
   }
 
-  private def selectIndex(selIndex: Int): Unit = {
+  private def selectIndex(index: Int): Unit = {
     val prevSelection = dirTableView.getSelectionModel.getSelectedIndex
-    if (prevSelection != selIndex) {
-      dirTableView.getSelectionModel.select(math.max(selIndex, 0))
-      dirTableView.scrollTo(math.max(selIndex - NumPrevVisibleItems, 0))
+    if (prevSelection != index) {
+      dirTableView.getSelectionModel.select(math.max(index, 0))
+      scrollTo(index)
     }
+  }
+
+  private def focusIndex(index: Int): Unit = {
+    logger.debug(s"focusIndex($index)")
+    val prevFocus = dirTableView.focusModel.value.getFocusedIndex
+    if (prevFocus != index) {
+      val i = math.max(index, 0)
+      logger.debug(s"  index=$i")
+      dirTableView.getSelectionModel.select(i)
+      scrollTo(index)
+    }
+  }
+
+  private def scrollTo(index: Int): Unit = {
+    dirTableView.scrollTo(math.max(index - NumPrevVisibleItems, 0))
   }
 
   private def registerCurDirFieldUpdater(): Unit = {

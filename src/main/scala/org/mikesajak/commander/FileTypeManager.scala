@@ -57,12 +57,17 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
 
   private val defaultFileTypeDetector = new DefaultFileTypeDetector
   private var fileTypeDetectors = List[FileTypeDetector]()
-//  registerFileTypeDetector(archiveManager) // parsing file by AM is time consuming - think of async way of doing it
-  registerFileTypeDetector(SimpleByExtensionFileDetector(ArchiveFile, "zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"))
+  registerFileTypeDetector(archiveManager)
+  registerFileTypeDetector(SimpleByExtensionFileDetector(ArchiveFile,
+                                                         "zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"))
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(GraphicFile, "jpg", "jpeg", "png", "gif"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(VideoFile, "avi", "mkv", "mov", "mpg", "mpv", "mp4"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(MusicFile, "mp3", "ogg", "wav"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(GraphicFile,
+                                                         "jpg", "jpeg", "png", "gif", "tif", "tiff"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(VideoFile,
+                                                         "avi", "mkv", "mov", "mpg", "mpv", "mp4",
+                                                         "mpeg", "flv", "m4v", "m2v"))
+  registerFileTypeDetector(SimpleByExtensionFileDetector(MusicFile,
+                                                         "mp3", "ogg", "wav", "wmv", "mpc", "m4a", "flac"))
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(XmlFile, "xml"))
 
@@ -81,15 +86,10 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
   registerFileTypeDetector(SimpleByExtensionFileDetector(PresentationFile, "odp"))
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(GenericSourceCodeFile,
-                                                         // "java",
                                                          "net",
-                                                         // "py",
-                                                         // "c", "h",
-                                                         // "cpp", "c++", "cxx", "hpp",
-                                                         // "scala", "sbt",
                                                          "kt",
                                                          "groovy",
-                                                         "html", "css",
+                                                         "html", "htm", "css",
                                                          "xml", "json",
                                                          "yml", "yaml"))
   registerFileTypeDetector(SimpleByExtensionFileDetector(ScalaSourceCodeFile, "scala", "sbt"))

@@ -16,4 +16,10 @@ class FileHandlerFactory(appCtrl: ApplicationController, archiveManager: Archive
       case _ => None
     }
   }
+
+  def getDefaultOSActionHandler(path: VPath): FileHandler =
+    path match {
+      case d: VDirectory => new DefaultDirectoryHandler(d)
+      case f: VFile => new DefaultOSActionFileHandler(f, appCtrl)
+    }
 }

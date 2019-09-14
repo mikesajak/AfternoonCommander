@@ -11,12 +11,15 @@ import scala.collection.JavaConverters._
 
 class ApacheCommonsArchiveHandler extends ArchiveHandler {
   override def supportedArchives: Set[ArchiveType] =
-    ArchiveStreamFactory.findAvailableArchiveInputStreamProviders().keySet().asScala.toSet
-      .filter(ext => ext != "7z") // apache archive does not support 7z in streaming mode
-      .map(ArchiveType.forExtension)
+    ArchiveStreamFactory.findAvailableArchiveInputStreamProviders().keySet().asScala
+                        .map(_.toLowerCase)
+                        .toSet
+                        .filter(ext => ext != "7z") // apache archive does not support 7z in streaming mode
+                        .map(ArchiveType.forExtension)
 
   override def archiveType(file: VFile): Option[ArchiveType] = try {
     Some(ArchiveStreamFactory.detect(file.inStream))
+        .map(_.toLowerCase)
         .filter(ext => ext != "7z")
         .map(ArchiveType.forExtension)
   } catch {

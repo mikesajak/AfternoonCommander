@@ -14,7 +14,6 @@ object Keys {
     case object Ctrl extends Modifier
     case object Shift extends Modifier
     case object Meta extends  Modifier
-    case object Shortcut extends Modifier
 
     def complementOf(entries: Seq[Modifier]): Seq[Modifier] = {
       val modSet = entries.toSet
@@ -43,6 +42,5 @@ object Keys {
       case Ctrl => ke.controlDown
       case Shift => ke.shiftDown
       case Meta => ke.metaDown
-      case Shortcut => ke.shortcutDown
     }
 }

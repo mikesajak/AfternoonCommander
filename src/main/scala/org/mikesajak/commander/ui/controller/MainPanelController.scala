@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller
 import org.mikesajak.commander.OperationMgr
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.Keys
-import org.mikesajak.commander.ui.Keys.Modifier.{Alt, Ctrl}
+import org.mikesajak.commander.ui.Keys.Modifier.Alt
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import scalafx.Includes._
 import scalafx.scene.control.{SplitPane, TabPane}
@@ -51,7 +51,7 @@ class MainPanelController(dirsSplitPane: SplitPane,
       }
     } else {
       ke.code match {
-        case KeyCode.R if Keys.hasOnlyModifiers(ke, Ctrl) => operationMgr.handleRefreshAction()
+        case KeyCode.R if ke.shortcutDown => operationMgr.handleRefreshAction()
 
         case KeyCode.F7 if Keys.hasOnlyModifiers(ke, Alt) =>operationMgr.handleFindAction()
 
