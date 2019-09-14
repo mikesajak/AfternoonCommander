@@ -64,19 +64,13 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
     statusDetailMessageLabel.text = null
 
     val msgThrottler = new Throttler[String](50, str => Platform.runLater(statusDetailMessageLabel.text = str))
+    Throttler.registerCancelOnServiceFinish(statsService, msgThrottler)
     statsService.message.onChange { (_, _, msg) => msgThrottler.update(msg) }
 
-
     statsService.state.onChange { (_, _, state) => state match {
-      case State.RUNNING => notifyStarted()
-      case State.FAILED =>
-        msgThrottler.cancel()
-        notifyError(Option(statsService.value.value._1), statsService.message.value)
-      case State.SUCCEEDED =>
-        msgThrottler.cancel()
-        notifyFinished(statsService.value.value._1, None)
-      case State.CANCELLED =>
-        msgThrottler.cancel()
+      case State.RUNNING =>   notifyStarted()
+      case State.FAILED =>    notifyError(Option(statsService.value.value._1), statsService.message.value)
+      case State.SUCCEEDED => notifyFinished(statsService.value.value._1, None)
       case _ =>
     }}
   }

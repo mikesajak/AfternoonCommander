@@ -55,14 +55,11 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
     countColumn.cellValueFactory = { _.value.value }
 
     val throttler = new Throttler[DirContents](200, value => Platform.runLater(updateChart(value)))
+    Throttler.registerCancelOnServiceFinish(statsService, throttler)
     statsService.value.onChange { (_, _, state) => throttler.update(state._2) }
 
     statsService.state.onChange { (_, _, state) => state match {
-      case State.SUCCEEDED =>
-        throttler.cancel()
-        updateChart(statsService.value.value._2)
-      case State.CANCELLED | State.FAILED =>
-        throttler.cancel()
+      case State.SUCCEEDED => updateChart(statsService.value.value._2)
       case _ =>
     }}
   }
@@ -82,7 +79,7 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
   }
 
   private def compareByNameAndCount(entry1: (FileType, Int), entry2: (FileType, Int)): Boolean = {
-    val delta = (entry1._2 - entry2._2) match {
+    val delta = entry1._2 - entry2._2 match {
       case 0 => fileTypeManager.descriptionOf(entry1._1) compareTo fileTypeManager.descriptionOf(entry2._1)
       case x => x
     }
@@ -90,7 +87,7 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
   }
 
   private def compareByNameAndCount2(entry1: (String, Int), entry2: (String, Int)): Boolean = {
-    val delta = (entry1._2 - entry2._2) match {
+    val delta = entry1._2 - entry2._2 match {
       case 0 => entry1._1 compareTo entry2._1
       case x => x
     }

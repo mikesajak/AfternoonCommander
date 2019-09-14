@@ -65,19 +65,13 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     val throttler = new Throttler[DirStats](50,
                                             stats => Platform.runLater(statsPanelController.updateStats(stats, None)))
+    Throttler.registerCancelOnServiceFinish(statsService, throttler)
     statsService.value.onChange { (_, _, stats) => throttler.update(stats) }
 
     statsService.state.onChange { (_, _, state) => state match {
-      case State.RUNNING =>
-        throttler.cancel()
-        statsPanelController.notifyStarted()
-      case State.FAILED =>
-        throttler.cancel()
-        notifyError(Option(statsService.value.value), statsService.message.value)
-      case State.SUCCEEDED =>
-        throttler.cancel()
-        notifyFinished(statsService.value.value, None)
-      case State.CANCELLED => throttler.cancel()
+      case State.RUNNING => statsPanelController.notifyStarted()
+      case State.FAILED => notifyError(Option(statsService.value.value), statsService.message.value)
+      case State.SUCCEEDED => notifyFinished(statsService.value.value, None)
       case _ =>
     }}
 

@@ -56,19 +56,14 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
     }
 
     val throttler = new Throttler[DirStats](50, stats => Platform.runLater(updateStats(stats)))
+    Throttler.registerCancelOnServiceFinish(statsService, throttler)
     statsService.value.onChange { (_, _, stats) => throttler.update(stats._1) }
 
     statsService.state.onChange { (_, _, state) =>
       state match {
-        case State.RUNNING =>
-          throttler.cancel()
-          notifyStarted()
-        case State.FAILED =>
-          throttler.cancel()
-          notifyError(Option(statsService.value.value._1), statsService.message.value)
-        case State.SUCCEEDED =>
-          throttler.cancel()
-          notifyFinished(statsService.value.value._1, None)
+        case State.RUNNING =>   notifyStarted()
+        case State.FAILED =>    notifyError(Option(statsService.value.value._1), statsService.message.value)
+        case State.SUCCEEDED => notifyFinished(statsService.value.value._1, None)
         case _ =>
       }
     }

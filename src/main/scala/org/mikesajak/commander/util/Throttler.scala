@@ -2,8 +2,20 @@ package org.mikesajak.commander.util
 
 import java.util.{Timer, TimerTask}
 
+import javafx.concurrent.Worker.State
+import scalafx.concurrent.Service
+import scalafx.event.subscriptions.Subscription
+
 object Throttler {
   val commonTimer = new Timer()
+
+  def registerCancelOnServiceFinish(service: Service[_], throttler: Throttler[_]): Subscription = {
+    service.state.onChange { (_, _, state) => state match {
+        case State.CANCELLED | State.FAILED | State.SUCCEEDED => throttler.cancel()
+        case _ =>
+      }
+    }
+  }
 }
 
 class Throttler[A](minUpdateTime: Long, updateFunc: A => Unit, timer0: => Timer = Throttler.commonTimer) {

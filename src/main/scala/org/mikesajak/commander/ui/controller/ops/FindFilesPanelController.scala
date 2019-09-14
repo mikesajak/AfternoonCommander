@@ -140,22 +140,17 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     }
   }
 
-  val throttler = new Throttler[SearchProgress](50, doUpdate)
   private def prepareSearchService(searchService: Service[SearchProgress]): Unit = {
     searchService.state.onChange { (_, _, state) => state match {
-      case State.RUNNING => searchStarted()
-      case State.FAILED =>
-        throttler.cancel()
-        searchStopped(searchService.value.value, cancelled = true)
-      case State.SUCCEEDED =>
-        throttler.cancel()
-        searchStopped(searchService.value.value, cancelled = false)
-      case State.CANCELLED =>
-        throttler.cancel()
-        searchStopped(searchService.value.value, cancelled = true)
+      case State.RUNNING =>   searchStarted()
+      case State.FAILED =>    searchStopped(searchService.value.value, cancelled = true)
+      case State.SUCCEEDED => searchStopped(searchService.value.value, cancelled = false)
+      case State.CANCELLED => searchStopped(searchService.value.value, cancelled = true)
       case _ =>
     }}
 
+    val throttler = new Throttler[SearchProgress](50, doUpdate)
+    Throttler.registerCancelOnServiceFinish(searchService, throttler)
     searchService.value.onChange { (_, _, value) => throttler.update(value) }
   }
 

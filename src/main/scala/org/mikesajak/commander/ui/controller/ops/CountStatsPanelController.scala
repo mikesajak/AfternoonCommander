@@ -59,6 +59,7 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
 
     val throttler = new Throttler[DirStats](50, s => Platform.runLater(statsPanelController.updateStats(s, None)))
+    Throttler.registerCancelOnServiceFinish(statsService, throttler)
     statsService.value.onChange { (_, _, stats) => throttler.update(stats) }
 
     dialog.onShown = _ => statsService.start()
