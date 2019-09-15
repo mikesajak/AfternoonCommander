@@ -7,7 +7,7 @@ import org.mikesajak.commander.task.CancelledException
 
 object IO {
   trait CopyListener {
-    def bytesWritten(size: Int): Boolean
+    def notifyBytesWritten(size: Long): Boolean
   }
 
   def channelCopy(source: ReadableByteChannel, target: WritableByteChannel, bufferSize: Int, copyListener: CopyListener): Unit =
@@ -15,20 +15,21 @@ object IO {
 
   def channelCopy(source: ReadableByteChannel, target: WritableByteChannel, bufferSize: Int, copyListener: Option[CopyListener] = None): Unit = {
     val buffer = ByteBuffer.allocate(bufferSize)
+    var count = 0L
     while (source.read(buffer) != -1) {
       buffer.flip()
-      val count = target.write(buffer)
-      val continue = copyListener.forall(_.bytesWritten(count))
+      count += target.write(buffer)
+      val cancelled = copyListener.forall(_.notifyBytesWritten(count))
       buffer.compact()
 
-      if (!continue)
+      if (cancelled)
         throw new CancelledException
     }
 
     buffer.flip()
     while(buffer.hasRemaining) {
-      val count = target.write(buffer)
-      val continue = copyListener.forall(_.bytesWritten(count))
+      count += target.write(buffer)
+      val continue = copyListener.forall(_.notifyBytesWritten(count))
 
       if (!continue)
         throw new CancelledException

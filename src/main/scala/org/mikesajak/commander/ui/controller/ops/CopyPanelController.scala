@@ -86,6 +86,12 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
     dialog.onShown = _ => statsService.start()
 
+    Platform.runLater {
+      targetDirCombo.requestFocus()
+      val comboTF = targetDirCombo.editor.value
+      comboTF.positionCaret(comboTF.text.value.size)
+    }
+
     statsService
   }
 

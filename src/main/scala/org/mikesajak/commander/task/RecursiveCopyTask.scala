@@ -4,20 +4,25 @@ import java.nio.channels.Channels
 
 import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
-import org.mikesajak.commander.fs.{VDirectory, VFile, VFileUpdater, VPath}
+import org.mikesajak.commander.fs._
 import org.mikesajak.commander.util.IO
 import org.mikesajak.commander.util.Utils.runWithTimer
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
 
-object CopyFileTask {
+object RecursiveCopyFileTask {
   // FixME: use configuration, not constants
-  val BUFFER_SIZE: Int = 1024 * 100
+  val BUFFER_SIZE: Int = 1024 * 1000
 }
 
-case class CopyJobDef(source: VPath, target: VPath)
+case class TransferDef(source: VPath, target: VPath)
+case class CopyJobDef(pathsToCopy: Seq[TransferDef], preserveModificationDate: Boolean)
+object CopyJobDef {
+  def apply(source: VPath, target: VPath, preserveModificationDate: Boolean) =
+    new CopyJobDef(Seq(TransferDef(source, target)), preserveModificationDate)
+}
 
-class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dryRun: Boolean)
+class RecursiveCopyTask(copyJobDef: CopyJobDef, jobStats: Option[DirStats], dryRun: Boolean)
     extends jfxc.Task[IOProgress] {
 
   private implicit val logger: Logger = Logger[RecursiveCopyTask]
@@ -25,22 +30,22 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
   private var overwriteDecision: Option[Boolean] = None
 
   override def call(): IOProgress = {
-    runWithTimer(s"Copy filesTask: $jobDefs")(runCopy)
+    runWithTimer(s"Copy filesTask: $copyJobDef")(runCopy)
   }
 
   private def runCopy(): IOProgress = {
-    val result = jobDefs.foldLeft(IOTaskSummary.empty) { case (summary, job) => copy(job, summary) }
+    val result = copyJobDef.pathsToCopy.foldLeft(IOTaskSummary.empty) { case (summary, job) => copy(job, summary) }
 
     logger.debug(s"Finished copy task, result=$result")
 
     reportProgress(result)
   }
 
-  private def copy(jobDef: CopyJobDef, summary: IOTaskSummary): IOTaskSummary = {
-    val source = jobDef.source
-    val target = jobDef.target
-    if (source.isDirectory) copyDir(source.directory, target.directory, summary)
-    else copyFile(source.asInstanceOf[VFile], target, summary)
+  private def copy(jobDef: TransferDef, summary: IOTaskSummary): IOTaskSummary = {
+    if (jobDef.source.isDirectory)
+      copyDir(jobDef.source.directory, jobDef.target.directory, summary)
+    else
+      copyFile(jobDef.source.asInstanceOf[VFile], jobDef.target, summary)
   }
 
   private def copyDir(source: VDirectory, target: VDirectory, summary: IOTaskSummary): IOTaskSummary = {
@@ -48,8 +53,8 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
 
     val targetDir = if (dryRun) target // todo: maybe create path for this dir without actually creating directory on FS
                     else target.updater
-                               .map(_.mkChildDir(source.name))
-                               // todo: ask user if continue instead of cacelling whole copy operation
+                               .map(updater => mkDir(updater, source))
+                               // todo: ask user if continue instead of cancelling whole copy operation
                                .getOrElse(throw new CopyException(s"Target directory $target is not writable. Cannot create child directory ${source.name}."))
 
     val dirSummary = source.childDirs.foldLeft(summary)((result, childDir) => copyDir(childDir, targetDir, result))
@@ -58,6 +63,13 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
     val resultSummary = totalSummary + IOTaskSummary.success(source)
     reportProgress(resultSummary, source)
     resultSummary
+  }
+
+  private def mkDir(parentUpdater: VDirectoryUpdater, source: VDirectory) = {
+    val childDir = parentUpdater.mkChildDir(source.name)
+    if (copyJobDef.preserveModificationDate)
+      childDir.updater.foreach(_.setModificationDate(source.modificationDate))
+    childDir
   }
 
   private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): IOTaskSummary = {
@@ -102,7 +114,8 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
         if (!targetFile.exists)
           updater.create()
         copyFileData(source, updater, summary)
-        updater.setModificationDate(source.modificationDate)
+        if (copyJobDef.preserveModificationDate)
+          updater.setModificationDate(source.modificationDate)
       }
     }
 
@@ -128,16 +141,19 @@ class RecursiveCopyTask(jobDefs: Seq[CopyJobDef], jobStats: Option[DirStats], dr
   def copyFileData(source: VFile, target: VFileUpdater, curSummary: IOTaskSummary): Unit = {
     val inChannel = Channels.newChannel(source.inStream)
     val outChannel = Channels.newChannel(target.outStream)
-
-    IO.channelCopy(inChannel, outChannel, CopyFileTask.BUFFER_SIZE, new FileCopyListener(source, curSummary))
-
-    inChannel.close()
-    outChannel.close()
+    try {
+      IO.channelCopy(inChannel, outChannel, RecursiveCopyFileTask.BUFFER_SIZE, new FileCopyListener(source, curSummary))
+    } finally {
+      inChannel.close()
+      outChannel.close()
+    }
   }
 
   class FileCopyListener(file: VFile, currentSummary: IOTaskSummary) extends IO.CopyListener {
-    override def bytesWritten(size: Int): Boolean = {
-      reportProgress(TransferState(size, file.size), currentSummary, file)
+    override def notifyBytesWritten(size: Long): Boolean = {
+      val updatedSummary = IOTaskSummary(currentSummary.numDirs, currentSummary.numFiles,
+                                         currentSummary.totalSize + size, currentSummary.errors)
+      reportProgress(TransferState(size, file.size), updatedSummary, file)
       isCancelled
     }
   }

@@ -93,7 +93,8 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
 
     val progressDialog = UIUtils.mkModalDialog[IOTaskSummary](appController.mainStage, contentPane)
 
-    val copyJobDefs = srcPaths.map(src => CopyJobDef(src, targetDir))
+    val copyJobDef = CopyJobDef(srcPaths.map(src => TransferDef(src, targetDir)),
+                                preserveModificationDate = true)
 
     val (headerText, statusMessage) = srcPaths match {
       case p if p.size == 1 && p.head.isDirectory =>
@@ -107,7 +108,7 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
         resourceMgr.getMessageWithArgs("copy_progress_dialog.status.message.paths", Seq(p.size)))
     }
 
-    val copyService = new BackgroundService(new RecursiveCopyTask(copyJobDefs, stats, dryRun))
+    val copyService = new BackgroundService(new RecursiveCopyTask(copyJobDef, stats, dryRun))
 
     ctrl.init(resourceMgr.getMessage("copy_progress_dialog.title"), headerText, statusMessage,
               resourceMgr.getIcon("file-multiple.png", IconSize.Big),

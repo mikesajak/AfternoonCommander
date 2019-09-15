@@ -9,9 +9,11 @@ object IOProgress {
     IOProgress(Some(transferState), summary, curMessage, jobStats)
 
   def calcProgress(summary: IOTaskSummary, stats: DirStats): Double =
-    calcProgress(summary).toDouble / getProgressMax(stats)
+    calcProgressBySize(summary).toDouble / getProgressMaxBySize(stats)
 
-  def calcProgress(summary: IOTaskSummary): Int = summary.numDirs + summary.numFiles
+  def calcProgressByNumFiles(summary: IOTaskSummary): Long = summary.numDirs + summary.numFiles
+  def calcProgressBySize(summary: IOTaskSummary): Long = summary.totalSize
 
-  def getProgressMax(stats: DirStats): Int = stats.numDirs + stats.numFiles
+  def getProgressMaxByNumFiles(stats: DirStats): Long = stats.numDirs + stats.numFiles
+  def getProgressMaxBySize(stats: DirStats): Long = stats.size
 }

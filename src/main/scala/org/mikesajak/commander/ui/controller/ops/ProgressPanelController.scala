@@ -30,6 +30,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
                                   sizeLabel: Label,
                                   elapsedTimeLabel: Label,
                                   estimatedTimeLabel: Label,
+                                  speedLabel: Label,
                                   dontCloseCheckbox: CheckBox)
     extends ProgressPanelController {
 
@@ -39,8 +40,6 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
   private var startTime: Long = _
   private val timer = new Timer()
-
-  dontCloseCheckbox.selected = true // TODO: make configurable
 
   override def init(title: String, headerText: String, statusMessage: String,
                     operationIcon: Image, dialog: Dialog[IOTaskSummary],
@@ -76,9 +75,9 @@ class ProgressPanelControllerImpl(nameLabel: Label,
       startTime = System.currentTimeMillis()
       timer.scheduleAtFixedRate(new TimerTask {
         override def run(): Unit = {
-          Platform.runLater(updateTimes())
+          Platform.runLater(updateTimes(Some(workerService)))
         }
-      }, 2000, 2000)
+      }, 1000, 1000)
       workerService.start()
     }
 
@@ -96,7 +95,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     totalProgressIndicator.progress = 1.0
 
     timer.cancel()
-    updateTimes()
+    updateTimes(None)
 
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
 
@@ -116,8 +115,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     progressBar.progress = progress.transferState.map(ts => ts.bytesDone.toDouble / ts.totalBytes)
                                    .getOrElse(progressValue)
 
-    totalProgressIndicator.progress = progress.transferState.map(t => t.bytesDone.toDouble / t.totalBytes)
-            .getOrElse(progressValue)
+    totalProgressIndicator.progress = progressValue
   }
 
   private def updateValue(progress: IOProgress): Unit = {
@@ -128,10 +126,22 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     progress.curMessage.foreach(msg => detailsLabel.text = msg)
   }
 
-  private def updateTimes(): Unit = {
+  private def updateTimes(workerService: Option[BackgroundService[IOProgress]]): Unit = {
     val millis = System.currentTimeMillis() - startTime
-    val interval = TimeInterval.apply(millis)
+    val interval = TimeInterval(millis)
     elapsedTimeLabel.text = interval.format()
-    estimatedTimeLabel.text = "n/a"
+    speedLabel.text =
+        workerService.map { service =>
+          val speed = service.value.value.summary.totalSize / (millis / 1000.0)
+          s"${DataUnit.formatDataSize(speed)}/s"
+        }.getOrElse("n/a")
+
+    estimatedTimeLabel.text =
+        workerService.flatMap { service =>
+          val speed = service.value.value.summary.totalSize / millis.toDouble
+          val ioProgress = service.value.value
+          ioProgress.jobStats.map(_.size - ioProgress.summary.totalSize)
+                    .map(r => TimeInterval((r / speed).toLong).format())
+        }.getOrElse("n/a")
   }
 }

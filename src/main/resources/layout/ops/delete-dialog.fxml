@@ -27,6 +27,6 @@
             <Insets left="10.0" />
          </VBox.margin>
       </Label>
-      <CheckBox fx:id="dryRunCheckbox" mnemonicParsing="false" selected="true" text="Dry run" />
+      <CheckBox fx:id="dryRunCheckbox" mnemonicParsing="false" text="Dry run" />
    </children>
 </VBox>

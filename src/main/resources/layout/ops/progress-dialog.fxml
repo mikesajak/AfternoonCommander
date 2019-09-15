@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-
 <?import javafx.geometry.Insets?><?import javafx.scene.control.*?><?import javafx.scene.layout.*?><?import javafx.scene.text.Font?>
-<VBox maxHeight="+Infinity" maxWidth="+Infinity" minHeight="200.0" minWidth="300.0" spacing="7.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.ProgressPanelControllerImpl">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="500.0" spacing="7.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.ProgressPanelControllerImpl">
 <children>
       <HBox>
          <children>
@@ -62,12 +61,15 @@
                     <rowConstraints>
                       <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
                         <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
+                        <RowConstraints maxHeight="-Infinity" minHeight="10.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
                         <Label text="Elapsed time:" />
                         <Label fx:id="elapsedTimeLabel" text="Label" GridPane.columnIndex="1" />
                         <Label text="Estimated time:" GridPane.rowIndex="1" />
                         <Label fx:id="estimatedTimeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label text="Speed:" GridPane.rowIndex="2" />
+                        <Label fx:id="speedLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                      </children>
                   </GridPane>
                </children>
