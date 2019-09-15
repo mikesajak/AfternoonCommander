@@ -21,7 +21,7 @@ object ArchiveTest {
 
     val h = new ApacheCommonsArchiveHandler()
 
-    val archiveDir = h.getArchiveFS(testFile)
+    val archiveDir = h.getArchiveRootDir(testFile)
 
 //    val archiveEntries = readArchiveEntries(testFile)
 //    val archiveVDir = new ArchiveRootDir(testFile, archiveEntries)

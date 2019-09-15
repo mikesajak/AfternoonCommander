@@ -31,7 +31,7 @@ object ArchiveType {
 trait ArchiveHandler {
   def supportedArchives: Set[ArchiveType]
   def archiveType(file: VFile): Option[ArchiveType]
-  def getArchiveFS(file: VFile): Option[VDirectory]
+  def getArchiveRootDir(file: VFile): Option[VDirectory]
 }
 
 class ArchiveManager extends FileTypeDetector with FileHandler {

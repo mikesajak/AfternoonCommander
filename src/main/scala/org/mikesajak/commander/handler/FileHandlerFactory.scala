@@ -10,7 +10,7 @@ class FileHandlerFactory(appCtrl: ApplicationController, archiveManager: Archive
       case d: VDirectory => Some(new DefaultDirectoryHandler(d))
       case f: VFile if archiveManager.findArchiveHandler(f).isDefined =>
         archiveManager.findArchiveHandler(f)
-                      .flatMap(_.getArchiveFS(f))
+                      .flatMap(_.getArchiveRootDir(f))
                       .map(new VirtualDirectoryHandler(_))
       case f: VFile => Some(new DefaultOSActionFileHandler(f, appCtrl))
       case _ => None

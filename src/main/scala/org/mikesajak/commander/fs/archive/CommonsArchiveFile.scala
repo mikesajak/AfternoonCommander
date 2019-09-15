@@ -6,14 +6,14 @@ import java.time.Instant
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.mikesajak.commander.fs._
 
-class ArchiveFile(archiveEntry: ArchiveEntry, parentDir: VDirectory) extends VFile {
+class CommonsArchiveFile(archiveEntry: ArchiveEntry, parentDir: VDirectory) extends VFile {
   override val name: String = archiveEntry.getName.split("[/\\\\]").last
 
   override val parent: Option[VDirectory] = Some(parentDir)
 
   override val directory: VDirectory = parentDir
 
-  override val absolutePath: String = archiveEntry.getName // TODO
+  override val absolutePath: String = s"${parentDir.absolutePath}/$name"
 
   override val modificationDate: Instant = Instant.ofEpochMilli(archiveEntry.getLastModifiedDate.getTime)
 
@@ -29,6 +29,6 @@ class ArchiveFile(archiveEntry: ArchiveEntry, parentDir: VDirectory) extends VFi
 
   override val exists = true
 
-  override def toString: String = name
+  override val toString: String = name
 
 }

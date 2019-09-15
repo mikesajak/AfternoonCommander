@@ -3,20 +3,21 @@ package org.mikesajak.commander.fs.archive
 import java.time.Instant
 
 import org.apache.commons.compress.archivers.ArchiveEntry
+import org.mikesajak.commander.archive.ArchiveType
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.util.PathUtils
 
-trait ArchiveDirectory extends VDirectory {
+trait CommonsArchiveDirectory extends VDirectory {
   val archiveNode: ArchiveNode
   val childNodes: Seq[ArchiveNode]
 
-  override val directory: ArchiveDirectory = this
+  override val directory: CommonsArchiveDirectory = this
   override val size = 0
 
   override lazy val childFiles: Seq[VFile] =
     childNodes.filter(node => archiveNode.isDirectSubNode(node))
               .filterNot { case ArchiveNode(_, Some(archiveEntry)) => archiveEntry.isDirectory }
-              .map(node => new ArchiveFile(node.archiveEntry.get, this))
+              .map(node => new CommonsArchiveFile(node.archiveEntry.get, this))
 
   override lazy val childDirs: Seq[VDirectory] = {
     val subDirsMap = childNodes
@@ -24,20 +25,20 @@ trait ArchiveDirectory extends VDirectory {
         .groupBy(node => archiveNode.getDirectSubNodePath(node))
 
     val createdIndirectSubDirs = subDirsMap.map { case (pathToRoot, childNodes) =>
-      new ArchiveSubDir(this, ArchiveNode(pathToRoot), childNodes)
+      new CommonsArchiveSubDir(this, ArchiveNode(pathToRoot), childNodes)
     }
 
     val leafDirs = childNodes.filterNot(node => subDirsMap.contains(node.pathToRoot))
                              .filter(node => archiveNode.isDirectSubNode(node))
                              .filter { case ArchiveNode(_, Some(archiveEntry)) => archiveEntry.isDirectory }
-                             .map(node => new ArchiveSubDir(this, node, Seq()))
+                             .map(node => new CommonsArchiveSubDir(this, node, Seq()))
 
     leafDirs ++ createdIndirectSubDirs
   }
 }
 
-class ArchiveRootDir(val archiveFile: VFile, archiveEntries: Seq[ArchiveEntry])
-    extends ArchiveDirectory {
+class CommonsArchiveRootDir(val archiveFile: VFile, archiveType: ArchiveType, archiveEntries: Seq[ArchiveEntry])
+    extends CommonsArchiveDirectory {
   override val archiveNode: ArchiveNode = ArchiveNode(IndexedSeq())
   override val childNodes: Seq[ArchiveNode] = archiveEntries.map { entry =>
     val segments = PathUtils.pathSegments(entry.getName)
@@ -46,10 +47,10 @@ class ArchiveRootDir(val archiveFile: VFile, archiveEntries: Seq[ArchiveEntry])
 
   override val name: String = archiveFile.name
   override val parent: Option[VDirectory] = Some(archiveFile.directory)
-  override val absolutePath: String = archiveFile.absolutePath
+  override val absolutePath: String = s"${archiveFile.absolutePath}/${archiveType.extension}/"
   override val modificationDate: Instant = archiveFile.modificationDate
   override val attributes: Attribs = archiveFile.attributes
-  override lazy val fileSystem: FS = new ArchiveFS(this)
+  override lazy val fileSystem: FS = new CommonsArchiveFS(this)
   override val size: Long = 0
 
   def isParent(path: VPath): Boolean =
@@ -61,16 +62,16 @@ class ArchiveRootDir(val archiveFile: VFile, archiveEntries: Seq[ArchiveEntry])
 
   override val exists: Boolean = true
 
-  override def toString = s"ArchiveRootDir(${archiveFile.name})"
+  override val toString = s"ArchiveRootDir(${archiveFile.name})"
 }
 
-class ArchiveSubDir(parentDir: VDirectory,
-                    override val archiveNode: ArchiveNode,
-                    override val childNodes: Seq[ArchiveNode])
-    extends ArchiveDirectory {
+class CommonsArchiveSubDir(parentDir: VDirectory,
+                           override val archiveNode: ArchiveNode,
+                           override val childNodes: Seq[ArchiveNode])
+    extends CommonsArchiveDirectory {
   override val name: String = archiveNode.name
   override val parent: Option[VDirectory] = Some(parentDir)
-  override def absolutePath: String = parent.get.absolutePath
+  override def absolutePath: String = s"${parentDir.absolutePath}/$name"
   override def modificationDate: Instant = parent.get.modificationDate
   override val attributes: Attribs = new Attribs(Attrib.Directory, Attrib.Readable)
   override val size: Long = 0
