@@ -12,7 +12,7 @@ import scalafx.application.Platform
 import scalafx.concurrent.Service
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
-import scalafx.scene.input.{KeyCode, KeyEvent}
+import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton}
 import scalafxml.core.macros.sfxml
 
 import scala.collection.JavaConverters._
@@ -109,6 +109,13 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     }
     searchResultsListView.items.value.onChange {
       showAsListButton.disable = searchResultsListView.items.value.size == 0
+    }
+
+    searchResultsListView.onMouseClicked = { me =>
+      if (me.button == MouseButton.Primary && me.clickCount == 2) {
+        if (searchResultsListView.selectionModel.value.selectedIndex.value >= 0)
+          goToPathButton.fire()
+      }
     }
 
     Platform.runLater { filenameSearchTextCombo.requestFocus() }
