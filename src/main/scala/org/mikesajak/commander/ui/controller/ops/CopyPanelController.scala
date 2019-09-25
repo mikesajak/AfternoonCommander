@@ -16,7 +16,13 @@ import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
 
 trait CopyPanelController {
-  def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats]
+  def initForCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats] =
+    init(sourcePaths, targetDir, "copy_dialog", dialog)
+
+  def initForMove(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats] =
+    init(sourcePaths, targetDir, "move_dialog", dialog)
+
+  def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialogTypePrefix: String, dialog: Dialog[ButtonType]): Service[DirStats]
   def dryRunSelected: Boolean
 }
 
@@ -35,13 +41,18 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
   private val logger = Logger[CopyPanelControllerImpl]
 
-  override def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats] = {
+  private var dialogTypePrefix: String = _
+
+  override def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialogTypePrefix: String, dialog: Dialog[ButtonType]): Service[DirStats] = {
     val pathType = pathTypeOf(sourcePaths)
-    dialog.title = resourceMgr.getMessage("copy_dialog.title")
-    dialog.headerText = resourceMgr.getMessage(s"copy_dialog.header.${pathType.name}")
-    dialog.graphic = new ImageView(resourceMgr.getIcon("content-copy-black.png", IconSize.Big))
+    this.dialogTypePrefix = dialogTypePrefix
+
+    dialog.title = resourceMgr.getMessage(s"$dialogTypePrefix.title")
+    dialog.headerText = resourceMgr.getMessage(s"$dialogTypePrefix.header.${pathType.name}")
+    val headerIconName = resourceMgr.getMessage(s"$dialogTypePrefix.header.icon")
+    dialog.graphic = new ImageView(resourceMgr.getIcon(headerIconName, IconSize.Big))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
-    sourcePathTypeLabel.text = resourceMgr.getMessage(s"copy_dialog.to_copy.${pathType.name}")
+    sourcePathTypeLabel.text = resourceMgr.getMessage(s"$dialogTypePrefix.source_type.${pathType.name}")
 
     targetDirCombo.selectionModel.value.select(targetDir.toString)
 
@@ -59,14 +70,14 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       sourceNameLabel.text = targetPath.name
       sourcePathsListView.visible = false
     } else {
-      sourceNameLabel.text = "[" + resourceMgr.getMessageWithArgs("copy_dialog.num_elements", Array(sourcePaths.size)) + "]"
+      sourceNameLabel.text = "[" + resourceMgr.getMessageWithArgs(s"$dialogTypePrefix.num_elements", Array(sourcePaths.size)) + "]"
       sourcePathsListView.visible = true
       sourcePathsListView.items = ObservableBuffer(sourcePaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
     }
 
-    summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_not_available.label")
+    summaryMessageLabel.text = resourceMgr.getMessage(s"$dialogTypePrefix.progress_not_available.label")
     summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("comment-alert-outline.png", IconSize.Small))
-    summaryMessageLabel.tooltip = resourceMgr.getMessage("copy_dialog.progress_not_available.tooltip")
+    summaryMessageLabel.tooltip = resourceMgr.getMessage(s"$dialogTypePrefix.progress_not_available.tooltip")
 
     statsPanelController.init(sourcePaths)
 
@@ -89,7 +100,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     Platform.runLater {
       targetDirCombo.requestFocus()
       val comboTF = targetDirCombo.editor.value
-      comboTF.positionCaret(comboTF.text.value.size)
+      comboTF.positionCaret(comboTF.text.value.length)
     }
 
     statsService
@@ -107,16 +118,16 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
   private def notifyFinished(stats: DirStats, message: Option[String]): Unit = {
     statsPanelController.notifyFinished(stats, message)
 
-    summaryMessageLabel.text = resourceMgr.getMessage("copy_dialog.progress_available.label")
+    summaryMessageLabel.text = resourceMgr.getMessage(s"$dialogTypePrefix.progress_available.label")
     summaryMessageLabel.graphic = null
-    summaryMessageLabel.tooltip = resourceMgr.getMessage("copy_dialog.progress_available.tooltip")
+    summaryMessageLabel.tooltip = resourceMgr.getMessage(s"$dialogTypePrefix.progress_available.tooltip")
   }
 
   private def notifyError(stats: Option[DirStats], message: String): Unit = {
     statsPanelController.notifyError(stats, message)
 
     summaryMessageLabel.text = message
-    summaryMessageLabel.tooltip = "An error occurred while processing IO operation."
+    summaryMessageLabel.tooltip = resourceMgr.getMessage(s"$dialogTypePrefix.io_error.tooltip")
     summaryMessageLabel.graphic = new ImageView(resourceMgr.getIcon("alert-circle.png", IconSize.Small))
   }
 }

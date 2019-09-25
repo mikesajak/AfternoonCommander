@@ -70,7 +70,7 @@ class CopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControll
     val (contentPane, contentCtrl) = UILoader.loadScene[CopyPanelController](copyLayout)
     val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
 
-    val statsService = contentCtrl.init(sourcePaths, targetDir, dialog)
+    val statsService = contentCtrl.initForCopy(sourcePaths, targetDir, dialog)
 
     val result = dialog.showAndWait()
 

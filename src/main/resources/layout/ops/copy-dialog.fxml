@@ -22,7 +22,7 @@
       </HBox>
       <ListView fx:id="sourcePathsListView" prefHeight="200.0" prefWidth="200.0" />
       <fx:include fx:id="statsPanel" source="stats-panel.fxml" />
-      <Label text="Copy to:">
+      <Label fx:id="operationDestinationLabel" text="Copy to:">
          <VBox.margin>
             <Insets top="10.0" />
          </VBox.margin>

@@ -1,6 +1,7 @@
 package org.mikesajak.commander.task
 
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
+import org.mikesajak.commander.units.DataUnit
 
 case class TransferState(bytesDone: Long, totalBytes: Long)
 
@@ -18,7 +19,7 @@ case class IOTaskSummary(numDirs: Int, numFiles: Int, totalSize: Long,
                   errors ::: that.errors)
 
   override def toString: String =
-    s"IOTaskSumary(numDirs=$numDirs, numFiles=$numFiles, totalSize=$totalSize, errors=$errors)"
+    s"IOTaskSumary(numDirs=$numDirs, numFiles=$numFiles, totalSize=${DataUnit.formatDataSize(totalSize)}, errors=$errors)"
 }
 
 object IOTaskSummary {
