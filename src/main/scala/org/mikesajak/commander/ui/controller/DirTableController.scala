@@ -7,7 +7,7 @@ import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
-import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager, UIUtils}
+import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
 import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager, HistoryMgr}
@@ -19,7 +19,7 @@ import scalafx.geometry.{Insets, Side}
 import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
 import scalafx.stage.Popup
-import scalafxml.core.macros.sfxml
+import scalafxml.core.macros.{nested, sfxml}
 
 import scala.collection.JavaConverters._
 /**
@@ -77,8 +77,7 @@ trait DirTableControllerIntf {
 }
 
 @sfxml
-class DirTableController(curDirField: TextField,
-                         addTabButton: Button,
+class DirTableController(addTabButton: Button,
                          dirTableView: TableView[FileRow],
                          idColumn: TableColumn[FileRow, VPath],
                          nameColumn: TableColumn[FileRow, String],
@@ -88,6 +87,7 @@ class DirTableController(curDirField: TextField,
                          attribsColumn: TableColumn[FileRow, String],
                          statusLabel1: Label,
                          statusLabel2: Label,
+                         @nested[PathBarControllerImpl] curPathBarController: PathBarController,
 
                          panelId: PanelId,
                          fileTypeMgr: FileTypeManager,
@@ -114,7 +114,6 @@ class DirTableController(curDirField: TextField,
   override val historyMgr = new HistoryMgr()
 
   addTabButton.padding = Insets.Empty
-  curDirField.prefHeight <== addTabButton.height
 
   private val configObserver: ConfigObserver = new ConfigObserver {
     override val observedKey = ConfigKey("file_panel", "*")
@@ -136,7 +135,8 @@ class DirTableController(curDirField: TextField,
 
     dirTableView.selectionModel.value.selectionMode = SelectionMode.Multiple
 
-    registerCurDirFieldUpdater()
+    curPathBarController.init()
+    curPathBarController.registerDirChangeListener((directory: VDirectory) => setCurrentDirectory(directory))
 
     dirTableView.selectionModel.value.selectedItems.onChange {
       val selectedPaths = dirTableView.selectionModel.value.selectedItems.map(_.path)
@@ -230,7 +230,9 @@ class DirTableController(curDirField: TextField,
     val prevDir = curDir
     val newDir = resolveTargetDir(directory)
     curDir = newDir
-    curDirField.text = newDir.absolutePath
+
+    curPathBarController.setDirectory(newDir)
+
     initTable(newDir)
 
     setTableFocusOn(focusedPath)
@@ -422,35 +424,6 @@ class DirTableController(curDirField: TextField,
 
   private def scrollTo(index: Int): Unit = {
     dirTableView.scrollTo(math.max(index - NumPrevVisibleItems, 0))
-  }
-
-  private def registerCurDirFieldUpdater(): Unit = {
-    var pending = false
-    curDirField.text.onChange { (_, _, _) =>
-      try {
-        if (!pending) {
-          pending = true
-          var textWidth = UIUtils.calcTextBounds(curDirField).getWidth
-          val componentWidth = curDirField.getBoundsInLocal.getWidth
-          while (textWidth > componentWidth) {
-            curDirField.text = shortenDirText(curDirField.text.value)
-            textWidth = UIUtils.calcTextBounds(curDirField).getWidth
-            curDirField.insets // FIXME: ???
-          }
-        }
-      } finally {
-        pending = false
-      }
-    }
-
-    curDirField.width.onChange { (_, _, _) =>
-      curDirField.text = curDir.absolutePath // FIXME: ??? shortenDirText?
-    }
-  }
-
-  private def shortenDirText(text: String): String = {
-    // TODO: smarter shortening - e.g. cut the middle of the path, leave the beginning and ending etc. /root/directory/.../lastDir
-    text.substring(1)
   }
 }
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.HBox?><?import javafx.scene.layout.Pane?><?import javafx.scene.layout.VBox?><?import org.controlsfx.control.BreadCrumbBar?>
+<HBox fx:id="curPathPanel" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.PathBarControllerImpl">
+   <children>
+      <VBox fx:id="pathBreadCrumbWrapper" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="16.0" minWidth="0.0">
+         <children>
+            <BreadCrumbBar fx:id="pathBreadCrumbBar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="16.0" minWidth="20.0" />
+         </children>
+      </VBox>
+      <Pane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" HBox.hgrow="ALWAYS" />
+   </children>
+</HBox>

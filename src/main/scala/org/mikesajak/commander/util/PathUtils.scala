@@ -37,6 +37,13 @@ object PathUtils {
     }
 
   @tailrec
+  def pathToRoot(p: VPath, list: List[VPath] = List()): List[VPath] =
+    p.parent match {
+      case Some(par) => pathToRoot(par, p:: list)
+      case _ => p:: list
+    }
+
+  @tailrec
   def findParent(path: VPath, parent: VPath): Option[VPath] = {
     if (path == parent) Some(path)
     else path.parent match {

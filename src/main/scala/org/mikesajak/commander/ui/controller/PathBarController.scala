@@ -1,0 +1,121 @@
+package org.mikesajak.commander.ui.controller
+
+import impl.org.controlsfx.skin.BreadCrumbBarSkin.BreadCrumbButton
+import javafx.scene.{control => jfxctrl}
+import org.controlsfx.control.BreadCrumbBar
+import org.mikesajak.commander.fs.VDirectory
+import org.mikesajak.commander.util.PathUtils
+import scalafx.Includes._
+import scalafx.scene.control.Button
+import scalafx.scene.layout.{HBox, VBox}
+import scalafxml.core.macros.sfxml
+
+import scala.annotation.tailrec
+
+trait PathBarController {
+  def init()
+  def setDirectory(directory: VDirectory)
+  def registerDirChangeListener(currentDirAware: CurrentDirAware)
+}
+
+trait CurrentDirAware {
+  def setDirectory(directory: VDirectory)
+}
+
+@sfxml
+class PathBarControllerImpl(curPathPanel: HBox,
+                            addNewTabButton: Button,
+
+                            pathBreadCrumbWrapper: VBox,
+                            pathBreadCrumbBar: BreadCrumbBar[BreadCrumbItem])
+    extends PathBarController with CurrentDirAware {
+
+  private var curDirListeners = List[CurrentDirAware]()
+
+  def init(): Unit = {
+    setupPathBreadCrumbBar()
+  }
+
+  def registerDirChangeListener(listener: CurrentDirAware): Unit = {
+    curDirListeners ::= listener
+  }
+
+  private def setupPathBreadCrumbBar(): Unit = {
+    pathBreadCrumbBar.setAutoNavigationEnabled(false)
+    pathBreadCrumbWrapper.children.setAll(pathBreadCrumbBar)
+    pathBreadCrumbBar.setCrumbFactory { item =>
+      item.value.value match {
+        case null => new BreadCrumbButton(null)
+        case PathCrumbItem(p) => new BreadCrumbButton(p.name) {
+          setTooltip(new jfxctrl.Tooltip(p.absolutePath))
+        }
+        case PrevCrumbItems(prevPaths) => new BreadCrumbButton("...") {
+          setTooltip(new jfxctrl.Tooltip(s"${prevPaths.last.absolutePath}"))
+        }
+      }
+      // TODO: mark filesystem directory with icon
+    }
+
+    pathBreadCrumbBar.setOnCrumbAction { event =>
+      event.getSelectedCrumb.getValue match {
+        case null =>
+        case PathCrumbItem(path) => changeDirectoryAction(path.directory)
+        case x@PrevCrumbItems(paths) =>
+          println(s"Hit prev .... $x")
+          changeDirectoryAction(paths.last.directory)
+      }
+    }
+  }
+
+  private def changeDirectoryAction(newDir: VDirectory): Unit = {
+    curDirListeners.foreach(_.setDirectory(newDir))
+  }
+
+  override def setDirectory(directory: VDirectory): Unit = {
+    updatePathBreadCrumbBar(directory)
+  }
+
+  private def updatePathBreadCrumbBar(dir: VDirectory): Unit = {
+    val pathToRoot = PathUtils.pathToRoot(dir)
+
+    val items = pathToRoot.map(p => PathCrumbItem(p))
+    pathBreadCrumbBar.setSelectedCrumb(BreadCrumbBar.buildTreeModel(items: _*))
+
+    resizeCrumbBar()
+  }
+
+  private def resizeCrumbBar(): Unit = {
+    recomputeSize(pathBreadCrumbBar)
+    while (pathBreadCrumbBar.getWidth > curPathPanel.width.value) {
+      val lastItem = pathBreadCrumbBar.getSelectedCrumb
+      val (invisibleSegments, visibleSegments) = treePathToRoot(lastItem).map(_.getValue).reverse match {
+        case PrevCrumbItems(prevItems) :: PathCrumbItem(headPath) :: tail => (headPath +: prevItems, tail)
+        case PathCrumbItem(headPath) :: tail => (List(headPath), tail)
+        case items => (List(), items)
+      }
+
+      val segments = PrevCrumbItems(invisibleSegments) :: visibleSegments
+      pathBreadCrumbBar.setSelectedCrumb(BreadCrumbBar.buildTreeModel(segments: _*))
+
+      recomputeSize(pathBreadCrumbBar)
+    }
+  }
+
+  private def recomputeSize(control: jfxctrl.Control): Unit = {
+    Option(control.getScene)
+        .flatMap(scene => Option(scene.getRoot))
+        .foreach { sceneRoot =>
+          sceneRoot.applyCss()
+          sceneRoot.layout()
+          control.autosize()
+        }
+  }
+
+  @tailrec
+  private def treePathToRoot(item: jfxctrl.TreeItem[BreadCrumbItem],
+                             curPath: List[jfxctrl.TreeItem[BreadCrumbItem]] = List())
+      : List[jfxctrl.TreeItem[BreadCrumbItem]] =
+    if (item.getParent != null) treePathToRoot(item.getParent, curPath :+ item)
+    else curPath
+
+}

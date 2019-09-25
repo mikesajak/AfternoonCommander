@@ -31,6 +31,9 @@ libraryDependencies ++= { // scalafx (and fxml)
   // todo: cleanup %% / %
 }
 
+// https://mvnrepository.com/artifact/org.controlsfx/controlsfx
+libraryDependencies += "org.controlsfx" % "controlsfx" % "11.0.0"
+
 // guice dependency injection
 libraryDependencies ++= Seq(
   "com.google.inject" % "guice" % "4.2.2",

@@ -7,7 +7,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.inject.name.Names
 import com.google.inject.{Binder, Key, Module}
 import com.typesafe.scalalogging.Logger
-import javafx.scene.{Parent, control}
+import javafx.scene.{Parent, control => jfxctrl}
 import org.mikesajak.commander._
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs._
@@ -39,6 +39,10 @@ object PanelId {
   }
 }
 
+trait BreadCrumbItem
+case class PathCrumbItem(path: VPath) extends BreadCrumbItem
+case class PrevCrumbItems(prevPaths: Seq[VPath]) extends BreadCrumbItem
+
 trait DirPanelControllerIntf {
   def init(panelId: PanelId)
 }
@@ -54,6 +58,7 @@ class DirPanelController(tabPane: TabPane,
                          homeDirButton: Button,
                          driveSelectionButton: Button,
                          freeSpaceLabel: Label,
+                         freeSpaceBar: ProgressBar,
                          topUIPane: Pane,
 
                          config: Configuration,
@@ -303,6 +308,7 @@ class DirPanelController(tabPane: TabPane,
         // FIXME: disabled until reload performance is fixed/improved
 //      logger.debug(s"$panelId - reloading tab: ${dirTabManager.selectedTab.dir}")
 //      dirTabManager.selectedTab.controller.reload()
+//      logger.trace(s"$panelId - finished reloading tab: ${dirTabManager.selectedTab.dir}")
       updateFreeSpace()
     }
     scheduler.scheduleAtFixedRate(task, 1, 5, TimeUnit.SECONDS)
@@ -318,6 +324,7 @@ class DirPanelController(tabPane: TabPane,
     Platform.runLater {
       freeSpaceLabel.text = resourceMgr.getMessageWithArgs("file_group_panel.free_space.message",
         Array(freeUnit.convert(free), freeUnit.symbol, totalUnit.convert(total), totalUnit.symbol))
+      freeSpaceBar.progress = (total - free).toDouble / total
     }
   }
 }
@@ -329,7 +336,7 @@ object DirTab {
 
   // This is helper to operate on tabs to work around that.
 
-  def updateTab(jfxTab: control.Tab, path: VDirectory): Unit = {
+  def updateTab(jfxTab: jfxctrl.Tab, path: VDirectory): Unit = {
     jfxTab.text = path.name
     jfxTab.tooltip = path.absolutePath
   }

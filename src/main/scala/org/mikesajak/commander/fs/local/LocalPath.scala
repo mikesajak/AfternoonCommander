@@ -12,7 +12,10 @@ trait LocalPath extends VPath {
   val file: File
   val fileSystem: LocalFS
 
-  override def name: String = file.getName
+  override def name: String = {
+    if (file.getName.isEmpty) file.getAbsolutePath
+    else file.getName
+  }
 
   override def absolutePath: String = file.getAbsolutePath
 
@@ -34,15 +37,14 @@ trait LocalPath extends VPath {
 
   override def modificationDate: Instant = Instant.ofEpochMilli(file.lastModified())
 
-  override def isDirectory: Boolean = file.isDirectory
-
   override def parent: Option[VDirectory] = {
     if (file.getParent != null) Some(new LocalDirectory(file.getParentFile, fileSystem))
     else None
   }
 
   override def directory: VDirectory = {
-    if (isDirectory) this.asInstanceOf[VDirectory] else parent.get
+    if (isDirectory) this.asInstanceOf[VDirectory]
+    else parent.get
   }
 
   override def toString: String = s"${LocalFS.id}://$absolutePath"
@@ -60,5 +62,4 @@ trait LocalPath extends VPath {
     val state = Seq(file)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
-
 }
