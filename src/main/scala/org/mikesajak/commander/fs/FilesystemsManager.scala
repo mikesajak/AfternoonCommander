@@ -8,6 +8,7 @@ import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager
 import org.mikesajak.commander.OSResolver
 import org.mikesajak.commander.OSType.Windows
 import org.mikesajak.commander.fs.local.LocalFS
+import org.mikesajak.commander.util.PathUtils.{depthToRoot, findParent}
 import org.mikesajak.commander.util.Utils
 
 import scala.collection.JavaConverters._
@@ -136,6 +137,12 @@ class FilesystemsManager(osResolver: OSResolver) {
     //    val fsv = FileSystemView.getFileSystemView
     //    LocalFS.mkLocalPathName(fsv.getHomeDirectory.getAbsolutePath)
     LocalFS.mkLocalPathName(System.getProperty("user.home"))
+  }
+
+  def findFilesystemFor(path: VPath): FS = {
+    val matchingFss = discoverFilesystems().filter(fs => findParent(path, fs.rootDirectory).isDefined)
+    //    val fs = matchingFss.foldLeft(dir.fileSystem)((a,b) => if (depthToRoot(a.rootDirectory) > depthToRoot(b.rootDirectory)) a else b)
+    matchingFss.maxBy(f => depthToRoot(f.rootDirectory))
   }
 
   def homeDir: VDirectory = resolvePath(homePath).get.directory

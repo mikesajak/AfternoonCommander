@@ -1,82 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?><?import javafx.scene.control.*?><?import javafx.scene.image.*?><?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?><?import javafx.scene.control.*?><?import javafx.scene.image.Image?><?import javafx.scene.image.ImageView?><?import javafx.scene.layout.*?>
 <VBox fx:id="topUIPane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirPanelController">
    <children>
-      <VBox>
+      <VBox VBox.vgrow="NEVER">
          <children>
-            <HBox alignment="BASELINE_LEFT" maxWidth="1.7976931348623157E308">
+            <HBox alignment="CENTER_LEFT" fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" spacing="5.0" VBox.vgrow="NEVER">
                <children>
-                  <Button fx:id="driveSelectionButton" mnemonicParsing="false" onAction="#handleDriveSelectionButton" text="Button" textOverrun="LEADING_ELLIPSIS" />
-                  <Pane maxHeight="0.0" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="20.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
-                  <Label fx:id="freeSpaceLabel" alignment="BASELINE_RIGHT" text="1234 MB" HBox.hgrow="ALWAYS">
+                  <Button fx:id="driveSelectionButton" alignment="BASELINE_LEFT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleDriveSelectionButton" text="Button" textOverrun="LEADING_ELLIPSIS" />
+                  <Pane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="20.0" HBox.hgrow="ALWAYS" />
+                  <Label fx:id="freeSpaceLabel" alignment="BASELINE_RIGHT" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" text="1234 MB" HBox.hgrow="ALWAYS">
                      <HBox.margin>
-                        <Insets right="10.0" />
+                        <Insets />
                      </HBox.margin>
                   </Label>
-                  <Button fx:id="favDirsButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" layoutX="184.0" layoutY="10.0" mnemonicParsing="false" onAction="#handleFavDirsButton">
+                  <Button fx:id="newTabButton" mnemonicParsing="false">
                      <graphic>
-                        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fitHeight="22.0" fitWidth="22.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@../images/bookmark-outline-24.png" />
+                              <Image url="@../images/plus-box.png" />
                            </image>
                         </ImageView>
                      </graphic>
                      <tooltip>
-                        <Tooltip text="%file_group_panel.favorites.tooltip" />
+                        <Tooltip text="%file_group_panel.add_tab.tooltip" />
                      </tooltip>
-                  </Button>
-                  <Button fx:id="prevDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handlePrevDirButton">
-                    <graphic>
-                      <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                         <image>
-                            <Image url="@../images/arrow-left-24.png" />
-                         </image>
-                      </ImageView>
-                    </graphic>
-                     <tooltip>
-                        <Tooltip text="%file_group_panel.prev_dir.tooltip" />
-                     </tooltip>
-                  </Button>
-                  <Button fx:id="parentDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleParentDirButton">
-                     <graphic>
-                        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../images/arrow-up-24.png" />
-                           </image>
-                        </ImageView>
-                     </graphic>
-                     <tooltip>
-                        <Tooltip text="%file_group_panel.parent_dir.tooltip" />
-                     </tooltip>
-                  </Button>
-                  <Button fx:id="topDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleTopDirButton">
-                    <graphic>
-                      <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                         <image>
-                            <Image url="@../images/icons8-double-up-24.png" />
-                         </image>
-                      </ImageView>
-                    </graphic>
-                     <tooltip>
-                        <Tooltip text="%file_group_panel.top_dir.tooltip" />
-                     </tooltip>
-                  </Button>
-                  <Button fx:id="homeDirButton" alignment="BASELINE_LEFT" graphicTextGap="0.0" mnemonicParsing="false" onAction="#handleHomeDirButton">
-                     <graphic>
-                        <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../images/home-24.png" />
-                           </image>
-                        </ImageView>
-                     </graphic>
-                     <tooltip>
-                        <Tooltip text="%file_group_panel.home_dir.tooltip" />
-                     </tooltip>
+                     <HBox.margin>
+                        <Insets left="5.0" />
+                     </HBox.margin>
+                     <padding>
+                        <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                     </padding>
                   </Button>
                </children>
+               <VBox.margin>
+                  <Insets left="5.0" right="5.0" />
+               </VBox.margin>
             </HBox>
-            <ProgressBar fx:id="freeSpaceBar" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="0.0" prefHeight="10.0" progress="0.45" />
+            <ProgressBar fx:id="freeSpaceBar" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="0.0" prefHeight="10.0" progress="0.45" VBox.vgrow="NEVER" />
          </children>
       </VBox>
       <TabPane fx:id="tabPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" tabClosingPolicy="ALL_TABS" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" VBox.vgrow="ALWAYS">

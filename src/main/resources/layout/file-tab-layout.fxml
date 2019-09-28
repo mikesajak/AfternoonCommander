@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 
-<?import javafx.geometry.Insets?><?import javafx.scene.control.*?><?import javafx.scene.image.Image?><?import javafx.scene.image.ImageView?><?import javafx.scene.layout.*?>
-<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirTableController">
-   <bottom>
-      <HBox nodeOrientation="LEFT_TO_RIGHT" prefHeight="0.0" BorderPane.alignment="CENTER">
+<?import javafx.scene.control.*?><?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.DirTableControllerImpl">
+   <children>
+      <VBox VBox.vgrow="NEVER">
          <children>
-            <Label fx:id="statusLabel2" text="Selected info" />
-            <Pane maxHeight="0.0" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="0.0" HBox.hgrow="ALWAYS" />
-            <Label fx:id="statusLabel1" text="Directory summary" />
+            <HBox fx:id="curPathPanel" alignment="CENTER_LEFT" fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" VBox.vgrow="NEVER">
+               <children>
+                  <fx:include fx:id="curPathBar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="path-bar.fxml" HBox.hgrow="SOMETIMES" />
+                  <fx:include fx:id="panelActionsBar" source="panel-actions-bar.fxml" />
+               </children>
+            </HBox>
          </children>
-      </HBox>
-   </bottom>
-   <center>
-      <TableView fx:id="dirTableView" editable="true" prefHeight="402.0" prefWidth="599.0" BorderPane.alignment="CENTER">
+      </VBox>
+      <TableView fx:id="dirTableView" editable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="402.0" prefWidth="599.0" VBox.vgrow="ALWAYS">
         <columns>
           <TableColumn fx:id="idColumn" editable="false" prefWidth="27.0" sortable="false" />
           <TableColumn fx:id="nameColumn" prefWidth="123.0" text="%file_table_panel.name_column" />
@@ -23,28 +24,6 @@
             <TableColumn fx:id="attribsColumn" editable="false" prefWidth="75.0" text="%file_table_panel.attribs_column" />
         </columns>
       </TableView>
-   </center>
-   <top>
-      <VBox>
-         <children>
-            <HBox fx:id="curPathPanel">
-               <children>
-                  <fx:include fx:id="curPathBar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="path-bar.fxml" HBox.hgrow="SOMETIMES" />
-                  <Button fx:id="addTabButton" alignment="BASELINE_LEFT" focusTraversable="false" mnemonicParsing="false" prefHeight="22.0" HBox.hgrow="NEVER">
-                     <graphic>
-                        <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
-                           <image>
-                              <Image url="@../images/plus-box.png" />
-                           </image>
-                        </ImageView>
-                     </graphic>
-                     <padding>
-                        <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
-                     </padding>
-                  </Button>
-               </children>
-            </HBox>
-         </children>
-      </VBox>
-   </top>
-</BorderPane>
+      <fx:include fx:id="panelStatusBar" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" source="panel-status-bar.fxml" VBox.vgrow="NEVER" />
+   </children>
+</VBox>

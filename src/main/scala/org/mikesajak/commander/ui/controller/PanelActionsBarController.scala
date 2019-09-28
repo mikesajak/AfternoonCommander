@@ -1,0 +1,146 @@
+package org.mikesajak.commander.ui.controller
+
+import com.google.common.eventbus.Subscribe
+import com.google.inject.Key
+import com.google.inject.name.Names
+import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
+import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
+import org.mikesajak.commander.ui.{IconSize, ResourceManager}
+import org.mikesajak.commander.util.PathUtils
+import org.mikesajak.commander._
+import scalafx.geometry.Side
+import scalafx.scene.control.{Button, ContextMenu, MenuItem, SeparatorMenuItem}
+import scalafx.scene.image.ImageView
+import scalafxml.core.macros.sfxml
+
+trait PanelActionsBarController {
+  def init(panelId: PanelId, currentDirAware: CurrentDirAware)
+}
+
+@sfxml
+class PanelActionsBarControllerImpl(favDirsButton: Button,
+                                    prevDirButton: Button,
+                                    parentDirButton: Button,
+                                    topDirButton: Button,
+                                    homeDirButton: Button,
+
+                                    resourceMgr: ResourceManager,
+                                    fsMgr: FilesystemsManager,
+                                    bookmarkMgr: BookmarkMgr,
+                                    globalHistoryMgr: HistoryMgr,
+                                    eventBus: EventBus)
+    extends PanelActionsBarController {
+
+  private var dirTabManager: DirTabManager = _
+  private var panelId: PanelId = _
+  private var curDirAware: CurrentDirAware = _
+
+  private val panelHistoryMgr = new HistoryMgr()
+
+  def init(panelId: PanelId, currentDirAware: CurrentDirAware): Unit = {
+    this.panelId = panelId
+    this.curDirAware = currentDirAware
+    dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
+                                                                          Names.named(panelId.toString)))
+
+    updateButtons()
+
+    eventBus.register(this)
+    eventBus.register(new PanelHistoryUpdater(panelId, panelHistoryMgr))
+  }
+
+  def handleFavDirsButton(): Unit = {
+
+    def titleMenuItem(messageKey: String): MenuItem =
+      new MenuItem {
+        text = resourceMgr.getMessage(messageKey)
+        disable = true
+      }
+
+    def mkBookmarkMenuItem(): MenuItem = {
+      val selectedDir = dirTabManager.selectedTab.dir
+      val selectedDirRep = if (fsMgr.isLocal(selectedDir)) selectedDir.absolutePath
+                           else selectedDir.toString
+      val selectedDirText = PathUtils.shortenPathTo(selectedDirRep, 50)
+      new MenuItem() {
+        text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
+        graphic = new ImageView(resourceMgr.getIcon("icons8-add-tag-48.png", IconSize.Tiny))
+        onAction = _ => bookmarkMgr.addBookmark(selectedDir)
+      }
+    }
+
+    def mkPathMenuItem(path: VPath): MenuItem = new MenuItem {
+      text = path.toString
+      onAction = _ => setCurrentTabDir(path.directory)
+    }
+
+    val bookmarks = bookmarkMgr.bookmarks.map(mkPathMenuItem)
+
+    val panelHistoryItems = panelHistoryMgr.getAll
+                                           .take(5)
+
+    val globalHistoryItems = globalHistoryMgr.getAll
+                                             .filter(i => !panelHistoryMgr.getAll.contains(i))
+                                             .take(5)
+
+    val ctxMenu = new ContextMenu() {
+      items.add(titleMenuItem("file_group_panel.bookmarks_menu.title"))
+      items.add(mkBookmarkMenuItem())
+      if (bookmarks.nonEmpty) {
+        items.add(new SeparatorMenuItem())
+        bookmarks.foreach(b => items.add(b))
+      }
+
+      if (panelHistoryItems.nonEmpty) {
+        items.add(new SeparatorMenuItem())
+        items.add(titleMenuItem("file_group_panel.local_history_menu.title"))
+        panelHistoryItems.map(mkPathMenuItem)
+                         .foreach(i => items.add(i))
+      }
+
+      if (globalHistoryItems.nonEmpty) {
+        items.add(new SeparatorMenuItem())
+        items.add(titleMenuItem("file_group_panel.global_history_menu.title"))
+        globalHistoryItems.map(mkPathMenuItem)
+                          .foreach(i => items.add(i))
+      }
+    }
+
+    ctxMenu.show(favDirsButton, Side.Bottom, 0, 0)
+  }
+
+  def handlePrevDirButton(): Unit = {
+    dirTabManager.selectedTab.controller.historyMgr.last
+                 .foreach(setCurrentTabDir)
+  }
+
+  def handleParentDirButton(): Unit = {
+    dirTabManager.selectedTab.dir.parent
+                 .foreach(dir => setCurrentTabDir(dir))
+  }
+
+  def handleTopDirButton(): Unit = {
+    val rootDir = FS.rootDirOf(dirTabManager.selectedTab.dir)
+    setCurrentTabDir(rootDir)
+  }
+
+  def handleHomeDirButton(): Unit = {
+    val homeDir = fsMgr.homeDir
+    setCurrentTabDir(homeDir)
+  }
+
+  private def updateButtons(): Unit = {
+    prevDirButton.disable = dirTabManager.selectedTab.controller.historyMgr.isEmpty
+    parentDirButton.disable = dirTabManager.selectedTab.dir.parent.isEmpty
+  }
+
+  private def setCurrentTabDir(directory: VDirectory): Unit = {
+    curDirAware.setDirectory(directory)
+  }
+
+  @Subscribe
+  def updateCurTabUIAfterDirChange(event: CurrentDirChange): Unit = {
+    if (event.panelId == panelId)
+      updateButtons()
+  }
+}

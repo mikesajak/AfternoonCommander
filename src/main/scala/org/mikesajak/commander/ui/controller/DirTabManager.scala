@@ -20,7 +20,7 @@ class DirTabManager(panelId: PanelId, eventBus: EventBus) {
 
   def tabs: IndexedSeq[TabData] = tabs0
 
-  def addTab(dir: VDirectory, controller: DirTableControllerIntf): Unit = {
+  def addTab(dir: VDirectory, controller: DirTableController): Unit = {
     tabs0 :+= TabData(dir, controller)
 
     eventBus.publish(TabAdded(panelId, tabs0.size, dir))
@@ -58,11 +58,12 @@ class DirTabManager(panelId: PanelId, eventBus: EventBus) {
 
   @Subscribe
   def onCurrentDirChange(event: CurrentDirChange): Unit = {
-    selectedTab.dir = event.curDir
+    if (event.panelId == panelId)
+      selectedTab.dir = event.curDir
   }
 }
 
-case class TabData(var dir: VDirectory, controller: DirTableControllerIntf)
+case class TabData(var dir: VDirectory, controller: DirTableController)
 
 object TabEvents {
 

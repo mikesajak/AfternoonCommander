@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
-import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
+import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
 import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
@@ -15,7 +15,7 @@ import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
-import scalafx.geometry.{Insets, Side}
+import scalafx.geometry.Side
 import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
 import scalafx.stage.Popup
@@ -63,7 +63,7 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
   }
 }
 
-trait DirTableControllerIntf {
+trait DirTableController {
   def init(path: VDirectory)
   def dispose()
   def currentDirectory: VDirectory
@@ -77,17 +77,17 @@ trait DirTableControllerIntf {
 }
 
 @sfxml
-class DirTableController(addTabButton: Button,
-                         dirTableView: TableView[FileRow],
+class DirTableControllerImpl(dirTableView: TableView[FileRow],
                          idColumn: TableColumn[FileRow, VPath],
                          nameColumn: TableColumn[FileRow, String],
                          extColumn: TableColumn[FileRow, String],
                          sizeColumn: TableColumn[FileRow, String],
                          dateColumn: TableColumn[FileRow, String],
                          attribsColumn: TableColumn[FileRow, String],
-                         statusLabel1: Label,
-                         statusLabel2: Label,
+
+                         @nested[PanelActionsBarControllerImpl] panelActionsBarController: PanelActionsBarController,
                          @nested[PathBarControllerImpl] curPathBarController: PathBarController,
+                         @nested[PanelStatusBarControllerImpl] panelStatusBarController: PanelStatusBarController,
 
                          panelId: PanelId,
                          fileTypeMgr: FileTypeManager,
@@ -99,7 +99,7 @@ class DirTableController(addTabButton: Button,
                          panelController: DirPanelControllerIntf,
                          appController: ApplicationController,
                          propertiesCtrl: PropertiesCtrl)
-    extends DirTableControllerIntf {
+    extends DirTableController {
 
   import org.mikesajak.commander.ui.UIParams._
 
@@ -113,10 +113,8 @@ class DirTableController(addTabButton: Button,
 
   override val historyMgr = new HistoryMgr()
 
-  addTabButton.padding = Insets.Empty
-
   private val configObserver: ConfigObserver = new ConfigObserver {
-    override val observedKey = ConfigKey("file_panel", "*")
+    override val observedKey: ConfigKey = ConfigKey("file_panel", "*")
 
     override def configChanged(key: ConfigKey): Unit = key match {
       case ConfigKey("file_panel", "show_hidden") =>
@@ -130,8 +128,7 @@ class DirTableController(addTabButton: Button,
   override def selectedPaths: ObservableBuffer[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path)
 
   override def init(path: VDirectory) {
-    statusLabel1.styleClass += "file_panel_status"
-    statusLabel2.styleClass += "file_panel_status"
+    panelStatusBarController.init()
 
     dirTableView.selectionModel.value.selectionMode = SelectionMode.Multiple
 
@@ -140,7 +137,7 @@ class DirTableController(addTabButton: Button,
 
     dirTableView.selectionModel.value.selectedItems.onChange {
       val selectedPaths = dirTableView.selectionModel.value.selectedItems.map(_.path)
-      updateSelectionBar(selectedPaths)
+      panelStatusBarController.setSelectedPaths(selectedPaths)
     }
 
     idColumn.cellValueFactory = { t => ObjectProperty(t.value.path) }
@@ -206,8 +203,6 @@ class DirTableController(addTabButton: Button,
 
     dirTableView.items = sortedRows
 
-    addTabButton.onAction = _ => eventBus.publish(NewTabRequest(panelId, curDir))
-
     setCurrentDirectory(path)
   }
 
@@ -237,7 +232,7 @@ class DirTableController(addTabButton: Button,
 
     setTableFocusOn(focusedPath)
 
-    updateStatusBar(newDir)
+    panelStatusBarController.setDirectory(newDir)
 
     eventBus.publish(CurrentDirChange(panelId, Option(prevDir), newDir))
   }
@@ -247,24 +242,6 @@ class DirTableController(addTabButton: Button,
       case p: PathToParent => p.targetDir
       case _ => directory
     }
-  }
-
-  private def updateStatusBar(directory: VDirectory): Unit =
-    statusLabel1.text = prepareSummary(directory.childDirs, directory.childFiles)
-
-  private def updateSelectionBar(selectedPaths: Seq[VPath]): Unit = {
-    val (dirs, files) = selectedPaths.partition(_.isDirectory)
-    statusLabel2.text = prepareSummary(dirs.map(_.asInstanceOf[VDirectory]), files.map(_.asInstanceOf[VFile]))
-  }
-
-  private def prepareSummary(dirs: Seq[VDirectory], files: Seq[VFile]): String = {
-    val numDirs = dirs.size
-    val totalSize = files.map(_.size).sum
-    val sizeUnit = DataUnit.findDataSizeUnit(totalSize)
-    resourceMgr.getMessageWithArgs("file_table_panel.status.message",
-                                   Array(numDirs, files.size,
-                                         sizeUnit.convert(totalSize),
-                                         sizeUnit.symbol))
   }
 
   override def reload(): Unit = {

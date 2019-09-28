@@ -48,6 +48,8 @@ object FileType {
 
   case object LogFile extends FileType("icons8-log-48.png")
   case object PropertiesFile extends FileType("icons8-view-details-50.png")
+  case object ShellScript extends FileType("icons8-console-90.png")
+
   case object OtherFile extends FileType("file-outline.png")
 }
 
@@ -100,7 +102,7 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(LogFile, "log"))
   registerFileTypeDetector(SimpleByExtensionFileDetector(PropertiesFile, "properties"))
-
+  registerFileTypeDetector(SimpleByExtensionFileDetector(ShellScript, "sh", "bat"))
 
   def registerFileTypeDetector(detector: FileTypeDetector): Unit =
     fileTypeDetectors ::= detector

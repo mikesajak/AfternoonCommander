@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.geometry.Insets?><?import javafx.scene.control.Label?><?import javafx.scene.layout.HBox?><?import javafx.scene.layout.Pane?>
+<HBox fillHeight="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.PanelStatusBarControllerImpl">
+   <children>
+      <Label fx:id="leftMessageLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Selected info" />
+      <Pane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="40.0" HBox.hgrow="ALWAYS" />
+      <Label fx:id="rightMessageLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" text="Current directory summary" />
+   </children>
+   <padding>
+      <Insets left="5.0" right="5.0" />
+   </padding>
+</HBox>
