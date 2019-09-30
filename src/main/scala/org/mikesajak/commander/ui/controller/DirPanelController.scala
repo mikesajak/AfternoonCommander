@@ -90,6 +90,7 @@ class DirPanelController(tabPane: TabPane,
       val tab = createTab(t)
       dirTabManager.addTab(t, tab.controller)
       tabPane += tab
+      tab.init()
       tabPane.selectionModel.select(tab.text.value)
     }
 
@@ -110,7 +111,7 @@ class DirPanelController(tabPane: TabPane,
   private def registerUIListeners(): Unit = {
     topUIPane.filterEvent(MouseEvent.MousePressed) { _: MouseEvent => statusMgr.selectedPanel = panelId }
 
-    tabPane.selectionModel.value.selectedIndexProperty.onChange { (_, oldIdx, newIdx) =>
+    tabPane.selectionModel.value.selectedIndexProperty.onChange { (_, _, newIdx) =>
       val tabIdx = newIdx.intValue
       if (tabIdx < tabPane.tabs.size) {
         statusMgr.selectedTabManager.selectedTabIdx = tabIdx
@@ -174,11 +175,12 @@ class DirPanelController(tabPane: TabPane,
         val tab = createTab(dir)
         tabPane += tab
         dirTabManager.addTab(dir, tab.controller)
+        tab.init()
         tabPane.selectionModel.value.select(tab)
       }
   }
 
-  private def createTab(path: VDirectory) = new DirTab(panelId, path)
+  private def createTab(path: VDirectory) = new DirTab(panelId, path, dirTabManager)
 
   @Subscribe
   def updateCurTabUIAfterDirChange(event: CurrentDirChange): Unit = {
@@ -244,7 +246,7 @@ object DirTab {
 
 }
 
-class DirTab(panelId: PanelId, tabPath: VDirectory) extends Tab {
+class DirTab(panelId: PanelId, tabPath: VDirectory, dirTabManager: DirTabManager) extends Tab {
   import DirTab._
 
   private val dirTableLayout = "/layout/file-tab-layout.fxml"
@@ -253,6 +255,7 @@ class DirTab(panelId: PanelId, tabPath: VDirectory) extends Tab {
     override def configure(binder: Binder): Unit = {
 //      binder.bind(classOf[DirPanelControllerIntf]).toInstance(panelController)
       binder.bind(classOf[PanelId]).toInstance(panelId)
+      binder.bind(classOf[DirTabManager]).toInstance(dirTabManager)
     }
   }
 
@@ -263,7 +266,9 @@ class DirTab(panelId: PanelId, tabPath: VDirectory) extends Tab {
 
   updateTab(this, tabPath)
 
-  controller.init(tabPath)
-
   this.onClosed = { _ => controller.dispose() }
+
+  def init(): Unit = {
+    controller.init(tabPath)
+  }
 }

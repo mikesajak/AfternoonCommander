@@ -13,9 +13,8 @@ import scalafxml.core.macros.sfxml
 import scala.annotation.tailrec
 
 trait PathBarController {
-  def init()
+  def init(listeners: CurrentDirAware*)
   def setDirectory(directory: VDirectory)
-  def registerDirChangeListener(currentDirAware: CurrentDirAware)
 }
 
 trait CurrentDirAware {
@@ -32,12 +31,9 @@ class PathBarControllerImpl(curPathPanel: HBox,
 
   private var curDirListeners = List[CurrentDirAware]()
 
-  def init(): Unit = {
+  def init(listeners: CurrentDirAware*): Unit = {
+    listeners.foreach(listener => curDirListeners ::= listener)
     setupPathBreadCrumbBar()
-  }
-
-  def registerDirChangeListener(listener: CurrentDirAware): Unit = {
-    curDirListeners ::= listener
   }
 
   private def setupPathBreadCrumbBar(): Unit = {
@@ -59,15 +55,15 @@ class PathBarControllerImpl(curPathPanel: HBox,
     pathBreadCrumbBar.setOnCrumbAction { event =>
       event.getSelectedCrumb.getValue match {
         case null =>
-        case PathCrumbItem(path) => changeDirectoryAction(path.directory)
+        case PathCrumbItem(path) => notifyDirectoryChange(path.directory)
         case x@PrevCrumbItems(paths) =>
           println(s"Hit prev .... $x")
-          changeDirectoryAction(paths.last.directory)
+          notifyDirectoryChange(paths.last.directory)
       }
     }
   }
 
-  private def changeDirectoryAction(newDir: VDirectory): Unit = {
+  private def notifyDirectoryChange(newDir: VDirectory): Unit = {
     curDirListeners.foreach(_.setDirectory(newDir))
   }
 

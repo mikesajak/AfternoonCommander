@@ -78,27 +78,27 @@ trait DirTableController {
 
 @sfxml
 class DirTableControllerImpl(dirTableView: TableView[FileRow],
-                         idColumn: TableColumn[FileRow, VPath],
-                         nameColumn: TableColumn[FileRow, String],
-                         extColumn: TableColumn[FileRow, String],
-                         sizeColumn: TableColumn[FileRow, String],
-                         dateColumn: TableColumn[FileRow, String],
-                         attribsColumn: TableColumn[FileRow, String],
+                             idColumn: TableColumn[FileRow, VPath],
+                             nameColumn: TableColumn[FileRow, String],
+                             extColumn: TableColumn[FileRow, String],
+                             sizeColumn: TableColumn[FileRow, String],
+                             dateColumn: TableColumn[FileRow, String],
+                             attribsColumn: TableColumn[FileRow, String],
 
-                         @nested[PanelActionsBarControllerImpl] panelActionsBarController: PanelActionsBarController,
-                         @nested[PathBarControllerImpl] curPathBarController: PathBarController,
-                         @nested[PanelStatusBarControllerImpl] panelStatusBarController: PanelStatusBarController,
+                             @nested[PanelActionsBarControllerImpl] panelActionsBarController: PanelActionsBarController,
+                             @nested[PathBarControllerImpl] curPathBarController: PathBarController,
+                             @nested[PanelStatusBarControllerImpl] panelStatusBarController: PanelStatusBarController,
 
-                         panelId: PanelId,
-                         fileTypeMgr: FileTypeManager,
-                         fileHandlerFactory: FileHandlerFactory,
-                         resourceMgr: ResourceManager,
-                         iconResolver: IconResolver,
-                         config: Configuration,
-                         eventBus: EventBus,
-                         panelController: DirPanelControllerIntf,
-                         appController: ApplicationController,
-                         propertiesCtrl: PropertiesCtrl)
+                             panelId: PanelId,
+                             fileTypeMgr: FileTypeManager,
+                             fileHandlerFactory: FileHandlerFactory,
+                             resourceMgr: ResourceManager,
+                             iconResolver: IconResolver,
+                             config: Configuration,
+                             eventBus: EventBus,
+                             panelController: DirPanelControllerIntf,
+                             appController: ApplicationController,
+                             propertiesCtrl: PropertiesCtrl)
     extends DirTableController {
 
   import org.mikesajak.commander.ui.UIParams._
@@ -128,12 +128,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   override def selectedPaths: ObservableBuffer[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path)
 
   override def init(path: VDirectory) {
-    panelStatusBarController.init()
-
     dirTableView.selectionModel.value.selectionMode = SelectionMode.Multiple
-
-    curPathBarController.init()
-    curPathBarController.registerDirChangeListener((directory: VDirectory) => setCurrentDirectory(directory))
 
     dirTableView.selectionModel.value.selectedItems.onChange {
       val selectedPaths = dirTableView.selectionModel.value.selectedItems.map(_.path)
@@ -202,6 +197,10 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     filteredRows.predicate = createShowHiddenFilesPredicate()
 
     dirTableView.items = sortedRows
+
+    panelStatusBarController.init()
+    curPathBarController.init(directory => setCurrentDirectory(directory))
+    panelActionsBarController.init(directory => setCurrentDirectory(directory))
 
     setCurrentDirectory(path)
   }

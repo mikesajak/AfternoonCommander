@@ -1,20 +1,18 @@
 package org.mikesajak.commander.ui.controller
 
 import com.google.common.eventbus.Subscribe
-import com.google.inject.Key
-import com.google.inject.name.Names
+import org.mikesajak.commander._
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.PathUtils
-import org.mikesajak.commander._
 import scalafx.geometry.Side
 import scalafx.scene.control.{Button, ContextMenu, MenuItem, SeparatorMenuItem}
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
 trait PanelActionsBarController {
-  def init(panelId: PanelId, currentDirAware: CurrentDirAware)
+  def init(listeners: CurrentDirAware*)
 }
 
 @sfxml
@@ -24,6 +22,8 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
                                     topDirButton: Button,
                                     homeDirButton: Button,
 
+                                    panelId: PanelId,
+                                    dirTabManager: DirTabManager,
                                     resourceMgr: ResourceManager,
                                     fsMgr: FilesystemsManager,
                                     bookmarkMgr: BookmarkMgr,
@@ -31,18 +31,12 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
                                     eventBus: EventBus)
     extends PanelActionsBarController {
 
-  private var dirTabManager: DirTabManager = _
-  private var panelId: PanelId = _
-  private var curDirAware: CurrentDirAware = _
+  private var curDirListeners = List[CurrentDirAware]()
 
   private val panelHistoryMgr = new HistoryMgr()
 
-  def init(panelId: PanelId, currentDirAware: CurrentDirAware): Unit = {
-    this.panelId = panelId
-    this.curDirAware = currentDirAware
-    dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
-                                                                          Names.named(panelId.toString)))
-
+  def init(listeners: CurrentDirAware*): Unit = {
+    listeners.foreach(listener => curDirListeners ::= listener)
     updateButtons()
 
     eventBus.register(this)
@@ -71,7 +65,7 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
 
     def mkPathMenuItem(path: VPath): MenuItem = new MenuItem {
       text = path.toString
-      onAction = _ => setCurrentTabDir(path.directory)
+      onAction = _ => notifyDirectoryChange(path.directory)
     }
 
     val bookmarks = bookmarkMgr.bookmarks.map(mkPathMenuItem)
@@ -111,22 +105,22 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
 
   def handlePrevDirButton(): Unit = {
     dirTabManager.selectedTab.controller.historyMgr.last
-                 .foreach(setCurrentTabDir)
+                 .foreach(notifyDirectoryChange)
   }
 
   def handleParentDirButton(): Unit = {
     dirTabManager.selectedTab.dir.parent
-                 .foreach(dir => setCurrentTabDir(dir))
+                 .foreach(dir => notifyDirectoryChange(dir))
   }
 
   def handleTopDirButton(): Unit = {
     val rootDir = FS.rootDirOf(dirTabManager.selectedTab.dir)
-    setCurrentTabDir(rootDir)
+    notifyDirectoryChange(rootDir)
   }
 
   def handleHomeDirButton(): Unit = {
     val homeDir = fsMgr.homeDir
-    setCurrentTabDir(homeDir)
+    notifyDirectoryChange(homeDir)
   }
 
   private def updateButtons(): Unit = {
@@ -134,8 +128,8 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
     parentDirButton.disable = dirTabManager.selectedTab.dir.parent.isEmpty
   }
 
-  private def setCurrentTabDir(directory: VDirectory): Unit = {
-    curDirAware.setDirectory(directory)
+  private def notifyDirectoryChange(directory: VDirectory): Unit = {
+    curDirListeners.foreach(_.setDirectory(directory))
   }
 
   @Subscribe
