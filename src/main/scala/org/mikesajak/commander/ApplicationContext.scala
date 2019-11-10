@@ -84,7 +84,7 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
                               fsMgr: FilesystemsManager,
                               appController: ApplicationController,
-                              copyOperationCtrl: CopyOperationCtrl,
+                              copyOperationCtrl: TransferOperationController,
                               mkDirOperationCtrl: MkDirOperationCtrl,
                               deleteOperationCtrl: DeleteOperationCtrl,
                               countDirStatsOperationCtrl: CountDirStatsOperationCtrl,
@@ -150,7 +150,7 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                                countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager) =
-    new CopyOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceManager)
+    new TransferOperationController(statusMgr, appController, countDirOpCtrl, resourceManager)
 
   @Provides
   @Singleton

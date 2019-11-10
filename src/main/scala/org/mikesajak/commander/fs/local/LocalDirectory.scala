@@ -74,4 +74,18 @@ class LocalDirectoryUpdater(dir: LocalDirectory) extends VDirectoryUpdater {
     if (dir.file.isDirectory) dir.file.mkdirs()
     else dir.file.createNewFile()
   }
+
+  override def move(targetDir: VDirectory, targetName: Option[String]): Try[Boolean] = Try {
+    targetDir match {
+      case targetLocalDir: LocalDirectory =>
+        val targetPath = Paths.get(targetDir.absolutePath, targetName.getOrElse(dir.name))
+        dir.file.renameTo(targetPath.toFile)
+      case _ => false
+    }
+  }
+
+  case class DirectoryMoveException(message: String, cause: Exception) extends Exception(message, cause) {
+    def this(message: String) = this(message, this)
+    def this(cause: Exception) = this(null, cause)
+  }
 }

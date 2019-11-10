@@ -12,7 +12,7 @@ import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
 
 trait PanelActionsBarController {
-  def init(listeners: CurrentDirAware*)
+  def init(listener: CurrentDirAware)
 }
 
 @sfxml
@@ -35,8 +35,8 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
 
   private val panelHistoryMgr = new HistoryMgr()
 
-  def init(listeners: CurrentDirAware*): Unit = {
-    listeners.foreach(listener => curDirListeners ::= listener)
+  def init(listener: CurrentDirAware): Unit = {
+    curDirListeners ::= listener
     updateButtons()
 
     eventBus.register(this)

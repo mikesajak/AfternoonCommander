@@ -13,7 +13,7 @@ import scalafxml.core.macros.sfxml
 import scala.annotation.tailrec
 
 trait PathBarController {
-  def init(listeners: CurrentDirAware*)
+  def init(listener: CurrentDirAware)
   def setDirectory(directory: VDirectory)
 }
 
@@ -31,8 +31,8 @@ class PathBarControllerImpl(curPathPanel: HBox,
 
   private var curDirListeners = List[CurrentDirAware]()
 
-  def init(listeners: CurrentDirAware*): Unit = {
-    listeners.foreach(listener => curDirListeners ::= listener)
+  def init(listener: CurrentDirAware): Unit = {
+    curDirListeners ::= listener
     setupPathBreadCrumbBar()
   }
 

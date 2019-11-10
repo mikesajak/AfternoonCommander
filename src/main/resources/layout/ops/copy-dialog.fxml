@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?><?import javafx.scene.control.*?><?import javafx.scene.layout.*?><?import javafx.scene.text.Font?>
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="500.0" spacing="5.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CopyPanelControllerImpl">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="100.0" minWidth="500.0" spacing="5.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.CopyPanelControllerImpl">
    <children>
       <Label fx:id="sourcePathTypeLabel" text="Plik/katalog do skopiowania" />
       <HBox alignment="BASELINE_LEFT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
@@ -20,7 +20,7 @@
             <Insets left="14.0" right="14.0" />
          </padding>
       </HBox>
-      <ListView fx:id="sourcePathsListView" prefHeight="200.0" prefWidth="200.0" />
+      <ListView fx:id="sourcePathsListView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="50.0" minWidth="0.0" prefHeight="150.0" VBox.vgrow="ALWAYS" />
       <fx:include fx:id="statsPanel" source="stats-panel.fxml" />
       <Label fx:id="operationDestinationLabel" text="Copy to:">
          <VBox.margin>

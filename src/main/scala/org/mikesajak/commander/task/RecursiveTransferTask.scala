@@ -5,71 +5,96 @@ import java.nio.channels.Channels
 import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs._
+import org.mikesajak.commander.task.OperationType.{Copy, Move}
 import org.mikesajak.commander.util.IO
 import org.mikesajak.commander.util.Utils.runWithTimer
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
 
-object RecursiveCopyFileTask {
+import scala.util.{Failure, Success}
+
+object RecursiveTransferFileTask {
   // FixME: use configuration, not constants
   val BUFFER_SIZE: Int = 1024 * 1000
 }
 
-case class TransferDef(source: VPath, target: VPath)
-case class CopyJobDef(pathsToCopy: Seq[TransferDef], preserveModificationDate: Boolean)
-object CopyJobDef {
-  def apply(source: VPath, target: VPath, preserveModificationDate: Boolean) =
-    new CopyJobDef(Seq(TransferDef(source, target)), preserveModificationDate)
-}
-
-class RecursiveCopyTask(copyJobDef: CopyJobDef, jobStats: Option[DirStats], dryRun: Boolean)
+class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats], dryRun: Boolean)
     extends jfxc.Task[IOProgress] {
 
-  private implicit val logger: Logger = Logger[RecursiveCopyTask]
+  private implicit val logger: Logger = Logger[RecursiveTransferTask]
 
   private var overwriteDecision: Option[Boolean] = None
 
   override def call(): IOProgress = {
-    runWithTimer(s"Copy filesTask: $copyJobDef")(runCopy)
+    runWithTimer(s"Transfer files task: $transferJob")(runTransfer)
   }
 
-  private def runCopy(): IOProgress = {
-    val result = copyJobDef.pathsToCopy.foldLeft(IOTaskSummary.empty) { case (summary, job) => copy(job, summary) }
+  private def runTransfer(): IOProgress = {
+    val result = transferJob.pathsToCopy.foldLeft(IOTaskSummary.empty) {
+      case (summary, job) => transfer(job, summary, transferJob.operationType)
+    }
 
     logger.debug(s"Finished copy task, result=$result")
 
     reportProgress(result)
   }
 
-  private def copy(jobDef: TransferDef, summary: IOTaskSummary): IOTaskSummary = {
+  private def transfer(jobDef: TransferDef, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
     if (jobDef.source.isDirectory)
-      copyDir(jobDef.source.directory, jobDef.target.directory, summary)
+      transferDir(jobDef.source.directory, jobDef.target.directory, summary, opType)
     else
-      copyFile(jobDef.source.asInstanceOf[VFile], jobDef.target, summary)
+      transferFile(jobDef.source.asInstanceOf[VFile], jobDef.target, summary, opType)
   }
 
-  private def copyDir(source: VDirectory, target: VDirectory, summary: IOTaskSummary): IOTaskSummary = {
+  private def transferDir(source: VDirectory, target: VDirectory, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
     reportProgress(summary, source)
 
-    val targetDir = if (dryRun) target // todo: maybe create path for this dir without actually creating directory on FS
-                    else target.updater
-                               .map(updater => mkDir(updater, source))
-                               // todo: ask user if continue instead of cancelling whole copy operation
-                               .getOrElse(throw new CopyException(s"Target directory $target is not writable. Cannot create child directory ${source.name}."))
+    val targetDir = copyDir(source, target)
 
-    val dirSummary = source.childDirs.foldLeft(summary)((result, childDir) => copyDir(childDir, targetDir, result))
-    val totalSummary = source.childFiles.foldLeft(dirSummary)((result, childFile) => copyFile(childFile, targetDir, result))
+    val dirSummary = source.childDirs.foldLeft(summary)((result, childDir) =>
+                                                          transferDir(childDir, targetDir, result, opType))
+    val totalSummary = source.childFiles.foldLeft(dirSummary)((result, childFile) =>
+                                                                transferFile(childFile, targetDir, result, opType))
 
     val resultSummary = totalSummary + IOTaskSummary.success(source)
     reportProgress(resultSummary, source)
     resultSummary
   }
 
+  private def copyDir(source: VDirectory, target: VDirectory) = {
+    if (dryRun) target // todo: maybe create path for this dir without actually creating directory on FS
+    else target.updater
+               .map(updater => mkDir(updater, source))
+               // todo: ask user if continue instead of cancelling whole copy operation
+               .getOrElse(throw new CopyException(
+                 s"Target directory $target is not writable. Cannot create child directory ${source.name}."))
+  }
+
   private def mkDir(parentUpdater: VDirectoryUpdater, source: VDirectory) = {
     val childDir = parentUpdater.mkChildDir(source.name)
-    if (copyJobDef.preserveModificationDate)
+    if (transferJob.preserveModificationDate)
       childDir.updater.foreach(_.setModificationDate(source.modificationDate))
     childDir
+  }
+
+  private def transferFile(source: VFile, target: VPath, summary: IOTaskSummary, opType: OperationType): IOTaskSummary =
+    opType match {
+      case Copy => copyFile(source, target, summary)
+      case Move => moveFile(source, target, summary)
+    }
+
+  private def moveFile(source: VFile, target: VPath, summary: IOTaskSummary): IOTaskSummary = {
+    reportProgress(summary, source)
+    source.updater.map { updater =>
+      updater.move(target.directory, Some(target.name)) match {
+        case Success(true) =>
+          summary + IOTaskSummary.success(source)
+        case Success(false) =>
+          copyFile(source, target, summary)
+        case Failure(exception) =>
+          summary + IOTaskSummary.failed(source, s"Move operation failed. ${exception.getLocalizedMessage}")
+      }
+    }.getOrElse(IOTaskSummary.failed(source, s"Move operation failed. Target location $target is not writable."))
   }
 
   private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): IOTaskSummary = {
@@ -80,7 +105,8 @@ class RecursiveCopyTask(copyJobDef: CopyJobDef, jobStats: Option[DirStats], dryR
       else target.directory.updater
                  .map(_.mkChildFile(source.name))
                  // todo: ask user if continue instead of cancelling whole copy operation
-                 .getOrElse(throw new CopyException(s"Target directory ${target.directory} is not writable. Cannot create child file ${source.name}"))
+                 .getOrElse(throw new CopyException(
+                   s"Target directory ${target.directory} is not writable. Cannot create child file ${source.name}"))
 
     val doCopy = overwriteDecision.getOrElse {
       // TODO: refactor this!
@@ -109,12 +135,11 @@ class RecursiveCopyTask(copyJobDef: CopyJobDef, jobStats: Option[DirStats], dryR
     }
 
     if (doCopy && !dryRun) {
-      val targetFileUpdater = targetFile.updater
-      targetFileUpdater.foreach { updater =>
+      targetFile.updater.foreach { updater =>
         if (!targetFile.exists)
           updater.create()
         copyFileData(source, updater, summary)
-        if (copyJobDef.preserveModificationDate)
+        if (transferJob.preserveModificationDate)
           updater.setModificationDate(source.modificationDate)
       }
     }
@@ -142,7 +167,7 @@ class RecursiveCopyTask(copyJobDef: CopyJobDef, jobStats: Option[DirStats], dryR
     val inChannel = Channels.newChannel(source.inStream)
     val outChannel = Channels.newChannel(target.outStream)
     try {
-      IO.channelCopy(inChannel, outChannel, RecursiveCopyFileTask.BUFFER_SIZE, new FileCopyListener(source, curSummary))
+      IO.channelCopy(inChannel, outChannel, RecursiveTransferFileTask.BUFFER_SIZE, new FileCopyListener(source, curSummary))
     } finally {
       inChannel.close()
       outChannel.close()

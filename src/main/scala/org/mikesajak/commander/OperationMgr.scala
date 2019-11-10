@@ -3,13 +3,14 @@ package org.mikesajak.commander
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.task.OperationType._
 import org.mikesajak.commander.ui._
 
 class OperationMgr(statusMgr: StatusMgr,
                    resourceMgr: ResourceManager,
                    fsMgr: FilesystemsManager,
                    appController: ApplicationController,
-                   copyOperationCtrl: CopyOperationCtrl,
+                   transferOperationCtrl: TransferOperationController,
                    mkDirOperationCtrl: MkDirOperationCtrl,
                    deleteOperationCtrl: DeleteOperationCtrl,
                    countDirStatsCtrl: CountDirStatsOperationCtrl,
@@ -26,11 +27,9 @@ class OperationMgr(statusMgr: StatusMgr,
     logger.warn(s"handleEdit - Not implemented yet!")
   }
 
-  def handleCopy(): Unit = copyOperationCtrl.handleCopy()
+  def handleCopy(): Unit = transferOperationCtrl.handleOperation(Copy)
 
-  def handleMove(): Unit = {
-    logger.warn(s"handleMove - Not implemented yet!")
-  }
+  def handleMove(): Unit = transferOperationCtrl.handleOperation(Move)
 
   def handleMkDir(): Unit = mkDirOperationCtrl.handleMkDir()
 

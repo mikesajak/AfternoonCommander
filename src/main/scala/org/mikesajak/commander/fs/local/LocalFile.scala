@@ -4,7 +4,7 @@ import java.io._
 import java.nio.file.{Files, Paths}
 import java.time.Instant
 
-import org.mikesajak.commander.fs.{VFile, VFileUpdater}
+import org.mikesajak.commander.fs.{VDirectory, VFile, VFileUpdater}
 
 import scala.util.Try
 
@@ -36,9 +36,22 @@ class LocalFileUpdater(file: LocalFile) extends VFileUpdater {
     else file.file.createNewFile()
   }
 
+  override def move(targetDir: VDirectory, name: Option[String]): Try[Boolean] = Try {
+    targetDir match {
+      case targetLocalDir: LocalDirectory =>
+        val targetPath = Paths.get(targetDir.absolutePath, name.getOrElse(file.name))
+        file.file.renameTo(targetPath.toFile)
+      case _ => false
+    }
+  }
+
   override def setModificationDate(date: Instant): Unit =
     file.file.setLastModified(date.getEpochSecond)
 
   override def outStream = new BufferedOutputStream(Files.newOutputStream(Paths.get(file.file.getAbsolutePath)))
 
+  case class FileMoveException(message: String, cause: Exception) extends Exception(message, cause) {
+    def this(message: String) = this(message, this)
+    def this(cause: Exception) = this(null, cause)
+  }
 }
