@@ -1,6 +1,6 @@
 package org.mikesajak.commander
 
-import org.mikesajak.commander.config.Configuration
+import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.util.Check
 import scalafx.application.{JFXApp, Platform}
 import scalafx.scene.control.Alert.AlertType
@@ -36,8 +36,8 @@ class ApplicationController(config: Configuration) {
   def exitApplication(exitAction: () => Boolean): Unit = {
     if (canExit) {
       // TODO: save config, close connections, etc.
-      config.intProperty("window", "width") := mainStage.width.toInt
-      config.intProperty("window", "height") := mainStage.height.toInt
+      config.intProperty(ConfigKeys.WindowWidth) := mainStage.width.toInt
+      config.intProperty(ConfigKeys.WindowHeight) := mainStage.height.toInt
       config.save()
 
       if (!exitAction())
@@ -46,7 +46,7 @@ class ApplicationController(config: Configuration) {
   }
 
   private def canExit: Boolean = {
-    val confirm = config.boolProperty("application", "exitConfirmation").getOrElse(true)
+    val confirm = config.boolProperty(ConfigKeys.ExitConfirmation).getOrElse(true)
 
     if (confirm) askUserForExit()
     else true

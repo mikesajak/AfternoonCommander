@@ -5,7 +5,7 @@ import java.util.concurrent.FutureTask
 import com.typesafe.scalalogging.Logger
 import enumeratum.{Enum, EnumEntry}
 import javafx.{concurrent => jfxc}
-import org.mikesajak.commander.config.Configuration
+import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.task.Decision.{No, Yes}
 import org.mikesajak.commander.task.OperationType.{Copy, Move}
@@ -264,7 +264,7 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
     targetFile.updater.map { updater =>
       if (!targetFile.exists)
         updater.create()
-      val bufferSize = config.intProperty("transfer", "buffer_size").getOrElse(1024 * 1000)
+      val bufferSize = config.intProperty(ConfigKeys.TransferBufferSize).getOrElse(1024 * 1000)
       IO.bufferedCopy(source.inStream, updater.outStream, bufferSize, copyListener)
       if (preserveModificationDate)
         updater.setModificationDate(source.modificationDate) // TODO: add warning to collector

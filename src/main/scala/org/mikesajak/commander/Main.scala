@@ -2,7 +2,7 @@ package org.mikesajak.commander
 
 import com.google.inject.Key
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.config.Configuration
+import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 import scalafx.Includes._
 import scalafx.animation.{KeyFrame, KeyValue, Timeline}
@@ -49,8 +49,8 @@ object Main extends JFXApp {
   appController.init(stage, this)
   pluginManager.init()
 
-  stage.width = config.intProperty("window", "width").getOrElse(1000): Int
-  stage.height = config.intProperty("window", "height").getOrElse(600): Int
+  stage.width = config.intProperty(ConfigKeys.WindowWidth).getOrElse(1000): Int
+  stage.height = config.intProperty(ConfigKeys.WindowHeight).getOrElse(600): Int
 
   stage.toFront()
   stage.opacity.value = 0

@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller
 import java.util.function.Predicate
 
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.config.{ConfigKey, ConfigObserver, Configuration}
+import org.mikesajak.commander.config.{ConfigKey, ConfigKeys, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
@@ -117,7 +117,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     override val observedKey: ConfigKey = ConfigKey("file_panel", "*")
 
     override def configChanged(key: ConfigKey): Unit = key match {
-      case ConfigKey("file_panel", "show_hidden") =>
+      case ConfigKeys.ShowHiddenFiles =>
         filteredRows.predicate = createShowHiddenFilesPredicate()
       case _ =>
     }
@@ -211,7 +211,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
 
   private def createShowHiddenFilesPredicate() = {
     row: FileRow =>
-      val showHidden = config.boolProperty("file_panel", "show_hidden").getOrElse(false)
+      val showHidden = config.boolProperty(ConfigKeys.ShowHiddenFiles).getOrElse(false)
       row.path.isInstanceOf[PathToParent] ||
         !row.path.attributes.contains(Attrib.Hidden) || showHidden
   }
