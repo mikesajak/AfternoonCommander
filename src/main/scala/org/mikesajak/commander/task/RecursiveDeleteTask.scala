@@ -85,7 +85,6 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
   private def performDelete(path: VPath): IOTaskSummary = {
     doDelete(path) match {
       case Success(true) => IOTaskSummary.success(path)
-      case Success(false) if dryRun => IOTaskSummary.success(path)
       case Success(false) if !dryRun => IOTaskSummary.failed(path, resourceMgr.getMessageWithArgs("delete_task.couldnt_delete", List(path)))
       case Failure(exception) => IOTaskSummary.failed(path, exception.getLocalizedMessage)
     }

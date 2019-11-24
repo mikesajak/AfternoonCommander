@@ -14,9 +14,6 @@ import scala.util.Try
 class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
     extends LocalPath with VDirectory {
 
-  if (!file.isDirectory)
-    throw new IllegalArgumentException(s"Cannot create LocalDirectory for param file=$file that is NOT a directory")
-
   override def childFiles: Seq[LocalFile] = {
     val files = file.listFiles()
     if (files != null)
@@ -46,23 +43,19 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
 
   override def exists: Boolean = file.exists()
 
-  override lazy val updater = Some(new LocalDirectoryUpdater(this))
+  override lazy val updater: Option[LocalDirectoryUpdater] = Some(new LocalDirectoryUpdater(this))
 
   override def canEqual(other: Any): Boolean = other.isInstanceOf[LocalDirectory]
 }
 
 class LocalDirectoryUpdater(dir: LocalDirectory) extends VDirectoryUpdater {
-  override def mkChildDir(child: String): LocalDirectory = {
-    val newDir = new File(dir.file, child)
-    if (newDir.mkdir())
-      new LocalDirectory(newDir, dir.fileSystem)
-    else throw new IllegalStateException(s"Couldnt't create new directory: $newDir")
-  }
+  override def mkChildDirPath(child: String): LocalDirectory =
+    new LocalDirectory(new File(dir.file, child), dir.fileSystem)
 
-  override def mkChildFile(child: String): LocalFile =
+  override def mkChildFilePath(child: String): LocalFile =
     new LocalFile(new File(dir.file.getAbsolutePath + File.separator + child), dir.fileSystem)
 
-  override def setModificationDate(date: Instant): Unit =
+  override def setModificationDate(date: Instant): Boolean =
     dir.file.setLastModified(date.toEpochMilli)
 
   override def delete(): Try[Boolean] = Try {
@@ -71,8 +64,7 @@ class LocalDirectoryUpdater(dir: LocalDirectory) extends VDirectoryUpdater {
   }
 
   override def create(): Try[Boolean] = Try {
-    if (dir.file.isDirectory) dir.file.mkdirs()
-    else dir.file.createNewFile()
+    dir.file.mkdir()
   }
 
   override def move(targetDir: VDirectory, targetName: Option[String]): Try[Boolean] = Try {
@@ -84,8 +76,11 @@ class LocalDirectoryUpdater(dir: LocalDirectory) extends VDirectoryUpdater {
     }
   }
 
-  case class DirectoryMoveException(message: String, cause: Exception) extends Exception(message, cause) {
-    def this(message: String) = this(message, this)
+  case class DirectoryMoveException(message: String) extends Exception(message) {
+    def this(message: String, cause: Exception) = {
+      this(message)
+      initCause(cause)
+    }
     def this(cause: Exception) = this(null, cause)
   }
 }

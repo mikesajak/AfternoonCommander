@@ -3,6 +3,7 @@ package org.mikesajak.commander.ui
 import com.typesafe.scalalogging.Logger
 import javafx.scene.control
 import org.mikesajak.commander.ApplicationController
+import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{PathToParent, VDirectory, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.OperationType._
@@ -17,7 +18,8 @@ import scala.util.{Failure, Success, Try}
 case class OperationUiData(progressDialogType: String, errorDialogType: String, iconName: String)
 
 class TransferOperationController(statusMgr: StatusMgr, appController: ApplicationController,
-                                  countStatsOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager) {
+                                  countStatsOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager,
+                                  config: Configuration) {
   private val logger = Logger[DeletePanelController]
 
   private val copyLayout = "/layout/ops/copy-dialog.fxml"
@@ -117,12 +119,7 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
         resourceMgr.getMessageWithArgs(s"${opUiData(opType).progressDialogType}.status.message.paths", Seq(p.size)))
     }
 
-    val jobTask = opType match {
-      case Copy => new RecursiveTransferTask(transferJob, stats, dryRun)
-      case Move => throw new UnsupportedOperationException(s"$opType not implemented")
-    }
-
-    val service = new BackgroundService(jobTask)
+    val service = new BackgroundService(new RecursiveTransferTask(transferJob, stats, dryRun, config))
 
     ctrl.init(resourceMgr.getMessage(s"${opUiData(opType).progressDialogType}.title"), headerText, statusMessage,
               resourceMgr.getIcon(opUiData(opType).iconName, IconSize.Big), progressDialog, service)

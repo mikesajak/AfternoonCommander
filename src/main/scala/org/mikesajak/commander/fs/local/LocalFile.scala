@@ -10,13 +10,9 @@ import scala.util.Try
 
 class LocalFile(inputFile: File, override val fileSystem: LocalFS) extends LocalPath with VFile {
 
-  if (inputFile.isDirectory)
-    throw new IllegalArgumentException(s"Cannot create LocalFile for param file=${inputFile.getAbsolutePath} that IS a directory")
-
   override val file: File = Paths.get(inputFile.getAbsolutePath).toFile
 
   override def inStream = new BufferedInputStream(Files.newInputStream(Paths.get(inputFile.getAbsolutePath)))
-
 
   override lazy val updater: Option[VFileUpdater] = Some(new LocalFileUpdater(this))
 
@@ -32,8 +28,11 @@ class LocalFileUpdater(file: LocalFile) extends VFileUpdater {
   }
 
   override def create(): Try[Boolean] = Try {
-    if (file.file.isDirectory) file.file.mkdirs()
-    else file.file.createNewFile()
+    val fsPath = Paths.get(file.absolutePath)
+    val parentFsPath = fsPath.getParent
+    Files.createDirectories(parentFsPath)
+    Files.createFile(fsPath)
+    true
   }
 
   override def move(targetDir: VDirectory, name: Option[String]): Try[Boolean] = Try {
@@ -45,13 +44,16 @@ class LocalFileUpdater(file: LocalFile) extends VFileUpdater {
     }
   }
 
-  override def setModificationDate(date: Instant): Unit =
+  override def setModificationDate(date: Instant): Boolean =
     file.file.setLastModified(date.getEpochSecond)
 
   override def outStream = new BufferedOutputStream(Files.newOutputStream(Paths.get(file.file.getAbsolutePath)))
 
-  case class FileMoveException(message: String, cause: Exception) extends Exception(message, cause) {
-    def this(message: String) = this(message, this)
+  case class FileMoveException(message: String) extends Exception(message) {
+    def this(message: String, cause: Exception) = {
+      this(message)
+      initCause(cause)
+    }
     def this(cause: Exception) = this(null, cause)
   }
 }

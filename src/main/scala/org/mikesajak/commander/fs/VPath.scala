@@ -80,7 +80,7 @@ trait VFileUpdater {
   def create(): Try[Boolean]
   def delete(): Try[Boolean]
   def move(targetDir: VDirectory, name: Option[String]): Try[Boolean]
-  def setModificationDate(date: Instant)
+  def setModificationDate(date: Instant): Boolean
   def outStream: OutputStream
 }
 
@@ -101,9 +101,9 @@ trait VDirectoryUpdater {
   def create(): Try[Boolean]
   def delete(): Try[Boolean]
   def move(targetDir: VDirectory, targetName: Option[String]): Try[Boolean]
-  def setModificationDate(date: Instant)
+  def setModificationDate(date: Instant): Boolean
 
-  def mkChildDir(child: String): VDirectory
-  def mkChildFile(child: String): VFile
+  def mkChildDirPath(child: String): VDirectory
+  def mkChildFilePath(child: String): VFile
 }
 

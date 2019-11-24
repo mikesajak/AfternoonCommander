@@ -21,6 +21,14 @@ object Utils {
       res.close()
     }
 
+  def using[A <: ClosableResource, B <: ClosableResource, R](res1: A, res2: B)(f: (A, B) => R): R =
+    try {
+      f(res1, res2)
+    } finally {
+      res1.close()
+      res2.close()
+    }
+
   def using[B](closable: => Unit)(f: => B): B =
     try {
       f

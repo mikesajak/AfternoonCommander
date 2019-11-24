@@ -1,38 +1,40 @@
 package org.mikesajak.commander.util
 
+import java.io.{InputStream, OutputStream}
 import java.nio.ByteBuffer
-import java.nio.channels.{ReadableByteChannel, WritableByteChannel}
+import java.nio.channels.{Channels, ReadableByteChannel, WritableByteChannel}
 
-import org.mikesajak.commander.task.CancelledException
+import org.mikesajak.commander.util.Utils.using
 
 object IO {
   trait CopyListener {
-    def notifyBytesWritten(size: Long): Boolean
+    def notifyBytesWritten(size: Long)
   }
 
-  def channelCopy(source: ReadableByteChannel, target: WritableByteChannel, bufferSize: Int, copyListener: CopyListener): Unit =
-    channelCopy(source, target, bufferSize, Some(copyListener))
+  def bufferedCopy(inStream: InputStream, outStream: OutputStream, bufferSize: Int, copyListener: IO.CopyListener): Unit =
+    bufferedCopy(Channels.newChannel(inStream), Channels.newChannel(outStream), bufferSize, Some(copyListener))
 
-  def channelCopy(source: ReadableByteChannel, target: WritableByteChannel, bufferSize: Int, copyListener: Option[CopyListener] = None): Unit = {
-    val buffer = ByteBuffer.allocate(bufferSize)
-    var count = 0L
-    while (source.read(buffer) != -1) {
+  def bufferedCopy(inStream: InputStream, outStream: OutputStream, bufferSize: Int, copyListener: Option[IO.CopyListener]): Unit =
+    bufferedCopy(Channels.newChannel(inStream), Channels.newChannel(outStream), bufferSize, copyListener)
+
+  def bufferedCopy(source: ReadableByteChannel, target: WritableByteChannel, bufferSize: Int, copyListener: CopyListener): Unit =
+    bufferedCopy(source, target, bufferSize, Some(copyListener))
+
+  def bufferedCopy(source: ReadableByteChannel, target: WritableByteChannel, bufferSize: Int, copyListener: Option[CopyListener] = None): Unit =
+    using(source, target) { (inChannel, outChannel) =>
+      val buffer = ByteBuffer.allocate(bufferSize)
+      var count = 0L
+      while (inChannel.read(buffer) != -1) {
+        buffer.flip()
+        count += outChannel.write(buffer)
+        copyListener.foreach(_.notifyBytesWritten(count))
+        buffer.compact()
+      }
+
       buffer.flip()
-      count += target.write(buffer)
-      val cancelled = copyListener.forall(_.notifyBytesWritten(count))
-      buffer.compact()
-
-      if (cancelled)
-        throw new CancelledException
+      while (buffer.hasRemaining) {
+        count += outChannel.write(buffer)
+        copyListener.foreach(_.notifyBytesWritten(count))
+      }
     }
-
-    buffer.flip()
-    while(buffer.hasRemaining) {
-      count += target.write(buffer)
-      val continue = copyListener.forall(_.notifyBytesWritten(count))
-
-      if (!continue)
-        throw new CancelledException
-    }
-  }
 }

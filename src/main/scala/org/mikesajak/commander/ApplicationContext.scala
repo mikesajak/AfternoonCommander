@@ -149,8 +149,9 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                               countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager) =
-    new TransferOperationController(statusMgr, appController, countDirOpCtrl, resourceManager)
+                               countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager,
+                               configuration: Configuration) =
+    new TransferOperationController(statusMgr, appController, countDirOpCtrl, resourceManager, configuration)
 
   @Provides
   @Singleton

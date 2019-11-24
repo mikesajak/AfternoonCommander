@@ -1,29 +1,31 @@
 package org.mikesajak.commander.task
 
-import java.nio.channels.Channels
+import java.util.concurrent.FutureTask
 
 import com.typesafe.scalalogging.Logger
+import enumeratum.{Enum, EnumEntry}
 import javafx.{concurrent => jfxc}
+import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs._
+import org.mikesajak.commander.task.Decision.{No, Yes}
 import org.mikesajak.commander.task.OperationType.{Copy, Move}
+import org.mikesajak.commander.task.OverwriteDecision.{NoToAll, YesToAll}
 import org.mikesajak.commander.util.IO
 import org.mikesajak.commander.util.Utils.runWithTimer
+import scalafx.application.Platform
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
 
-import scala.util.{Failure, Success}
+import scala.collection.immutable
+import scala.util.{Failure, Success, Try}
 
-object RecursiveTransferFileTask {
-  // FixME: use configuration, not constants
-  val BUFFER_SIZE: Int = 1024 * 1000
-}
-
-class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats], dryRun: Boolean)
+class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats],
+                            dryRun: Boolean, config: Configuration)
     extends jfxc.Task[IOProgress] {
 
   private implicit val logger: Logger = Logger[RecursiveTransferTask]
 
-  private var overwriteDecision: Option[Boolean] = None
+  private var overwriteDecision: Option[OverwriteDecision] = None
 
   override def call(): IOProgress = {
     runWithTimer(s"Transfer files task: $transferJob")(runTransfer)
@@ -40,21 +42,40 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
   }
 
   private def transfer(jobDef: TransferDef, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
-    if (jobDef.source.isDirectory)
-      transferDir(jobDef.source.directory, jobDef.target.directory, summary, opType)
-    else
-      transferFile(jobDef.source.asInstanceOf[VFile], jobDef.target, summary, opType)
+    try {
+      if (jobDef.source.isDirectory)
+        transferDir(jobDef.source.directory, jobDef.target, summary, opType)
+      else
+        transferFile(jobDef.source.asInstanceOf[VFile], jobDef.target, summary, opType)
+    } catch {
+      case e: TransferException =>
+        logger.info(s"An error occurred during $opType operation. Detailed error: ${e.getLocalizedMessage}", e)
+        showErrorDialogAndAskForDecision(opType, e.getLocalizedMessage) match {
+          case ContinueAfterErrorButtonTypes.Retry =>
+            logger.info(s"User selected retry.")
+            transfer(jobDef, summary, opType)
+          case ContinueAfterErrorButtonTypes.Skip => logger.info(s"User selected skip.")
+          case ContinueAfterErrorButtonTypes.Abort =>
+            logger.info(s"User selected abort after an error occurred during $opType operation. Detailed error: ${e.getLocalizedMessage}")
+            throw e
+        }
+        summary + IOTaskSummary.failed(jobDef.source, e.getLocalizedMessage)
+    }
   }
 
-  private def transferDir(source: VDirectory, target: VDirectory, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
+  private def transferDir(source: VDirectory, target: VPath, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
     reportProgress(summary, source)
 
-    val targetDir = copyDir(source, target)
+    val targetDir =
+      if (target.isDirectory) target.directory
+      else throw new TransferException(s"Cannot copy directory $source, target path $target is existing file.")
+
+    val resultDir = copyDir(source, targetDir)
 
     val dirSummary = source.childDirs.foldLeft(summary)((result, childDir) =>
-                                                          transferDir(childDir, targetDir, result, opType))
+                                                          transferDir(childDir, resultDir, result, opType))
     val totalSummary = source.childFiles.foldLeft(dirSummary)((result, childFile) =>
-                                                                transferFile(childFile, targetDir, result, opType))
+                                                                transferFile(childFile, resultDir, result, opType))
 
     val resultSummary = totalSummary + IOTaskSummary.success(source)
     reportProgress(resultSummary, source)
@@ -64,123 +85,135 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
   private def copyDir(source: VDirectory, target: VDirectory) = {
     if (dryRun) target // todo: maybe create path for this dir without actually creating directory on FS
     else target.updater
-               .map(updater => mkDir(updater, source))
+               .map(updater => mkDir(updater, source, transferJob.preserveModificationDate))
                // todo: ask user if continue instead of cancelling whole copy operation
-               .getOrElse(throw new CopyException(
+               .getOrElse(throw new TransferException(
                  s"Target directory $target is not writable. Cannot create child directory ${source.name}."))
   }
 
-  private def mkDir(parentUpdater: VDirectoryUpdater, source: VDirectory) = {
-    val childDir = parentUpdater.mkChildDir(source.name)
-    if (transferJob.preserveModificationDate)
-      childDir.updater.foreach(_.setModificationDate(source.modificationDate))
-    childDir
-  }
-
-  private def transferFile(source: VFile, target: VPath, summary: IOTaskSummary, opType: OperationType): IOTaskSummary =
-    opType match {
-      case Copy => copyFile(source, target, summary)
-      case Move => moveFile(source, target, summary)
-    }
-
-  private def moveFile(source: VFile, target: VPath, summary: IOTaskSummary): IOTaskSummary = {
-    reportProgress(summary, source)
-    source.updater.map { updater =>
-      updater.move(target.directory, Some(target.name)) match {
-        case Success(true) =>
-          summary + IOTaskSummary.success(source)
-        case Success(false) =>
-          copyFile(source, target, summary)
-        case Failure(exception) =>
-          summary + IOTaskSummary.failed(source, s"Move operation failed. ${exception.getLocalizedMessage}")
-      }
-    }.getOrElse(IOTaskSummary.failed(source, s"Move operation failed. Target location $target is not writable."))
-  }
-
-  private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): IOTaskSummary = {
+  private def transferFile(source: VFile, target: VPath, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
     reportProgress(summary, source)
 
-    val targetFile =
-      if (!target.isDirectory) target.asInstanceOf[VFile]
-      else target.directory.updater
-                 .map(_.mkChildFile(source.name))
-                 // todo: ask user if continue instead of cancelling whole copy operation
-                 .getOrElse(throw new CopyException(
-                   s"Target directory ${target.directory} is not writable. Cannot create child file ${source.name}"))
-
-    val doCopy = overwriteDecision.getOrElse {
-      // TODO: refactor this!
-      if (targetFile.exists) {
-         confirmOverwriteDialog(targetFile) match {
-          case Some(ButtonType.Yes) =>
-            logger.debug("selected Yen")
-            true
-          case Some(yesToAllButtonType) =>
-            logger.debug("selected Yes to all")
-            overwriteDecision = Some(true)
-            true
-          case Some(ButtonType.No) =>
-            logger.debug("selected No")
-            false
-          case Some(noToAllButtonType) =>
-            logger.debug("selected No to all")
-            overwriteDecision = Some(false)
-            false
-          case Some(ButtonType.Cancel) =>
-            logger.debug("selected Cancel")
-            throw new CancelledException()
-          case _ => false
-        }
-      } else true
-    }
-
-    if (doCopy && !dryRun) {
-      targetFile.updater.foreach { updater =>
-        if (!targetFile.exists)
-          updater.create()
-        copyFileData(source, updater, summary)
-        if (transferJob.preserveModificationDate)
-          updater.setModificationDate(source.modificationDate)
+    val resultSummary = {
+      opType match {
+        case Copy => copyFile(source, target, summary)
+        case Move => moveFile(source, target, summary)
       }
+      summary + IOTaskSummary.success(target)
     }
 
-    val resultSummary = summary + IOTaskSummary.success(targetFile)
-    reportProgress(resultSummary, targetFile)
+    reportProgress(resultSummary, target)
     resultSummary
   }
 
-  private def confirmOverwriteDialog(targetFile: VPath) = {
-    val yesToAllButtonType = new ButtonType("Yes to all")
-    val noToAllButtonType = new ButtonType("No to all")
-    val alert = new Alert(AlertType.Confirmation) {
-      initOwner(null)
-      title = "Confirm overwrite"
-      headerText = "Target file already exists"
-      contentText = s"Are you sure to overwrite ${targetFile.absolutePath}"
-      buttonTypes = Seq(ButtonType.Yes, yesToAllButtonType, ButtonType.No, noToAllButtonType, ButtonType.Cancel)
-    }
+  private def moveFile(source: VFile, target: VPath, summary: IOTaskSummary): Unit = {
+    val targetFile =
+      if (!target.isDirectory) target.asInstanceOf[VFile]
+      else target.directory.updater
+                 .map(_.mkChildFilePath(source.name))
+                 // todo: ask user if continue instead of cancelling whole copy operation
+                 .getOrElse(throw new TransferException(
+                   s"Target directory ${target.directory} is not writable. Cannot create child file ${source.name}"))
 
-    alert.showAndWait()
+    val proceedWithMove = if (!targetFile.exists) Yes
+                 else overwriteDecision.getOrElse(getOverwriteDecision(targetFile))
+
+    if (proceedWithMove == Yes && !dryRun) {
+      // first try to rename
+      val renameSucceeded = source.updater.map(_.move(target.directory, Some(target.name))) match {
+        case Some(Success(renamed)) => renamed
+        case Some(Failure(cause)) =>
+          throw new TransferException(s"Move operation failed. ${cause.getLocalizedMessage}", cause)
+        case None => throw new TransferException(s"Move operation failed. Source file $source cannot be modified.") // TODO: i18
+      }
+
+      if (!renameSucceeded) {
+        // if quick rename/move is not possible, then fallback to copy+delete
+        doCopy(source, targetFile, transferJob.preserveModificationDate, new FileCopyListener(source, summary))
+        doDelete(source)
+      }
+    }
   }
 
-  def copyFileData(source: VFile, target: VFileUpdater, curSummary: IOTaskSummary): Unit = {
-    val inChannel = Channels.newChannel(source.inStream)
-    val outChannel = Channels.newChannel(target.outStream)
-    try {
-      IO.channelCopy(inChannel, outChannel, RecursiveTransferFileTask.BUFFER_SIZE, new FileCopyListener(source, curSummary))
-    } finally {
-      inChannel.close()
-      outChannel.close()
+  private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): Unit /*: IOTaskSummary*/ = {
+    val targetFilePath =
+      if (!target.isDirectory) target.asInstanceOf[VFile]
+      else target.directory.updater
+                 .map(_.mkChildFilePath(source.name))
+                 // todo: ask user if continue instead of cancelling whole copy operation
+                 .getOrElse(throw new TransferException(
+                   s"Target directory ${target.directory} is not writable. Cannot create child file ${source.name}"))
+
+    val proceedWithCopy = if (!targetFilePath.exists) Yes
+                 else overwriteDecision.getOrElse(getOverwriteDecision(targetFilePath))
+
+    if (proceedWithCopy == Yes && !dryRun)
+      doCopy(source, targetFilePath, transferJob.preserveModificationDate, new FileCopyListener(source, summary))
+  }
+
+
+  private def getOverwriteDecision(targetFile: VPath): Decision = {
+    overwriteDecision match {
+      case Some(YesToAll) => Yes
+      case Some(NoToAll) => No
+      case None =>
+        showConfirmOverwriteDialog(targetFile) match {
+          case Some(DecisionButtonTypes.Yes) => Yes
+          case Some(DecisionButtonTypes.No) => No
+          case Some(DecisionButtonTypes.YesToAll) =>
+            overwriteDecision = Some(YesToAll)
+            Yes
+          case Some(DecisionButtonTypes.NoToAll) =>
+            overwriteDecision = Some(NoToAll)
+            No
+          case Some(DecisionButtonTypes.Cancel) | None =>
+            throw new CancelledException() // TODO: value
+        }
     }
   }
 
-  class FileCopyListener(file: VFile, currentSummary: IOTaskSummary) extends IO.CopyListener {
-    override def notifyBytesWritten(size: Long): Boolean = {
-      val updatedSummary = IOTaskSummary(currentSummary.numDirs, currentSummary.numFiles,
-                                         currentSummary.totalSize + size, currentSummary.errors)
-      reportProgress(TransferState(size, file.size), updatedSummary, file)
-      isCancelled
-    }
+  object DecisionButtonTypes {
+    val Yes: ButtonType = ButtonType.Yes
+    val No: ButtonType = ButtonType.No
+    val YesToAll: ButtonType = new ButtonType("Yes to all")
+    val NoToAll: ButtonType = new ButtonType("No to all")
+    val Cancel: ButtonType = ButtonType.Cancel
+  }
+
+  private def showConfirmOverwriteDialog(targetFile: VPath): Option[ButtonType] = {
+    val futureTask = new FutureTask(() =>
+      new Alert(AlertType.Confirmation) {
+        initOwner(null)
+        title = "Confirm overwrite"
+        headerText = "Target file already exists"
+        contentText = s"Are you sure to overwrite ${targetFile.absolutePath}"
+        buttonTypes = Seq(DecisionButtonTypes.Yes, DecisionButtonTypes.YesToAll,
+                          DecisionButtonTypes.No, DecisionButtonTypes.NoToAll,
+                          DecisionButtonTypes.Cancel)
+      }.showAndWait())
+
+    Platform.runLater(futureTask)
+    futureTask.get()
+  }
+
+  object ContinueAfterErrorButtonTypes {
+    val Retry: ButtonType = new ButtonType("Retry")
+    val Skip: ButtonType = new ButtonType("Skip")
+    val Abort: ButtonType = new ButtonType("Abort")
+  }
+
+  private def showErrorDialogAndAskForDecision(opType: OperationType, errorMsg: String): Option[ButtonType]  = {
+    val futureTask = new FutureTask(() =>
+      new Alert(AlertType.Confirmation) {
+        initOwner(null)
+        title = "Operation failed, continue?"
+        headerText = s"An error occurred during $opType operation. Do you want to continue?"
+        contentText = s"$errorMsg"
+        buttonTypes = Seq(ContinueAfterErrorButtonTypes.Retry, ContinueAfterErrorButtonTypes.Skip,
+                          ContinueAfterErrorButtonTypes.Abort)
+      }.showAndWait())
+    Platform.runLater(futureTask)
+    futureTask.get()
   }
 
   private def reportProgress(transferState: TransferState, summary: IOTaskSummary, curPath: VPath): IOProgress = {
@@ -201,7 +234,74 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
     progress
   }
 
-  class CopyException(msg: String) extends Exception(msg)
+
+  def mkDir(parentUpdater: VDirectoryUpdater, source: VDirectory, preserveModificationDate: Boolean = false): VDirectory = {
+    val childDir = parentUpdater.mkChildDirPath(source.name)
+    val maybeTriedBoolean: Option[Try[Boolean]] = childDir.updater.map(_.create())
+    maybeTriedBoolean match {
+      case Some(Success(true)) =>
+        if (preserveModificationDate)
+          childDir.updater.foreach(_.setModificationDate(source.modificationDate)) // TODO: add warning to collector
+        childDir
+      case Some(Success(false)) => throw new TransferException(s"Creating directory $childDir failed.")
+      case Some(Failure(cause)) =>
+        throw new TransferException(s"Creating directory $childDir failed. ${cause.getLocalizedMessage}", cause)
+      case None => throw new TransferException(s"Couldn't create directory $childDir, parent directory is not writable")
+    }
+  }
+
+  def doDelete(source: VFile): Unit = {
+    source.updater.map(_.delete()) match {
+      case Some(Success(true)) =>
+      case Some(Success(false)) => throw new TransferException(s"Deleting file $source failed.")
+      case Some(Failure(cause)) =>
+        throw new TransferException(s"Deleting file $source failed. ${cause.getLocalizedMessage}", cause)
+      case None => throw new TransferException(s"Couldn't delete file $source, it is not writable.")
+    }
+  }
+
+  def doCopy(source: VFile, targetFile: VFile, preserveModificationDate: Boolean, copyListener: IO.CopyListener): Unit = {
+    targetFile.updater.map { updater =>
+      if (!targetFile.exists)
+        updater.create()
+      val bufferSize = config.intProperty("transfer", "buffer_size").getOrElse(1024 * 1000)
+      IO.bufferedCopy(source.inStream, updater.outStream, bufferSize, copyListener)
+      if (preserveModificationDate)
+        updater.setModificationDate(source.modificationDate) // TODO: add warning to collector
+    }.getOrElse(throw new TransferException(s"Couldn't copy file $source. Target file $targetFile is not writable"))
+  }
+
+  class TransferException(msg: String) extends Exception(msg) {
+    def this(msg: String, cause: Throwable) = {
+      this(msg)
+      initCause(cause)
+    }
+  }
+
+  class FileCopyListener(file: VFile, currentSummary: IOTaskSummary) extends IO.CopyListener {
+    override def notifyBytesWritten(size: Long): Unit = {
+      val updatedSummary = IOTaskSummary(currentSummary.numDirs, currentSummary.numFiles,
+                                         currentSummary.totalSize + size, currentSummary.errors)
+      reportProgress(TransferState(size, file.size), updatedSummary, file)
+
+      if (isCancelled) {
+        throw CancelledException(updatedSummary)
+      }
+    }
+  }
 }
 
+sealed trait OverwriteDecision extends EnumEntry
+object OverwriteDecision extends Enum[OverwriteDecision] {
+  override val values: immutable.IndexedSeq[OverwriteDecision] = findValues
+  case object YesToAll extends OverwriteDecision
+  case object NoToAll extends OverwriteDecision
+}
 
+sealed trait Decision extends EnumEntry
+object Decision extends Enum[Decision] {
+  override val values: immutable.IndexedSeq[Decision] = findValues
+
+  case object Yes extends Decision
+  case object No extends Decision
+}
