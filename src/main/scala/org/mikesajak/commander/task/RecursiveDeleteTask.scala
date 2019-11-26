@@ -11,7 +11,7 @@ import scala.util.{Failure, Success, Try}
 case class DeleteJobDef(target: VPath)
 
 class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats], dryRun: Boolean,
-                          resourceMgr: ResourceManager)
+                          userDecisionCtrl: UserDecisionCtrl, resourceMgr: ResourceManager)
     extends jfxc.Task[IOProgress] {
   private implicit val logger: Logger = Logger[RecursiveDeleteTask]
 
@@ -35,9 +35,27 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
       throw e
   }
 
-  private def delete(target: VPath, summary: IOTaskSummary) = {
-    if (target.isDirectory) deleteDir(target.directory, summary)
-    else deleteFile(target.asInstanceOf[VFile], summary)
+  private def delete(target: VPath, summary: IOTaskSummary): IOTaskSummary = {
+    try {
+      if (target.isDirectory) deleteDir(target.directory, summary)
+      else deleteFile(target.asInstanceOf[VFile], summary)
+    } catch {
+      case e: DeleteException =>
+        logger.info(s"An error occurred during delete operation. Detailed error: ${e.getLocalizedMessage}", e)
+        userDecisionCtrl.showErrorDialogAndAskForDecision("Operation failed, continue?",
+                                                          s"An error occurred during delete operation. Do you want to continue?",
+                                                          e.getLocalizedMessage) match {
+          case Some(userDecisionCtrl.RetryButtonType) =>
+            logger.info(s"User selected retry.")
+            delete(target, summary)
+          case Some(userDecisionCtrl.SkipButtonType) => logger.info(s"User selected skip.")
+          case None | Some(userDecisionCtrl.AbortButtonType) =>
+            logger.info(s"User selected abort after an error occurred during delete operation. Detailed error: ${e.getLocalizedMessage}")
+            throw e
+
+        }
+        summary + IOTaskSummary.failed(target, e.getLocalizedMessage)
+    }
   }
 
   private def deleteFile(file: VFile, summary: IOTaskSummary): IOTaskSummary = {

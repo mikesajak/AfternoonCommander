@@ -20,10 +20,6 @@ class ButtonBarController(viewButton: Button,
   // Disable not implemented buttons...
   viewButton.disable = true
   editButton.disable = true
-//  copyButton.disable = true
-  moveButton.disable = true
-//  mkdirButton.disable = true
-//  deleteButton.disable = true
 
   def handleView(): Unit = opsMgr.handleView()
 

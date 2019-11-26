@@ -9,6 +9,7 @@ import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.handler.FileHandlerFactory
 import org.mikesajak.commander.status.StatusMgr
+import org.mikesajak.commander.task.UserDecisionCtrl
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
@@ -150,8 +151,8 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                                countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager,
-                               configuration: Configuration) =
-    new TransferOperationController(statusMgr, appController, countDirOpCtrl, resourceManager, configuration)
+                               userDecisionCtrl: UserDecisionCtrl, configuration: Configuration) =
+    new TransferOperationController(statusMgr, appController, countDirOpCtrl, resourceManager, userDecisionCtrl, configuration)
 
   @Provides
   @Singleton
@@ -161,14 +162,20 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideDeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                                 countDirOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager) =
-    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl, resourceMgr)
+                                 countDirOpCtrl: CountDirStatsOperationCtrl, userDecisionCtrl: UserDecisionCtrl,
+                                 resourceMgr: ResourceManager) =
+    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl,userDecisionCtrl, resourceMgr)
 
   @Provides
   @Singleton
   def provideCountDirStatsOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                                         resourceMgr: ResourceManager) =
     new CountDirStatsOperationCtrl(statusMgr, appController, resourceMgr)
+
+  @Provides
+  @Singleton
+  def provideUserDecisionCtrl(resourceMgr: ResourceManager) =
+    new UserDecisionCtrl(resourceMgr)
 
   @Provides
   @Singleton

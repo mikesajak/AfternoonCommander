@@ -1,7 +1,5 @@
 package org.mikesajak.commander.task
 
-import java.util.concurrent.FutureTask
-
 import com.typesafe.scalalogging.Logger
 import enumeratum.{Enum, EnumEntry}
 import javafx.{concurrent => jfxc}
@@ -11,16 +9,14 @@ import org.mikesajak.commander.task.Decision.{No, Yes}
 import org.mikesajak.commander.task.OperationType.{Copy, Move}
 import org.mikesajak.commander.task.OverwriteDecision.{NoToAll, YesToAll}
 import org.mikesajak.commander.util.IO
-import org.mikesajak.commander.util.Utils.runWithTimer
-import scalafx.application.Platform
-import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.{Alert, ButtonType}
+import org.mikesajak.commander.util.Utils._
 
 import scala.collection.immutable
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats],
-                            dryRun: Boolean, config: Configuration)
+                            dryRun: Boolean, config: Configuration,
+                            userDecisionCtrl: UserDecisionCtrl)
     extends jfxc.Task[IOProgress] {
 
   private implicit val logger: Logger = Logger[RecursiveTransferTask]
@@ -50,12 +46,14 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
     } catch {
       case e: TransferException =>
         logger.info(s"An error occurred during $opType operation. Detailed error: ${e.getLocalizedMessage}", e)
-        showErrorDialogAndAskForDecision(opType, e.getLocalizedMessage) match {
-          case ContinueAfterErrorButtonTypes.Retry =>
+        userDecisionCtrl.showErrorDialogAndAskForDecision("Operation failed, continue?",
+                                                          s"An error occurred during $opType operation. Do you want to continue?",
+                                                          e.getLocalizedMessage) match {
+          case Some(userDecisionCtrl.RetryButtonType) =>
             logger.info(s"User selected retry.")
             transfer(jobDef, summary, opType)
-          case ContinueAfterErrorButtonTypes.Skip => logger.info(s"User selected skip.")
-          case ContinueAfterErrorButtonTypes.Abort =>
+          case Some(userDecisionCtrl.SkipButtonType) => logger.info(s"User selected skip.")
+          case None | Some(userDecisionCtrl.AbortButtonType) =>
             logger.info(s"User selected abort after an error occurred during $opType operation. Detailed error: ${e.getLocalizedMessage}")
             throw e
         }
@@ -64,6 +62,7 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
   }
 
   private def transferDir(source: VDirectory, target: VPath, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
+    checkCancelled()
     reportProgress(summary, source)
 
     val targetDir =
@@ -92,6 +91,7 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
   }
 
   private def transferFile(source: VFile, target: VPath, summary: IOTaskSummary, opType: OperationType): IOTaskSummary = {
+    checkCancelled()
     reportProgress(summary, source)
 
     val resultSummary = {
@@ -107,6 +107,7 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
   }
 
   private def moveFile(source: VFile, target: VPath, summary: IOTaskSummary): Unit = {
+    logger.debug(s"Moving file $source -> $target")
     val targetFile =
       if (!target.isDirectory) target.asInstanceOf[VFile]
       else target.directory.updater
@@ -128,14 +129,16 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
       }
 
       if (!renameSucceeded) {
+        logger.trace(s"Quick rename/move $source -> $target didn't succeed, fallback to slow copy+delete")
         // if quick rename/move is not possible, then fallback to copy+delete
         doCopy(source, targetFile, transferJob.preserveModificationDate, new FileCopyListener(source, summary))
         doDelete(source)
-      }
+      } else logger.trace(s"Quick rename/move $source -> $target succeeded")
     }
   }
 
-  private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): Unit /*: IOTaskSummary*/ = {
+  private def copyFile(source: VFile, target: VPath, summary: IOTaskSummary): Unit = {
+    logger.debug(s"Copying file $source -> $target")
     val targetFilePath =
       if (!target.isDirectory) target.asInstanceOf[VFile]
       else target.directory.updater
@@ -157,63 +160,21 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
       case Some(YesToAll) => Yes
       case Some(NoToAll) => No
       case None =>
-        showConfirmOverwriteDialog(targetFile) match {
-          case Some(DecisionButtonTypes.Yes) => Yes
-          case Some(DecisionButtonTypes.No) => No
-          case Some(DecisionButtonTypes.YesToAll) =>
+        userDecisionCtrl.showYesNoAllCancelDialog("Confirm overwrite",
+                                                  "Target file already exists",
+                                                  s"Are you sure to overwrite ${targetFile.absolutePath}") match {
+          case Some(userDecisionCtrl.YesButtonType) => Yes
+          case Some(userDecisionCtrl.NoButtonType) => No
+          case Some(userDecisionCtrl.YesToAllButtonType) =>
             overwriteDecision = Some(YesToAll)
             Yes
-          case Some(DecisionButtonTypes.NoToAll) =>
+          case Some(userDecisionCtrl.NoToAllButtonType) =>
             overwriteDecision = Some(NoToAll)
             No
-          case Some(DecisionButtonTypes.Cancel) | None =>
+          case Some(userDecisionCtrl.CancelButtonType) | None =>
             throw new CancelledException() // TODO: value
         }
     }
-  }
-
-  object DecisionButtonTypes {
-    val Yes: ButtonType = ButtonType.Yes
-    val No: ButtonType = ButtonType.No
-    val YesToAll: ButtonType = new ButtonType("Yes to all")
-    val NoToAll: ButtonType = new ButtonType("No to all")
-    val Cancel: ButtonType = ButtonType.Cancel
-  }
-
-  private def showConfirmOverwriteDialog(targetFile: VPath): Option[ButtonType] = {
-    val futureTask = new FutureTask(() =>
-      new Alert(AlertType.Confirmation) {
-        initOwner(null)
-        title = "Confirm overwrite"
-        headerText = "Target file already exists"
-        contentText = s"Are you sure to overwrite ${targetFile.absolutePath}"
-        buttonTypes = Seq(DecisionButtonTypes.Yes, DecisionButtonTypes.YesToAll,
-                          DecisionButtonTypes.No, DecisionButtonTypes.NoToAll,
-                          DecisionButtonTypes.Cancel)
-      }.showAndWait())
-
-    Platform.runLater(futureTask)
-    futureTask.get()
-  }
-
-  object ContinueAfterErrorButtonTypes {
-    val Retry: ButtonType = new ButtonType("Retry")
-    val Skip: ButtonType = new ButtonType("Skip")
-    val Abort: ButtonType = new ButtonType("Abort")
-  }
-
-  private def showErrorDialogAndAskForDecision(opType: OperationType, errorMsg: String): Option[ButtonType]  = {
-    val futureTask = new FutureTask(() =>
-      new Alert(AlertType.Confirmation) {
-        initOwner(null)
-        title = "Operation failed, continue?"
-        headerText = s"An error occurred during $opType operation. Do you want to continue?"
-        contentText = s"$errorMsg"
-        buttonTypes = Seq(ContinueAfterErrorButtonTypes.Retry, ContinueAfterErrorButtonTypes.Skip,
-                          ContinueAfterErrorButtonTypes.Abort)
-      }.showAndWait())
-    Platform.runLater(futureTask)
-    futureTask.get()
   }
 
   private def reportProgress(transferState: TransferState, summary: IOTaskSummary, curPath: VPath): IOProgress = {
@@ -237,8 +198,7 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
 
   def mkDir(parentUpdater: VDirectoryUpdater, source: VDirectory, preserveModificationDate: Boolean = false): VDirectory = {
     val childDir = parentUpdater.mkChildDirPath(source.name)
-    val maybeTriedBoolean: Option[Try[Boolean]] = childDir.updater.map(_.create())
-    maybeTriedBoolean match {
+    childDir.updater.map(_.create()) match {
       case Some(Success(true)) =>
         if (preserveModificationDate)
           childDir.updater.foreach(_.setModificationDate(source.modificationDate)) // TODO: add warning to collector
@@ -271,6 +231,13 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
     }.getOrElse(throw new TransferException(s"Couldn't copy file $source. Target file $targetFile is not writable"))
   }
 
+  private def checkCancelled(): Unit = {
+    if (isCancelled) {
+      logger.debug(s"Cancel request was detected - stopping current task.")
+      throw new CancelledException
+    }
+  }
+
   class TransferException(msg: String) extends Exception(msg) {
     def this(msg: String, cause: Throwable) = {
       this(msg)
@@ -284,9 +251,7 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
                                          currentSummary.totalSize + size, currentSummary.errors)
       reportProgress(TransferState(size, file.size), updatedSummary, file)
 
-      if (isCancelled) {
-        throw CancelledException(updatedSummary)
-      }
+      checkCancelled()
     }
   }
 }

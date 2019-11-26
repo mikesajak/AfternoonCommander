@@ -19,7 +19,7 @@ case class OperationUiData(progressDialogType: String, errorDialogType: String, 
 
 class TransferOperationController(statusMgr: StatusMgr, appController: ApplicationController,
                                   countStatsOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager,
-                                  config: Configuration) {
+                                  userDecisionCtrl: UserDecisionCtrl, config: Configuration) {
   private val logger = Logger[DeletePanelController]
 
   private val copyLayout = "/layout/ops/copy-dialog.fxml"
@@ -119,7 +119,7 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
         resourceMgr.getMessageWithArgs(s"${opUiData(opType).progressDialogType}.status.message.paths", Seq(p.size)))
     }
 
-    val service = new BackgroundService(new RecursiveTransferTask(transferJob, stats, dryRun, config))
+    val service = new BackgroundService(new RecursiveTransferTask(transferJob, stats, dryRun, config, userDecisionCtrl))
 
     ctrl.init(resourceMgr.getMessage(s"${opUiData(opType).progressDialogType}.title"), headerText, statusMessage,
               resourceMgr.getIcon(opUiData(opType).iconName, IconSize.Big), progressDialog, service)

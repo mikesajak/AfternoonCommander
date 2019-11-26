@@ -64,12 +64,12 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
                                                          "zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"))
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(GraphicFile,
-                                                         "jpg", "jpeg", "png", "gif", "tif", "tiff"))
+                                                         "jpg", "jpeg", "png", "gif", "tif", "tiff", "svg", "bmp"))
   registerFileTypeDetector(SimpleByExtensionFileDetector(VideoFile,
                                                          "avi", "mkv", "mov", "mpg", "mpv", "mp4",
-                                                         "mpeg", "flv", "m4v", "m2v"))
+                                                         "mpeg", "flv", "m4v", "m2v", "wmv", "asf"))
   registerFileTypeDetector(SimpleByExtensionFileDetector(MusicFile,
-                                                         "mp3", "ogg", "wav", "wmv", "mpc", "m4a", "flac"))
+                                                         "mp3", "ogg", "wav", "wma", "mpc", "m4a", "flac"))
 
   registerFileTypeDetector(SimpleByExtensionFileDetector(XmlFile, "xml"))
 
