@@ -108,8 +108,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideHistoryMgr(eventBus: EventBus): HistoryMgr = {
-    val historyMgr = new HistoryMgr
+  def provideHistoryMgr(eventBus: EventBus, fsManager: FilesystemsManager, config: Configuration): HistoryMgr = {
+    val historyMgr = new HistoryMgr(config)
+    historyMgr.init(fsManager)
     eventBus.register(historyMgr)
     historyMgr
   }

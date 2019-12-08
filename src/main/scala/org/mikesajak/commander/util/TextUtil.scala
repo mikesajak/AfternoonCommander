@@ -24,4 +24,9 @@ object TextUtil {
     }
     false
   }
+
+  def firstLowerCase(text: String): String = {
+    if (text.length > 1) text.substring(0, 1).toLowerCase + text.substring(1)
+    else text.toLowerCase
+  }
 }
