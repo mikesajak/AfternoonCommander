@@ -10,7 +10,7 @@ import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
 import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
-import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager, HistoryMgr}
+import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager}
 import scalafx.Includes._
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
@@ -73,7 +73,6 @@ trait DirTableController {
   def reload(): Unit
   def setTableFocusOn(pathOption: Option[VPath])
   def setTableFocusOn(pathName: String) // TODO: change to some matcher, or first occurrence, or startsWith etc.
-  def historyMgr: HistoryMgr
 }
 
 @sfxml
@@ -110,8 +109,6 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   private val tableRows = ObservableBuffer[FileRow]()
   private val filteredRows = new FilteredBuffer(tableRows)
   private val sortedRows = new SortedBuffer(filteredRows)
-
-  override val historyMgr = new HistoryMgr()
 
   private val configObserver: ConfigObserver = new ConfigObserver {
     override val observedKey: ConfigKey = ConfigKey("file_panel", "*")
@@ -219,8 +216,6 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   override def currentDirectory: VDirectory = curDir
 
   override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit = {
-    if (curDir != null)
-      historyMgr.add(resolveTargetDir(curDir))
     val prevDir = curDir
     val newDir = resolveTargetDir(directory)
     curDir = newDir

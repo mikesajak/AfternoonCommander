@@ -47,6 +47,7 @@ trait DirPanelControllerIntf extends CurrentDirAware {
 /**
   * Created by mike on 14.04.17.
   */
+//noinspection UnstableApiUsage
 @sfxml
 class DirPanelController(tabPane: TabPane,
                          driveSelectionButton: Button,
@@ -59,7 +60,6 @@ class DirPanelController(tabPane: TabPane,
                          fsMgr: FilesystemsManager,
                          statusMgr: StatusMgr,
                          bookmarkMgr: BookmarkMgr,
-                         globalHistoryMgr: HistoryMgr,
                          iconResolver: IconResolver,
                          resourceMgr: ResourceManager,
                          appController: ApplicationController,

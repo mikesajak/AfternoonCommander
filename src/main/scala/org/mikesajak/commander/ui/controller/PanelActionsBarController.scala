@@ -27,20 +27,17 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
                                     resourceMgr: ResourceManager,
                                     fsMgr: FilesystemsManager,
                                     bookmarkMgr: BookmarkMgr,
-                                    globalHistoryMgr: HistoryMgr,
+                                    historyMgr: HistoryMgr,
                                     eventBus: EventBus)
     extends PanelActionsBarController {
 
   private var curDirListeners = List[CurrentDirAware]()
-
-  private val panelHistoryMgr = new HistoryMgr()
 
   def init(listener: CurrentDirAware): Unit = {
     curDirListeners ::= listener
     updateButtons()
 
     eventBus.register(this)
-    eventBus.register(new PanelHistoryUpdater(panelId, panelHistoryMgr))
   }
 
   def handleFavDirsButton(): Unit = {
@@ -70,12 +67,11 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
 
     val bookmarks = bookmarkMgr.bookmarks.map(mkPathMenuItem)
 
-    val panelHistoryItems = panelHistoryMgr.getAll
-                                           .take(5)
+    val panelHistoryItems = historyMgr.panelHistoryCtrl(panelId).getAll.take(5)
 
-    val globalHistoryItems = globalHistoryMgr.getAll
-                                             .filter(i => !panelHistoryMgr.getAll.contains(i))
-                                             .take(5)
+    val globalHistoryItems = historyMgr.globalHistoryCtrl.getAll
+                                       .filter(i => !historyMgr.panelHistoryCtrl(panelId).getAll.contains(i))
+                                       .take(5)
 
     val ctxMenu = new ContextMenu() {
       items.add(titleMenuItem("file_group_panel.bookmarks_menu.title"))
@@ -104,8 +100,8 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
   }
 
   def handlePrevDirButton(): Unit = {
-    dirTabManager.selectedTab.controller.historyMgr.last
-                 .foreach(notifyDirectoryChange)
+    historyMgr.panelHistoryCtrl(panelId).last
+              .foreach(notifyDirectoryChange)
   }
 
   def handleParentDirButton(): Unit = {
@@ -124,7 +120,7 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
   }
 
   private def updateButtons(): Unit = {
-    prevDirButton.disable = dirTabManager.selectedTab.controller.historyMgr.isEmpty
+    prevDirButton.disable = historyMgr.panelHistoryCtrl(panelId).isEmpty
     parentDirButton.disable = dirTabManager.selectedTab.dir.parent.isEmpty
   }
 
@@ -132,6 +128,7 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
     curDirListeners.foreach(_.setDirectory(directory))
   }
 
+  //noinspection UnstableApiUsage
   @Subscribe
   def updateCurTabUIAfterDirChange(event: CurrentDirChange): Unit = {
     if (event.panelId == panelId)
