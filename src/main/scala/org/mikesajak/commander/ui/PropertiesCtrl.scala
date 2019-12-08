@@ -1,5 +1,6 @@
 package org.mikesajak.commander.ui
 
+import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
@@ -8,7 +9,10 @@ import org.mikesajak.commander.ui.controller.PropertiesPanelController
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
 
+import scala.concurrent.CancellationException
+
 class PropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController) {
+  private val logger = Logger[PropertiesCtrl]
   def handlePropertiesAction(): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val targetPaths = selectedTab.controller.selectedPaths
@@ -34,6 +38,12 @@ class PropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController)
     dialog.setWindowSize(700, 600)
     dialog.showAndWait()
 
-    backgroundServices.foreach(_.cancel())
+    backgroundServices.foreach { bgService =>
+      try {
+        bgService.cancel()
+      } catch {
+        case _: CancellationException => logger.debug(s"Background service cancelled")
+      }
+    }
   }
 }
