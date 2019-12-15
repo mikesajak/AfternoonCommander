@@ -15,7 +15,7 @@ class UserDecisionCtrl(resourceMgr: ResourceManager) {
   val SkipButtonType = new ContinueDecisionButtonType("decision_button.skip") {}
   val AbortButtonType = new ContinueDecisionButtonType("decision_button.abort") {}
 
-   def showErrorDialogAndAskForDecision(titleText: String, headerMsg: String, errorMsg: String): Option[ContinueDecisionButtonType]  = {
+   def showErrorDialogAndAskForDecision(titleText: String, headerMsg: String, errorMsg: String): Option[ButtonType]  = {
     val futureTask = new FutureTask(() =>
       new Alert(AlertType.Confirmation) {
         initOwner(null)
@@ -25,7 +25,7 @@ class UserDecisionCtrl(resourceMgr: ResourceManager) {
         buttonTypes = Seq(RetryButtonType, SkipButtonType, AbortButtonType)
       }.showAndWait())
     Platform.runLater(futureTask)
-    futureTask.get().asInstanceOf[Option[ContinueDecisionButtonType]]
+    futureTask.get()
   }
 
 
@@ -36,7 +36,7 @@ class UserDecisionCtrl(resourceMgr: ResourceManager) {
   val NoToAllButtonType = new ConfirmButtonType("confirm_button.no_to_all") {}
   val CancelButtonType = new ConfirmButtonType("confirm_button.cancel") {}
 
-  def showYesNoAllCancelDialog(titleText: String, headerMsg: String, description: String): Option[ConfirmButtonType] = {
+  def showYesNoAllCancelDialog(titleText: String, headerMsg: String, description: String): Option[ButtonType] = {
     val futureTask = new FutureTask(() =>
       new Alert(AlertType.Confirmation) {
         initOwner(null)
@@ -47,6 +47,6 @@ class UserDecisionCtrl(resourceMgr: ResourceManager) {
       }.showAndWait())
 
     Platform.runLater(futureTask)
-    futureTask.get().asInstanceOf[Option[ConfirmButtonType]]
+    futureTask.get()
   }
 }

@@ -6,7 +6,7 @@ import java.time.Instant
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.mikesajak.commander.fs._
 
-class CommonsArchiveFile(archiveEntry: ArchiveEntry, parentDir: VDirectory) extends VFile {
+class CommonsArchiveFile(archiveStreamProvider: ArchiveStreamProvider, archiveEntry: ArchiveEntry, parentDir: VDirectory) extends VFile {
   override val name: String = archiveEntry.getName.split("[/\\\\]").last
 
   override val parent: Option[VDirectory] = Some(parentDir)
@@ -23,12 +23,12 @@ class CommonsArchiveFile(archiveEntry: ArchiveEntry, parentDir: VDirectory) exte
 
   override val fileSystem: FS = parentDir.fileSystem
 
-  override def inStream: InputStream = throw new UnsupportedOperationException// TODO
+  override def inStream: InputStream =
+    archiveStreamProvider.getStreamForEntry(archiveEntry)
 
   override val updater: Option[VFileUpdater] = None
 
   override val exists = true
 
   override val toString: String = name
-
 }

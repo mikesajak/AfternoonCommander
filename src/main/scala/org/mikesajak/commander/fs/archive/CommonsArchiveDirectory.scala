@@ -8,16 +8,19 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.util.PathUtils
 
 trait CommonsArchiveDirectory extends VDirectory {
+  val archiveFile: VFile
   val archiveNode: ArchiveNode
   val childNodes: Seq[ArchiveNode]
 
   override val directory: CommonsArchiveDirectory = this
   override val size = 0
 
+  private lazy val archiveStreamProvider = new ArchiveStreamProvider(archiveFile)
+
   override lazy val childFiles: Seq[VFile] =
     childNodes.filter(node => archiveNode.isDirectSubNode(node))
               .filterNot { case ArchiveNode(_, Some(archiveEntry)) => archiveEntry.isDirectory }
-              .map(node => new CommonsArchiveFile(node.archiveEntry.get, this))
+              .map(node => new CommonsArchiveFile(archiveStreamProvider, node.archiveEntry.get, this))
 
   override lazy val childDirs: Seq[VDirectory] = {
     val subDirsMap = childNodes
@@ -25,19 +28,19 @@ trait CommonsArchiveDirectory extends VDirectory {
         .groupBy(node => archiveNode.getDirectSubNodePath(node))
 
     val createdIndirectSubDirs = subDirsMap.map { case (pathToRoot, childNodes) =>
-      new CommonsArchiveSubDir(this, ArchiveNode(pathToRoot), childNodes)
+      new CommonsArchiveSubDir(archiveFile, this, ArchiveNode(pathToRoot), childNodes)
     }
 
     val leafDirs = childNodes.filterNot(node => subDirsMap.contains(node.pathToRoot))
                              .filter(node => archiveNode.isDirectSubNode(node))
                              .filter { case ArchiveNode(_, Some(archiveEntry)) => archiveEntry.isDirectory }
-                             .map(node => new CommonsArchiveSubDir(this, node, Seq()))
+                             .map(node => new CommonsArchiveSubDir(archiveFile,this, node, Seq()))
 
     leafDirs ++ createdIndirectSubDirs
   }
 }
 
-class CommonsArchiveRootDir(val archiveFile: VFile, archiveType: ArchiveType, archiveEntries: Seq[ArchiveEntry])
+class CommonsArchiveRootDir(override val archiveFile: VFile, archiveType: ArchiveType, archiveEntries: Seq[ArchiveEntry])
     extends CommonsArchiveDirectory {
   override val archiveNode: ArchiveNode = ArchiveNode(IndexedSeq())
   override val childNodes: Seq[ArchiveNode] = archiveEntries.map { entry =>
@@ -65,7 +68,8 @@ class CommonsArchiveRootDir(val archiveFile: VFile, archiveType: ArchiveType, ar
   override val toString = s"ArchiveRootDir(${archiveFile.name})"
 }
 
-class CommonsArchiveSubDir(parentDir: VDirectory,
+class CommonsArchiveSubDir(override val archiveFile: VFile,
+                           parentDir: VDirectory,
                            override val archiveNode: ArchiveNode,
                            override val childNodes: Seq[ArchiveNode])
     extends CommonsArchiveDirectory {
