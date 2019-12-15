@@ -27,6 +27,7 @@ class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControl
         val newDir = selectedTab.dir.updater
             .map(_.mkChildDirPath(newDirName))
             .getOrElse(throw new MkDirException("Cannot create directory $newDirName. Target directory ${selectedTab.dir} is not writable."))
+        newDir.updater.foreach(_.create())
         selectedTab.controller.reload()
         selectedTab.controller.setTableFocusOn(Some(newDir))
       } catch {
