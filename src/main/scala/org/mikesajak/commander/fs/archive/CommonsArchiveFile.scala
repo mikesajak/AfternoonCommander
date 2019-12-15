@@ -1,6 +1,6 @@
 package org.mikesajak.commander.fs.archive
 
-import java.io.InputStream
+import java.io.{BufferedInputStream, InputStream}
 import java.time.Instant
 
 import org.apache.commons.compress.archivers.ArchiveEntry
@@ -24,7 +24,7 @@ class CommonsArchiveFile(archiveStreamProvider: ArchiveStreamProvider, archiveEn
   override val fileSystem: FS = parentDir.fileSystem
 
   override def inStream: InputStream =
-    archiveStreamProvider.getStreamForEntry(archiveEntry)
+    new BufferedInputStream(archiveStreamProvider.getStreamForEntry(archiveEntry))
 
   override val updater: Option[VFileUpdater] = None
 

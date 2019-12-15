@@ -1,6 +1,6 @@
 package org.mikesajak.commander.fs.archive
 
-import java.io.InputStream
+import java.io.{BufferedInputStream, InputStream}
 import java.time.Instant
 
 import org.apache.commons.compress.compressors.xz.XZUtils
@@ -27,7 +27,7 @@ class XZFile(file: VFile, parentDir: XZRootDir) extends VFile {
 
   override val exists: Boolean = true
 
-  override def inStream: InputStream = new XZInputStream(file.inStream)
+  override def inStream: InputStream = new BufferedInputStream(new XZInputStream(file.inStream))
 
   override def updater: Option[VFileUpdater] = None
 }
