@@ -270,7 +270,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     eventBus.publish(CurrentDirChange(panelId, Option(prevDir), newDir))
   }
 
-  private def resolveTargetDir(directory: VDirectory) = {
+  private def resolveTargetDir(directory: VDirectory): VDirectory = {
     directory match {
       case p: PathToParent => p.targetDir
       case _ => directory
@@ -416,7 +416,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   private def selectIndex(index: Int): Unit = {
     val prevSelection = dirTableView.getSelectionModel.getSelectedIndex
     if (prevSelection != index) {
-      dirTableView.getSelectionModel.select(math.max(index, 0))
+      dirTableView.getSelectionModel.select(math.max(index, 0), nameColumn) // column is needed in selection to prevent bug in javafx implementation (NPE for null column)
       scrollTo(index)
     }
   }
