@@ -2,6 +2,7 @@ package org.mikesajak.commander.ui.controller
 
 import java.util.function.Predicate
 
+import com.google.common.eventbus.Subscribe
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKey, ConfigKeys, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
@@ -113,10 +114,32 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   private val configObserver: ConfigObserver = new ConfigObserver {
     override val observedKey: ConfigKey = ConfigKey("file_panel", "*")
 
-    override def configChanged(key: ConfigKey): Unit = key match {
+    //noinspection UnstableApiUsage
+    @Subscribe
+    override def configChanged(key: ConfigKey): Unit =
+      key match {
       case ConfigKeys.ShowHiddenFiles =>
         filteredRows.predicate = createShowHiddenFilesPredicate()
-      case _ =>
+
+      case ConfigKey(category, _) if category == ConfigKeys.filePanelColumnCategory =>
+        handleTableColumnWidthChange(key)
+
+      case _ => // ignore all other changes, config keys that this panel is not interested
+    }
+
+    def handleTableColumnWidthChange(configKey: ConfigKey): Unit = {
+      val column = configKey match {
+        case ConfigKeys.NameColumnWidth => Some(nameColumn)
+        case ConfigKeys.ExtColumnWidth => Some(extColumn)
+        case ConfigKeys.SizeColumnWidth => Some(sizeColumn)
+        case ConfigKeys.ModifiedColumnWidth => Some(dateColumn)
+        case ConfigKeys.AttribsColumnWidth => Some(attribsColumn)
+        case _ =>
+          logger.debug(s"Width change for unknown column. ConfigKey: $configKey")
+          None
+      }
+
+      column.foreach { c => config.intProperty(configKey).value.foreach { width => c.prefWidth = width } }
     }
   }
 
@@ -188,6 +211,8 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
       row
     }
 
+    initColumnWidthChangeHandlers()
+
     dirTableView.handleEvent(KeyEvent.KeyPressed) { event: KeyEvent => handleKeyEvent(event) }
 
     eventBus.register(configObserver)
@@ -200,6 +225,20 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     panelActionsBarController.init(directory => setCurrentDirectory(directory))
 
     setCurrentDirectory(path)
+  }
+
+  private def initColumnWidthChangeHandlers(): Unit = {
+    bindColumnWidthToConfigChanges(nameColumn, ConfigKeys.NameColumnWidth)
+    bindColumnWidthToConfigChanges(extColumn, ConfigKeys.ExtColumnWidth)
+    bindColumnWidthToConfigChanges(sizeColumn, ConfigKeys.SizeColumnWidth)
+    bindColumnWidthToConfigChanges(dateColumn, ConfigKeys.ModifiedColumnWidth)
+    bindColumnWidthToConfigChanges(attribsColumn, ConfigKeys.AttribsColumnWidth)
+  }
+
+  private def bindColumnWidthToConfigChanges(column: TableColumn[_,_], configKey: ConfigKey): Unit = {
+    config.intProperty(configKey).value.foreach(width => column.prefWidth = width)
+
+    column.width.onChange { (_, _, newSize) => config.intProperty(configKey) := newSize.intValue }
   }
 
   override def dispose(): Unit = {

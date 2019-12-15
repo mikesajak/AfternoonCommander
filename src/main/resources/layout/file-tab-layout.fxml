@@ -15,7 +15,7 @@
       </VBox>
       <TableView fx:id="dirTableView" editable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="402.0" prefWidth="599.0" VBox.vgrow="ALWAYS">
         <columns>
-          <TableColumn fx:id="idColumn" editable="false" prefWidth="27.0" sortable="false" />
+          <TableColumn fx:id="idColumn" editable="false" maxWidth="50.0" prefWidth="27.0" resizable="false" sortable="false" />
           <TableColumn fx:id="nameColumn" prefWidth="123.0" text="%file_table_panel.name_column" />
             <TableColumn fx:id="extColumn" prefWidth="75.0" text="%file_table_panel.ext_column" />
             <TableColumn fx:id="sizeColumn" editable="false" prefWidth="75.0" text="%file_table_panel.size_column" />
