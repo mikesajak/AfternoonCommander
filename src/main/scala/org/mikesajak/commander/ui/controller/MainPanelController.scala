@@ -2,12 +2,13 @@ package org.mikesajak.commander.ui.controller
 
 import org.mikesajak.commander.OperationMgr
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.ui.Keys
-import org.mikesajak.commander.ui.Keys.Modifier.Alt
+import org.mikesajak.commander.ui.Action
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
+import org.mikesajak.commander.ui.keys.KeyActionMapper
+import org.mikesajak.commander.ui.keys.KeyActionMapper.KeyInput
 import scalafx.Includes._
 import scalafx.scene.control.{SplitPane, TabPane}
-import scalafx.scene.input.{KeyCode, KeyEvent}
+import scalafx.scene.input.KeyEvent
 import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
 
@@ -23,44 +24,33 @@ class MainPanelController(dirsSplitPane: SplitPane,
                           @nested[DirPanelController] rightDirPanelController: DirPanelControllerIntf,
 
                           statusMgr: StatusMgr,
-                          operationMgr: OperationMgr) {
+                          operationMgr: OperationMgr,
+                          keyActionMapper: KeyActionMapper) {
   leftDirPanelController.init(LeftPanel)
   rightDirPanelController.init(RightPanel)
 
   statusMgr.selectedPanel = LeftPanel
 
   mainPane.filterEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
-    var handled = true
-    if (Keys.hasNoModifiers(ke)) {
-      ke.code match {
-        case KeyCode.F3 => operationMgr.handleView()
-        case KeyCode.F4 => operationMgr.handleEdit()
-        case KeyCode.F5 => operationMgr.handleCopy()
-        case KeyCode.F6 => operationMgr.handleMove()
-        case KeyCode.F7 => operationMgr.handleMkDir()
-        case KeyCode.F8 => operationMgr.handleDelete()
-        case KeyCode.F10 => operationMgr.handleExit()
+    for (action <- keyActionMapper.actionForKey(KeyInput(ke))) {
+      action match {
+        case Action.View => operationMgr.handleView()
+        case Action.Edit => operationMgr.handleEdit()
+        case Action.Copy => operationMgr.handleCopy()
+        case Action.Move => operationMgr.handleMove()
+        case Action.Delete => operationMgr.handleDelete()
+        case Action.Exit => operationMgr.handleExit()
+
         // Debug: temporary
-        case KeyCode.F2 => operationMgr.handleCountDirStats()
+        case Action.CountDirStats => operationMgr.handleCountDirStats()
 
-        case KeyCode.F11 => operationMgr.handlePropertiesAction()
+        case Action.ShowProperties => operationMgr.handlePropertiesAction()
 
-        case KeyCode.Tab => // todo
-
-        case _ => handled = false
+        case Action.Refresh => operationMgr.handleRefreshAction()
+        case Action.FindFiles => operationMgr.handleFindAction()
       }
-    } else {
-      ke.code match {
-        case KeyCode.R if ke.shortcutDown => operationMgr.handleRefreshAction()
-
-        case KeyCode.F7 if Keys.hasOnlyModifiers(ke, Alt) =>operationMgr.handleFindAction()
-
-        case _ => handled = false
-      }
-    }
-
-    if (handled)
       ke.consume()
+    }
   }
 
 }

@@ -13,6 +13,9 @@ import org.mikesajak.commander.task.UserDecisionCtrl
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
+import org.mikesajak.commander.ui.keys.{KeyActionLoader, KeyActionMapper}
+
+import scala.io.Source
 
 /**
   * Created by mike on 09.04.17.
@@ -33,6 +36,18 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     config.load()
     config
   }
+
+
+  @Provides
+  @Singleton
+  def provideKeyMapper(loader: KeyActionLoader): KeyActionMapper = {
+    val mapping = loader.load(Source.fromResource("actions.keymap"))
+    new KeyActionMapper(mapping)
+  }
+
+  @Provides
+  @Singleton
+  def provideKeyActionLoader() = new KeyActionLoader
 
   @Provides
   @Singleton
