@@ -21,6 +21,7 @@ object Action extends Enum[Action] {
   case object ShowProperties extends Action
 
   case object Refresh extends Action
+  case object SwitchSelectedPanel extends Action
 }
 
 sealed trait Action extends EnumEntry

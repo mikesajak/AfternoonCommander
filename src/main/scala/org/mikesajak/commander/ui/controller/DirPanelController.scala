@@ -43,6 +43,7 @@ case class PrevCrumbItems(prevPaths: Seq[VPath]) extends BreadCrumbItem
 
 trait DirPanelControllerIntf extends CurrentDirAware {
   def init(panelId: PanelId)
+  def requestFocus()
 }
 /**
   * Created by mike on 14.04.17.
@@ -109,7 +110,7 @@ class DirPanelController(tabPane: TabPane,
   }
 
   private def registerUIListeners(): Unit = {
-    topUIPane.filterEvent(MouseEvent.MousePressed) { _: MouseEvent => statusMgr.selectedPanel = panelId }
+    topUIPane.filterEvent(MouseEvent.MousePressed) { _: MouseEvent => selectThisPanel() }
 
     tabPane.selectionModel.value.selectedIndexProperty.onChange { (_, _, newIdx) =>
       val tabIdx = newIdx.intValue
@@ -120,6 +121,10 @@ class DirPanelController(tabPane: TabPane,
       logger.debug(s"$panelId - reloading tab: $tabIdx: ${dirTabManager.tab(tabIdx).dir}")
       dirTabManager.tab(tabIdx).controller.reload()
     }
+  }
+
+  private def selectThisPanel(): Unit = {
+    statusMgr.selectedPanel = panelId
   }
 
   private def registerEventBusSubscribers(): Unit = {
@@ -134,6 +139,11 @@ class DirPanelController(tabPane: TabPane,
     })
 
     eventBus.register(this)
+  }
+
+  def requestFocus(): Unit = {
+    dirTabManager.selectedTab.controller.requestFocus()
+    selectThisPanel()
   }
 
   def handleDriveSelectionButton(): Unit = {

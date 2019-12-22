@@ -37,9 +37,7 @@ class OperationMgr(statusMgr: StatusMgr,
 
   def handleCountDirStats(): Unit = countDirStatsCtrl.handleCountDirStats()
 
-  def handleExit(): Unit = {
-    appController.exitApplication()
-  }
+  def handleExit(): Unit = appController.exitApplication()
 
   def handleRefreshAction(): Unit = {
     logger.debug(s"Refreshing ${statusMgr.selectedPanel}, ${statusMgr.selectedTabManager.selectedTab.dir}")

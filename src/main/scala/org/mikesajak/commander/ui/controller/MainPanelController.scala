@@ -1,5 +1,6 @@
 package org.mikesajak.commander.ui.controller
 
+import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.OperationMgr
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.Action
@@ -26,6 +27,8 @@ class MainPanelController(dirsSplitPane: SplitPane,
                           statusMgr: StatusMgr,
                           operationMgr: OperationMgr,
                           keyActionMapper: KeyActionMapper) {
+  private val logger = Logger[MainPanelController]
+
   leftDirPanelController.init(LeftPanel)
   rightDirPanelController.init(RightPanel)
 
@@ -48,9 +51,22 @@ class MainPanelController(dirsSplitPane: SplitPane,
 
         case Action.Refresh => operationMgr.handleRefreshAction()
         case Action.FindFiles => operationMgr.handleFindAction()
+
+        case Action.SwitchSelectedPanel => handleSwitchSelectedPanel()
       }
       ke.consume()
     }
+  }
+
+  private def handleSwitchSelectedPanel(): Unit = {
+    val panelToSelect = PanelId.oppositePanel(statusMgr.selectedPanel)
+    logger.debug(s"Switching panel ${statusMgr.selectedPanel} -> $panelToSelect")
+    val panelCtrl = panelToSelect match {
+      case PanelId.LeftPanel => leftDirPanelController
+      case PanelId.RightPanel => rightDirPanelController
+    }
+
+    panelCtrl.requestFocus()
   }
 
 }

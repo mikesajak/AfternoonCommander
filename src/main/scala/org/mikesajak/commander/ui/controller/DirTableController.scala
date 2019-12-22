@@ -74,6 +74,8 @@ trait DirTableController {
   def reload(): Unit
   def setTableFocusOn(pathOption: Option[VPath])
   def setTableFocusOn(pathName: String) // TODO: change to some matcher, or first occurrence, or startsWith etc.
+
+  def requestFocus()
 }
 
 @sfxml
@@ -294,6 +296,10 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
       math.max(0, dirTableView.items.value.indexWhere(row => row.path.name == pathName))
 
     selectIndex(selIndex)
+  }
+
+  override def requestFocus(): Unit = {
+    dirTableView.requestFocus()
   }
 
   private def handleKeyEvent(event: KeyEvent) {
