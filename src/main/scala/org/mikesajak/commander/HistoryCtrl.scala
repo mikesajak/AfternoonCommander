@@ -72,12 +72,10 @@ class HistoryMgr(config: Configuration) {
   //noinspection UnstableApiUsage
   @Subscribe
   def curDirChanged(event: CurrentDirChange): Unit = {
-    event.prevDir.foreach { dir =>
-      globalHistoryCtrl.add(dir)
-      panelHistoryCtrl.foreach { case (panelId, ctrl) =>
-        if (event.panelId == panelId)
-          ctrl.add(dir)
-      }
+    globalHistoryCtrl.add(event.curDir)
+    panelHistoryCtrl.foreach { case (panelId, ctrl) =>
+      if (event.panelId == panelId)
+        ctrl.add(event.curDir)
     }
   }
 }
