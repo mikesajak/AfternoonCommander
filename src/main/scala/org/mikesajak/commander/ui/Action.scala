@@ -16,7 +16,6 @@ object Action extends Enum[Action] {
   case object Exit extends Action
 
   case object FindFiles extends Action
-  case object SwitchPanels extends Action
   case object CountDirStats extends Action
   case object ShowProperties extends Action
 

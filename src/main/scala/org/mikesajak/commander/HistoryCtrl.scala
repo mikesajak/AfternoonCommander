@@ -2,7 +2,7 @@ package org.mikesajak.commander
 
 import com.google.common.eventbus.Subscribe
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.config.{ConfigKey, Configuration}
+import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
 import org.mikesajak.commander.ui.controller.PanelId
@@ -12,7 +12,7 @@ import org.mikesajak.commander.util.TextUtil.firstLowerCase
 class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) {
   private val logger = Logger[HistoryCtrl]
   private var dirList = collection.mutable.Queue[VDirectory]()
-  private val configKey = ConfigKey("general", s"history.$name")
+  private val configKey = s"${ConfigKeys.History}.$name"
 
   def init(fsMgr: FilesystemsManager): Unit = {
     val savedHistory = config.stringSeqProperty(configKey).value

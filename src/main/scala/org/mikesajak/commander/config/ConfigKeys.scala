@@ -1,22 +1,24 @@
 package org.mikesajak.commander.config
 
 object ConfigKeys {
-  val WindowHeight: ConfigKey = ConfigKey("window", "height")
-  val WindowWidth: ConfigKey = ConfigKey("window", "width")
+  val ExitConfirmation = "general.exitConfirmation"
+  val Bookmarks = "general.bookmarks"
+  val History = "general.history"
+  val ShowHiddenFiles = "filePanel.showHidden"
+  val TransferBufferSize = "transfer.bufferSize"
 
-  val ExitConfirmation: ConfigKey = ConfigKey("application", "exitConfirmation")
+  // runtime
 
-  val ShowHiddenFiles: ConfigKey = ConfigKey("filePanel", "showHidden")
+  val WindowHeight = "runtime.window.height"
+  val WindowWidth = "runtime.window.width"
 
-  val Bookmarks: ConfigKey = ConfigKey("general", "bookmarks")
 
-  val TransferBufferSize: ConfigKey = ConfigKey("transfer", "bufferSize")
+  val filePanelCategory = "runtime.filePanel"
+  val filePanelColumnCategory = s"$filePanelCategory.column"
 
-  val filePanelColumnCategory = "filePanel.column"
-  val NameColumnWidth: ConfigKey = ConfigKey(filePanelColumnCategory, "name.width")
-  val ExtColumnWidth: ConfigKey = ConfigKey(filePanelColumnCategory, "extension.width")
-  val SizeColumnWidth: ConfigKey = ConfigKey(filePanelColumnCategory, "size.width")
-  val ModifiedColumnWidth: ConfigKey = ConfigKey(filePanelColumnCategory, "modified.width")
-  val AttribsColumnWidth: ConfigKey = ConfigKey(filePanelColumnCategory, "attribs.width")
-
+  val NameColumnWidth = s"$filePanelColumnCategory.name.width"
+  val ExtColumnWidth = s"$filePanelColumnCategory.extension.width"
+  val SizeColumnWidth = s"$filePanelColumnCategory.size.width"
+  val ModifiedColumnWidth = s"$filePanelColumnCategory.modified.width"
+  val AttribsColumnWidth = s"$filePanelColumnCategory.attribs.width"
 }

@@ -41,42 +41,49 @@ class TypesafeConfig(filename: String, eventBus: EventBus) extends Configuration
     writer.close()
   }
 
-  override def getBoolProperty(key: ConfigKey): Option[Boolean] = {
+  override def entriesKeys: Seq[String] = {
+    config.entrySet().asScala
+        .map(e => e.getKey)
+        .map(key => key.replaceFirst(s"^$appName\\.", ""))
+        .toSeq
+  }
+
+  override def getBoolProperty(key: String): Option[Boolean] = {
     val path = s"$appName.$key"
     if (config.hasPath(path)) Some(config.getBoolean(path)) else None
   }
 
-  override def setBoolProperty(key: ConfigKey, value: Boolean): Unit = {
+  override def setBoolProperty(key: String, value: Boolean): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromAnyRef(value))
     notifyConfigChanged(key)
   }
 
-  override def getIntProperty(key: ConfigKey): Option[Int] = {
+  override def getIntProperty(key: String): Option[Int] = {
     val path = s"$appName.$key"
     if (config.hasPath(path)) Some(config.getInt(path)) else None
   }
 
-  override def setIntProperty(key: ConfigKey, value: Int): Unit = {
+  override def setIntProperty(key: String, value: Int): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromAnyRef(value))
     notifyConfigChanged(key)
   }
 
-  override def getStringProperty(key: ConfigKey): Option[String] = {
+  override def getStringProperty(key: String): Option[String] = {
     val path = s"$appName.$key"
     if (config.hasPath(path)) Some(config.getString(path)) else None
   }
 
-  override def setStringProperty(key: ConfigKey, value: String): Unit = {
+  override def setStringProperty(key: String, value: String): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromAnyRef(value))
     notifyConfigChanged(key)
   }
 
-  override def getStringSeqProperty(key: ConfigKey): Option[Seq[String]] = {
+  override def getStringSeqProperty(key: String): Option[Seq[String]] = {
     val path = s"$appName.$key"
     if (config.hasPath(path)) Some(config.getStringList(path).asScala) else None
   }
 
-  override def setStringSeqProperty(key: ConfigKey, value: Seq[String]): Unit = {
+  override def setStringSeqProperty(key: String, value: Seq[String]): Unit = {
     config = config.withValue(s"$appName.$key", ConfigValueFactory.fromIterable(value.asJava))
     notifyConfigChanged(key)
   }

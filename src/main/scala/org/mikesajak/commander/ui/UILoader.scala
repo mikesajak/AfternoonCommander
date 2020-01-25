@@ -26,6 +26,11 @@ object UILoader {
     (root, controller)
   }
 
+  def loadSceneNoCtrl[CtrlType](layout: String, additionalContexts: Module*): Parent = {
+    val (root, _)= loadSceneImpl(layout, defaultStyles, defaultResource, additionalContexts: _*)
+    root
+  }
+
   private def loadSceneImpl(layout: String, styles: Seq[String], resourceBundle: String, additionalContexts: Module*) = {
     implicit val injector: Injector = ApplicationContext.globalInjector.createChildInjector(additionalContexts: _*)
 

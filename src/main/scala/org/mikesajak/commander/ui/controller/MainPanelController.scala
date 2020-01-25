@@ -41,6 +41,7 @@ class MainPanelController(dirsSplitPane: SplitPane,
         case Action.Edit => operationMgr.handleEdit()
         case Action.Copy => operationMgr.handleCopy()
         case Action.Move => operationMgr.handleMove()
+        case Action.MkDir => operationMgr.handleMkDir()
         case Action.Delete => operationMgr.handleDelete()
         case Action.Exit => operationMgr.handleExit()
 

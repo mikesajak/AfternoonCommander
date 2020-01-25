@@ -4,7 +4,7 @@ import java.util.function.Predicate
 
 import com.google.common.eventbus.Subscribe
 import com.typesafe.scalalogging.Logger
-import org.mikesajak.commander.config.{ConfigKey, ConfigKeys, ConfigObserver, Configuration}
+import org.mikesajak.commander.config.{ConfigKeys, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
@@ -114,22 +114,23 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   private val sortedRows = new SortedBuffer(filteredRows)
 
   private val configObserver: ConfigObserver = new ConfigObserver {
-    override val observedKey: ConfigKey = ConfigKey("file_panel", "*")
+    //noinspection ScalaUnusedSymbol
+    val observedKeyPrefix: String = ConfigKeys.filePanelCategory
 
     //noinspection UnstableApiUsage
     @Subscribe
-    override def configChanged(key: ConfigKey): Unit =
+    override def configChanged(key: String): Unit =
       key match {
-      case ConfigKeys.ShowHiddenFiles =>
-        filteredRows.predicate = createShowHiddenFilesPredicate()
+        case ConfigKeys.ShowHiddenFiles =>
+          filteredRows.predicate = createShowHiddenFilesPredicate()
 
-      case ConfigKey(category, _) if category == ConfigKeys.filePanelColumnCategory =>
-        handleTableColumnWidthChange(key)
+        case key if key startsWith ConfigKeys.filePanelColumnCategory =>
+          handleTableColumnWidthChange(key)
 
-      case _ => // ignore all other changes, config keys that this panel is not interested
-    }
+        case _ => // ignore all other changes, config keys that this panel is not interested
+      }
 
-    def handleTableColumnWidthChange(configKey: ConfigKey): Unit = {
+    def handleTableColumnWidthChange(configKey: String): Unit = {
       val column = configKey match {
         case ConfigKeys.NameColumnWidth => Some(nameColumn)
         case ConfigKeys.ExtColumnWidth => Some(extColumn)
@@ -237,7 +238,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     bindColumnWidthToConfigChanges(attribsColumn, ConfigKeys.AttribsColumnWidth)
   }
 
-  private def bindColumnWidthToConfigChanges(column: TableColumn[_,_], configKey: ConfigKey): Unit = {
+  private def bindColumnWidthToConfigChanges(column: TableColumn[_,_], configKey: String): Unit = {
     config.intProperty(configKey).value.foreach(width => column.prefWidth = width)
 
     column.width.onChange { (_, _, newSize) => config.intProperty(configKey) := newSize.intValue }
