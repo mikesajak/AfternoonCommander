@@ -2,16 +2,15 @@ package org.mikesajak.commander.config
 
 object ConfigKeys {
   val ExitConfirmation = "general.exitConfirmation"
-  val Bookmarks = "general.bookmarks"
-  val History = "general.history"
   val ShowHiddenFiles = "filePanel.showHidden"
   val TransferBufferSize = "transfer.bufferSize"
 
   // runtime
-
   val WindowHeight = "runtime.window.height"
   val WindowWidth = "runtime.window.width"
 
+  val Bookmarks = "runtime.general.bookmarks"
+  val History = "runtime.general.history"
 
   val filePanelCategory = "runtime.filePanel"
   val filePanelColumnCategory = s"$filePanelCategory.column"
