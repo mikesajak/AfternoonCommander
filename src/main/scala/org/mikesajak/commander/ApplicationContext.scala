@@ -5,7 +5,7 @@ import com.google.inject.name.{Named, Names}
 import com.typesafe.scalalogging.Logger
 import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.archive.ArchiveManager
-import org.mikesajak.commander.config.{Configuration, TypesafeConfig}
+import org.mikesajak.commander.config.{ConfigKeys, Configuration, TypesafeConfig}
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.handler.FileHandlerFactory
 import org.mikesajak.commander.status.StatusMgr
@@ -34,9 +34,20 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     val config = new TypesafeConfig(s"${ApplicationController.configPath}/${ApplicationController.configFile}",
                                     eventBus)
     config.load()
+    setConfigDefaults(config)
     config
   }
 
+  // TODO: temporary defaults, until moved to config file, remove this then
+  private def setConfigDefaults(config: Configuration): Unit = {
+    config.stringProperty(ConfigKeys.PanelTextColor) := "#5D5D5D"
+    config.stringProperty(ConfigKeys.PanelBgColor1) := "#FFFFFF"
+    config.stringProperty(ConfigKeys.PanelBgColor2) := "#FFFFFF"
+    config.stringProperty(ConfigKeys.PanelSelectionColor) := "#FFFFFF"
+    config.stringProperty(ConfigKeys.PanelSelectionBgColor) := "#E95420"
+    config.stringProperty(ConfigKeys.PanelCursorColor) := "#FFFFFF"
+    config.stringProperty(ConfigKeys.PanelCursorBgColor) := "#4444FF"
+  }
 
   @Provides
   @Singleton

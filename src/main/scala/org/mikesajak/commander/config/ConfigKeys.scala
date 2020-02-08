@@ -1,19 +1,31 @@
 package org.mikesajak.commander.config
 
 object ConfigKeys {
-  val ExitConfirmation = "general.exitConfirmation"
-  val ShowHiddenFiles = "filePanel.showHidden"
+  val generalCategory = "general"
+  val ExitConfirmation = s"$generalCategory.exitConfirmation"
+
+  val filePanelCategory = "filePanel"
+  val ShowHiddenFiles = s"$filePanelCategory.showHidden"
+
+  val PanelTextColor = s"$filePanelCategory.textColor"
+  val PanelBgColor1 = s"$filePanelCategory.bgColor1"
+  val PanelBgColor2 = s"$filePanelCategory.bgColor2"
+  val PanelSelectionColor = s"$filePanelCategory.selectionColor"
+  val PanelSelectionBgColor = s"$filePanelCategory.selectionBgColor"
+  val PanelCursorColor = s"$filePanelCategory.cursorColor"
+  val PanelCursorBgColor = s"$filePanelCategory.cursorBgColor"
+
   val TransferBufferSize = "transfer.bufferSize"
 
   // runtime
-  val WindowHeight = "runtime.window.height"
-  val WindowWidth = "runtime.window.width"
+  val windowCategory = "runtime.window"
+  val WindowHeight = s"$windowCategory.height"
+  val WindowWidth = s"$windowCategory.width"
 
-  val Bookmarks = "runtime.general.bookmarks"
-  val History = "runtime.general.history"
+  val Bookmarks = s"runtime.$generalCategory.bookmarks"
+  val History = s"runtime.$generalCategory.history"
 
-  val filePanelCategory = "runtime.filePanel"
-  val filePanelColumnCategory = s"$filePanelCategory.column"
+  val filePanelColumnCategory = s"runtime.$filePanelCategory.column"
 
   val NameColumnWidth = s"$filePanelColumnCategory.name.width"
   val ExtColumnWidth = s"$filePanelColumnCategory.extension.width"

@@ -5,12 +5,14 @@ import java.text.NumberFormat
 import javafx.{scene => jfxs}
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.ui.controller.settings.SettingsType.{BoolType, ColorType, IntType}
 import scalafx.Includes._
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Node
 import scalafx.scene.control._
-import scalafx.scene.layout.{AnchorPane, HBox, VBox}
+import scalafx.scene.layout.{AnchorPane, GridPane, Pane}
+import scalafx.scene.paint.Color
 import scalafx.util.converter.FormatStringConverter
 import scalafxml.core.macros.sfxml
 
@@ -73,45 +75,63 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
     }
   }
 
-  def createSettingsPanel(items: Seq[SettingsItem]): VBox = {
-    new VBox(5) {
-      children = items.map { item =>
-        item.itemType match {
-          case t if classOf[Boolean].isAssignableFrom(t) => new CheckBox(item.name) {
-            selected = item.value.asInstanceOf[Boolean]
-            tooltip = new Tooltip(item.description)
-          }
+  def createSettingsPanel(items: Seq[SettingsItem]): Pane =
+    new GridPane {
+      hgap = 5
+      vgap = 5
 
-          case t if classOf[Int].isAssignableFrom(t) => new HBox(5) {
-            alignment = Pos.BaselineLeft
-            children = Seq(
-              new Label(item.name) {
-                tooltip = new Tooltip(item.description)
-              },
-              new TextField() {
-                val converter = new FormatStringConverter[Number](NumberFormat.getIntegerInstance)
-                textFormatter = new TextFormatter(converter)
-                text = item.value.asInstanceOf[Int].toString
-                tooltip = new Tooltip(item.description)
-              }
-            )
-          }
-
-          case _ => new HBox(5) {
-            alignment = Pos.BaselineLeft
-            children = Seq(
-              new Label(item.name) {
-                tooltip = new Tooltip(item.description)
-              },
-              new TextField() {
-                text = item.value.toString
-                tooltip = new Tooltip(item.description)
-              }
-            )
-          }
+      children = items.zipWithIndex.flatMap { case (item, index) =>
+        val controls = item.itemType match {
+          case BoolType => Seq(mkBoolEditor(item, index))
+          case IntType => Seq(mkLabel(item, index), mkIntEditor(item, index))
+          case ColorType => Seq(mkLabel(item, index), mkColorEditor(item, index))
+          case _ => Seq(mkLabel(item, index), mkStringEditor(item, index))
         }
+        controls.foreach(control => setCommonProperties(item, control))
+        controls
       }
     }
 
+  private def setCommonProperties(item: SettingsItem, control: Control) = {
+    control.alignmentInParent = Pos.BaselineLeft
+    control.tooltip = new Tooltip(item.description)
+    control
   }
+
+  private def mkBoolEditor(item: SettingsItem, row: Int) =
+    new CheckBox(item.name) {
+      selected = item.value.asInstanceOf[Boolean]
+      GridPane.setConstraints(this, 0, row, 2, 1)
+    }
+
+  private def mkLabel(item: SettingsItem, row: Int) =
+    new Label(item.name) {
+      alignmentInParent = Pos.BaselineLeft
+      tooltip = new Tooltip(item.description)
+      GridPane.setConstraints(this, 0, row)
+    }
+
+  private def mkStringEditor(item: SettingsItem, row: Int) =
+    new TextField() {
+      alignmentInParent = Pos.BaselineLeft
+      text = item.value.toString
+      tooltip = new Tooltip(item.description)
+
+      GridPane.setConstraints(this, 1, row)
+    }
+
+  private def mkIntEditor(item: SettingsItem, row: Int) =
+    new TextField() {
+      val converter = new FormatStringConverter[Number](NumberFormat.getIntegerInstance)
+      textFormatter = new TextFormatter(converter)
+      text = item.value.asInstanceOf[Int].toString
+
+      GridPane.setConstraints(this, 1, row)
+    }
+
+  private def mkColorEditor(item: SettingsItem, row: Int) =
+    new ColorPicker(item.value.asInstanceOf[Color]) {
+      GridPane.setConstraints(this, 1, row)
+    }
+
 }
