@@ -53,7 +53,7 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideKeyMapper(loader: KeyActionLoader): KeyActionMapper = {
     val mapping = loader.load(Source.fromResource("actions.keymap"))
-    new KeyActionMapper(mapping)
+    new KeyActionMapper(KeyActionMapper.Default ++ mapping)
   }
 
   @Provides

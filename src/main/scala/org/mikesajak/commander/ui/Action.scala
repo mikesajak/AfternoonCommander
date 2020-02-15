@@ -21,6 +21,14 @@ object Action extends Enum[Action] {
 
   case object Refresh extends Action
   case object SwitchSelectedPanel extends Action
+
+  case object ShowDrivesLeftPanel extends Action
+  case object ShowDrivesRightPanel extends Action
+
+  case object NewTab extends Action
+
+  case object SelectCurrentDirInOtherPanel extends Action
+  case object SelectTargetDirInOtherPanel extends Action
 }
 
 sealed trait Action extends EnumEntry

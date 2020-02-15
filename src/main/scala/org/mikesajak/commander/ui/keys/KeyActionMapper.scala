@@ -40,7 +40,14 @@ object KeyActionMapper {
 
     KeyInput(KeyCode.F7, Alt) -> FindFiles,
 
-    KeyInput(KeyCode.R, Ctrl) -> Refresh)
+    KeyInput(KeyCode.R, Ctrl) -> Refresh,
+    KeyInput(KeyCode.Tab) -> SwitchSelectedPanel,
+
+    KeyInput(KeyCode.F1, Ctrl) -> ShowDrivesLeftPanel,
+    KeyInput(KeyCode.F2, Ctrl) -> ShowDrivesRightPanel,
+
+    KeyInput(KeyCode.T, Ctrl) -> NewTab
+  )
 }
 
 class KeyActionMapper(val mapping: KeyActionMapping) {

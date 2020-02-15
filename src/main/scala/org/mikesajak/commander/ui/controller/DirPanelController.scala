@@ -13,7 +13,7 @@ import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.status.StatusChangeEvents.PanelSelected
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.ui.controller.DirViewEvents.{CurrentDirChange, NewTabRequest}
+import org.mikesajak.commander.ui.controller.DirViewEvents._
 import org.mikesajak.commander.ui.{IconResolver, IconSize, ResourceManager, UILoader}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.Implicits._
@@ -43,7 +43,6 @@ case class PrevCrumbItems(prevPaths: Seq[VPath]) extends BreadCrumbItem
 
 trait DirPanelControllerIntf extends CurrentDirAware {
   def init(panelId: PanelId)
-  def requestFocus()
 }
 /**
   * Created by mike on 14.04.17.
@@ -60,10 +59,8 @@ class DirPanelController(tabPane: TabPane,
                          config: Configuration,
                          fsMgr: FilesystemsManager,
                          statusMgr: StatusMgr,
-                         bookmarkMgr: BookmarkMgr,
                          iconResolver: IconResolver,
                          resourceMgr: ResourceManager,
-                         appController: ApplicationController,
                          eventBus: EventBus)
     extends DirPanelControllerIntf {
 
@@ -146,6 +143,9 @@ class DirPanelController(tabPane: TabPane,
     selectThisPanel()
   }
 
+  def showDrivesSelection(): Unit =
+    driveSelectionButton.fire()
+
   def handleDriveSelectionButton(): Unit = {
     val fsItems =
       fsMgr.discoverFilesystems().map(fs => new MenuItem() {
@@ -173,11 +173,6 @@ class DirPanelController(tabPane: TabPane,
       logger.info(s"Cannot set current tab directory $directory. The target directory does not exist.")
   }
 
-  @Subscribe
-  def addNewTab(request: NewTabRequest): Unit =
-    if (request.panelId == panelId)
-      addNewTab(Some(request.curDir))
-
   private def addNewTab(newTabDir: Option[VDirectory]): Unit = {
     fsMgr.resolvePath(newTabDir.getOrElse(fsMgr.homeDir).toString)
       .map(_.directory)
@@ -193,9 +188,24 @@ class DirPanelController(tabPane: TabPane,
   private def createTab(path: VDirectory) = new DirTab(panelId, path, dirTabManager)
 
   @Subscribe
-  def updateCurTabUIAfterDirChange(event: CurrentDirChange): Unit = {
-    if (event.panelId == panelId)
-      updateCurTabUIAfterDirChange(event.curDir)
+  def dirPanelRequest(request: DirPanelEvent): Unit = {
+    if (request.panelId == panelId) {
+      request match {
+        case CurrentDirChangeNotification(_, _, curDir) => updateCurTabUIAfterDirChange(curDir)
+
+        case ChangeDirRequest(_, dir) => setDirectory(dir)
+
+        case NewTabRequest(_, dirOpt) =>
+          addNewTab(dirOpt)
+          requestFocus()
+
+        case FocusRequest(_) => requestFocus()
+
+        case DriveSelectionRequest(_) =>
+          showDrivesSelection()
+          requestFocus()
+      }
+    }
   }
 
   private def updateCurTabUIAfterDirChange(dir: VDirectory) {
@@ -281,4 +291,19 @@ class DirTab(panelId: PanelId, tabPath: VDirectory, dirTabManager: DirTabManager
   def init(): Unit = {
     controller.init(tabPath)
   }
+}
+
+object DirViewEvents {
+  abstract class DirPanelEvent(val panelId: PanelId)
+
+  case class CurrentDirChangeNotification(override val panelId: PanelId, prevDir: Option[VDirectory], curDir: VDirectory) extends DirPanelEvent(panelId)
+
+  case class ChangeDirRequest(override val panelId: PanelId, dir: VDirectory) extends DirPanelEvent(panelId)
+  case class NewTabRequest(override val panelId: PanelId, curDir: Option[VDirectory]) extends DirPanelEvent(panelId)
+  object NewTabRequest {
+    def apply(panelId: PanelId): NewTabRequest = NewTabRequest(panelId, None)
+  }
+
+  case class FocusRequest(override val panelId: PanelId) extends DirPanelEvent(panelId)
+  case class DriveSelectionRequest(override val panelId: PanelId) extends DirPanelEvent(panelId)
 }

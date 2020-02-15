@@ -11,3 +11,11 @@ F11: ShowProperties
 Alt+F7: FindFiles
 Ctrl+R: Refresh
 Tab: SwitchSelectedPanel
+
+Ctrl+F1: ShowDrivesLeftPanel
+Ctrl+F2: ShowDrivesRightPanel
+
+Ctrl+T: NewTab
+
+Alt+I: SelectCurrentDirInOtherPanel
+Alt+O: SelectTargetDirInOtherPanel

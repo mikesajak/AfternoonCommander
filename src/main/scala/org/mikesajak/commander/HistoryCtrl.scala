@@ -4,7 +4,7 @@ import com.google.common.eventbus.Subscribe
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
-import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
+import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotification
 import org.mikesajak.commander.ui.controller.PanelId
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.util.TextUtil.firstLowerCase
@@ -71,7 +71,7 @@ class HistoryMgr(config: Configuration) {
 
   //noinspection UnstableApiUsage
   @Subscribe
-  def curDirChanged(event: CurrentDirChange): Unit = {
+  def curDirChanged(event: CurrentDirChangeNotification): Unit = {
     globalHistoryCtrl.add(event.curDir)
     panelHistoryCtrl.foreach { case (panelId, ctrl) =>
       if (event.panelId == panelId)

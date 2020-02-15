@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller
 import com.google.common.eventbus.Subscribe
 import org.mikesajak.commander._
 import org.mikesajak.commander.fs.{FS, FilesystemsManager, VDirectory, VPath}
-import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
+import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotification
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.PathUtils
 import scalafx.geometry.Side
@@ -130,7 +130,7 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
 
   //noinspection UnstableApiUsage
   @Subscribe
-  def updateCurTabUIAfterDirChange(event: CurrentDirChange): Unit = {
+  def updateCurTabUIAfterDirChange(event: CurrentDirChangeNotification): Unit = {
     if (event.panelId == panelId)
       updateButtons()
   }

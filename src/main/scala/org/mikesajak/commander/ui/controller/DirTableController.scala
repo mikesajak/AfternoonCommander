@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKeys, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
-import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChange
+import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotification
 import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
@@ -270,7 +270,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
 
     panelStatusBarController.setDirectory(newDir)
 
-    eventBus.publish(CurrentDirChange(panelId, Option(prevDir), newDir))
+    eventBus.publish(CurrentDirChangeNotification(panelId, Option(prevDir), newDir))
   }
 
   private def resolveTargetDir(directory: VDirectory): VDirectory = {
@@ -442,9 +442,4 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   private def scrollTo(index: Int): Unit = {
     dirTableView.scrollTo(math.max(index - NumPrevVisibleItems, 0))
   }
-}
-
-object DirViewEvents {
-  case class CurrentDirChange(panelId: PanelId, prevDir: Option[VDirectory], curDir: VDirectory)
-  case class NewTabRequest(panelId: PanelId, curDir: VDirectory)
 }
