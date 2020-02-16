@@ -38,7 +38,6 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     config
   }
 
-  // TODO: temporary defaults, until moved to config file, remove this then
   private def setConfigDefaults(config: Configuration): Unit = {
     config.stringProperty(ConfigKeys.PanelTextColor) := "#5D5D5D"
     config.stringProperty(ConfigKeys.PanelBgColor1) := "#FFFFFF"
@@ -47,6 +46,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     config.stringProperty(ConfigKeys.PanelSelectionBgColor) := "#E95420"
     config.stringProperty(ConfigKeys.PanelCursorColor) := "#FFFFFF"
     config.stringProperty(ConfigKeys.PanelCursorBgColor) := "#4444FF"
+
+    config.stringProperty(ConfigKeys.ToolsExternalViewer) := ""
+    config.stringProperty(ConfigKeys.ToolsExternalEditor) := ""
   }
 
   @Provides
@@ -177,9 +179,9 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                               countDirOpCtrl: CountDirStatsOperationCtrl, resourceManager: ResourceManager,
-                               userDecisionCtrl: UserDecisionCtrl, configuration: Configuration) =
-    new TransferOperationController(statusMgr, appController, countDirOpCtrl, resourceManager, userDecisionCtrl, configuration)
+                               resourceManager: ResourceManager, userDecisionCtrl: UserDecisionCtrl,
+                               configuration: Configuration) =
+    new TransferOperationController(statusMgr, appController, resourceManager, userDecisionCtrl, configuration)
 
   @Provides
   @Singleton

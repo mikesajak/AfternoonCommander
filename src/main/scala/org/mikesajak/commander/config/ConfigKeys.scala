@@ -15,6 +15,9 @@ object ConfigKeys {
   val PanelCursorColor = s"$filePanelCategory.cursorColor"
   val PanelCursorBgColor = s"$filePanelCategory.cursorBgColor"
 
+  val ToolsExternalViewer = "tools.externalViewer"
+  val ToolsExternalEditor = "tools.externalEditor"
+
   val TransferBufferSize = "transfer.bufferSize"
 
   // runtime

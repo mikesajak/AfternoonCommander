@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller.settings
 import com.typesafe.scalalogging.Logger
 import enumeratum.{Enum, EnumEntry}
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.ui.controller.settings.SettingsType.{BoolType, ColorType, IntType, StringType}
+import org.mikesajak.commander.ui.controller.settings.SettingsType.{BoolType, ColorType, ExecFileType, IntType, StringType}
 import scalafx.scene.paint.Color
 
 import scala.collection.immutable
@@ -83,6 +83,16 @@ class ColorSettingsItem(key: String, settingsDataProvider: SettingsDataProvider)
   }
 }
 
+class ExecFileSettingsItem(key: String, settingsDataProvider: SettingsDataProvider)
+    extends SettingsItem(key, ExecFileType, settingsDataProvider) {
+
+  override def value: String = settingsDataProvider.config.stringProperty(key).getOrElse("")
+  override def updateConfigValue(): Unit = {
+    logger.info(s"Setting config $key (of type $itemType) to $value")
+    settingsDataProvider.config.stringProperty(key) := value
+  }
+}
+
 trait SettingsDataProvider {
   def itemName(key: String): String
   def itemCategory(key: String): String
@@ -104,11 +114,13 @@ object SettingsType extends Enum[SettingsType] {
   case object BoolType extends SettingsType
   case object StringType extends SettingsType
   case object ColorType extends SettingsType
+  case object ExecFileType extends SettingsType
 
   def parseString(text: String): SettingsType = text match {
     case "int" => IntType
     case "bool" => BoolType
     case "string" => StringType
     case "color" => ColorType
+    case "file.exec" => ExecFileType
   }
 }

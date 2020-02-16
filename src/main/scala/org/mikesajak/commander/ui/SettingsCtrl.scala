@@ -20,7 +20,7 @@ class SettingsCtrl(appController: ApplicationController) {
     stage.initModality(Modality.ApplicationModal)
     stage.initStyle(StageStyle.Utility)
     stage.initOwner(appController.mainStage)
-    stage.scene = new Scene(root, 500, 400)
+    stage.scene = new Scene(root, 700, 600)
     stage.show()
   }
 }

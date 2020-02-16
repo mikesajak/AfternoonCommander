@@ -18,7 +18,7 @@ import scala.util.{Failure, Success, Try}
 case class OperationUiData(progressDialogType: String, errorDialogType: String, iconName: String)
 
 class TransferOperationController(statusMgr: StatusMgr, appController: ApplicationController,
-                                  countStatsOpCtrl: CountDirStatsOperationCtrl, resourceMgr: ResourceManager,
+                                  resourceMgr: ResourceManager,
                                   userDecisionCtrl: UserDecisionCtrl, config: Configuration) {
   private val logger = Logger[DeletePanelController]
 

@@ -73,7 +73,7 @@ class ResourceManager {
   }
 
   def getMessage(key: String, resourceFile: String = "ui", locale: Locale = Locale.getDefault()): String =
-    ResourceBundle.getBundle(resourceFile).getString(key)
+    ResourceBundle.getBundle(resourceFile, locale).getString(key)
 
   def getMessageOpt(key: String, resourceFile: String = "ui", locale: Locale = Locale.getDefault()): Option[String] =
     if (ResourceBundle.getBundle(resourceFile).containsKey(key))

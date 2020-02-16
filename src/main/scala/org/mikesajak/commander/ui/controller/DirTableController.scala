@@ -23,6 +23,7 @@ import scalafx.stage.Popup
 import scalafxml.core.macros.{nested, sfxml}
 
 import scala.collection.JavaConverters._
+
 /**
   * Created by mike on 14.04.17.
   */
@@ -39,8 +40,8 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
   private def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else pname
   private def mkExt(p: VPath): String = if (p.isDirectory) "" else pext
 
-  def formatSize(vFile: VPath): String =
-    path match {
+  def formatSize(pathToFormat: VPath): String =
+    pathToFormat match {
       case _: PathToParent => resourceMgr.getMessage("file_row.parent")
       case _: VDirectory => resourceMgr.getMessageWithArgs("file_row.num_elements",
                                                            Array(path.directory.children.size))
@@ -98,7 +99,6 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
                              iconResolver: IconResolver,
                              config: Configuration,
                              eventBus: EventBus,
-                             panelController: DirPanelControllerIntf,
                              appController: ApplicationController,
                              propertiesCtrl: PropertiesCtrl)
     extends DirTableController {

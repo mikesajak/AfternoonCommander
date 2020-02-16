@@ -2,7 +2,7 @@ package org.mikesajak.commander.ui.controller.settings
 
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.ui.ResourceManager
-import org.mikesajak.commander.ui.controller.settings.SettingsType.{BoolType, ColorType, IntType, StringType}
+import org.mikesajak.commander.ui.controller.settings.SettingsType._
 
 class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
   private val configMetadataParser = new ConfigMetadataParser
@@ -20,7 +20,7 @@ class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
 
   def settingsItems: Seq[SettingsItem] = configKeys._2.map(key => mkSettingsItem(key))
   def settingsCategories: Seq[String] = {
-    configKeys._2.map(key => resourceMgr.getMessageOpt(s"config.$key")
+    configKeys._2.map(key => resourceMgr.getMessageOpt(s"config.$key", "config")
                                         .map(configMetadataParser.extractCategory)
                                         .getOrElse(key))
   }
@@ -49,22 +49,23 @@ class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
       case BoolType => new BoolSettingsItem(key, settingsDataProvider)
       case ColorType => new ColorSettingsItem(key, settingsDataProvider)
       case StringType => new StringSettingsItem(key, settingsDataProvider)
+      case ExecFileType => new ExecFileSettingsItem(key, settingsDataProvider)
     }
   }
 
   private def parseType(key: String) = SettingsType.parseString(typeStr(key))
-  private def typeStr(key: String) = resourceMgr.getMessageOpt(s"config.$key")
+  private def typeStr(key: String) = resourceMgr.getMessageOpt(s"config.$key", "config")
                                                 .map(configMetadataParser.extractType)
                                                 .getOrElse("string")
 
   class SettingsDataProviderImpl extends SettingsDataProvider {
     private val metadataParser = new ConfigMetadataParser
 
-    def itemName(key: String): String = resourceMgr.getMessageOpt(s"config.$key")
+    def itemName(key: String): String = resourceMgr.getMessageOpt(s"config.$key", "config")
                                                    .map(metadataParser.extractName)
                                                    .getOrElse(key)
 
-    private def categoryStr(key: String) = resourceMgr.getMessageOpt(s"config.$key")
+    private def categoryStr(key: String) = resourceMgr.getMessageOpt(s"config.$key", "config")
                                                       .map(metadataParser.extractCategory)
                                                       .getOrElse(key)
 
@@ -84,12 +85,12 @@ class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
       orderOpt.map(_.toInt).getOrElse(-1)
     }
 
-    def itemDescription(key: String): String = resourceMgr.getMessageOpt(s"config.$key")
+    def itemDescription(key: String): String = resourceMgr.getMessageOpt(s"config.$key", "config")
                                                           .map(metadataParser.extractDescription)
                                                           .getOrElse(key)
 
 
-    def itemTypeStr(key: String): String = resourceMgr.getMessageOpt(s"config.$key")
+    def itemTypeStr(key: String): String = resourceMgr.getMessageOpt(s"config.$key", "config")
                                                       .map(configMetadataParser.extractType)
                                                       .getOrElse("string")
 
