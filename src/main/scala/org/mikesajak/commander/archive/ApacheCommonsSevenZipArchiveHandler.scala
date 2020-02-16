@@ -33,4 +33,6 @@ class ApacheCommonsSevenZipArchiveHandler extends ArchiveHandler {
       case _ => None
     }
   }
+
+  override def toString: String = "Apache Commons 7Z archive handler"
 }

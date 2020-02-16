@@ -18,6 +18,8 @@ class XZArchiveHandler extends ArchiveHandler {
 
   override def getArchiveRootDir(file: VFile): Option[VDirectory] =
     archiveType(file).map { _ => new XZRootDir(file) }
+
+  override def toString: String = "Custom XZ archive handler"
 }
 
 

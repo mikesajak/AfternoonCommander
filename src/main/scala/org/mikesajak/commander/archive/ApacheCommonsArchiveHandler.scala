@@ -45,6 +45,8 @@ class ApacheCommonsArchiveHandler extends ArchiveHandler {
       case _ => entryList
     }
   }
+
+  override def toString = "Apache Commons archive handler"
 }
 
 
