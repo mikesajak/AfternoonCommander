@@ -52,7 +52,6 @@ class ResourceManager {
   def getIcon(name: String): Image = {
     val imagePath = s"/images/$name"
     try {
-//      new Image(imagePath)
       getImage(CacheKey(imagePath))
     } catch {
       case e: Exception =>
@@ -72,18 +71,18 @@ class ResourceManager {
     }
   }
 
-  def getMessage(key: String, resourceFile: String = "ui", locale: Locale = Locale.getDefault()): String =
+  def getMessage(key: String, locale: Locale = Locale.getDefault())(implicit resourceFile: String = "ui"): String =
     ResourceBundle.getBundle(resourceFile, locale).getString(key)
 
-  def getMessageOpt(key: String, resourceFile: String = "ui", locale: Locale = Locale.getDefault()): Option[String] =
+  def getMessageOpt(key: String, locale: Locale = Locale.getDefault())(implicit resourceFile: String = "ui"): Option[String] =
     if (ResourceBundle.getBundle(resourceFile).containsKey(key))
-      Some(getMessage(key, resourceFile, locale))
+      Some(getMessage(key, locale)(resourceFile))
     else None
 
 
-  def getMessageWithArgs(key: String, args: Seq[Any],
-                         resourceFile: String = "ui", locale: Locale = Locale.getDefault): String = {
-    val pattern = getMessage(key, resourceFile)
+  def getMessageWithArgs(key: String, args: Seq[Any], locale: Locale = Locale.getDefault)
+                        (implicit resourceFile: String = "ui"): String = {
+    val pattern = getMessage(key)(resourceFile)
     val formatter = new MessageFormat("")
     formatter.setLocale(locale)
     formatter.applyPattern(pattern)

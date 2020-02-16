@@ -8,6 +8,8 @@ class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
   private val configMetadataParser = new ConfigMetadataParser
   private val settingsDataProvider = new SettingsDataProviderImpl
 
+  private implicit val configResourceFile: String = "config"
+
   private def configKeys: (Seq[String], Seq[String]) = {
     val (runtimeKeys, persistentKeys) = config.entriesKeys
                                               .sorted
@@ -20,7 +22,7 @@ class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
 
   def settingsItems: Seq[SettingsItem] = configKeys._2.map(key => mkSettingsItem(key))
   def settingsCategories: Seq[String] = {
-    configKeys._2.map(key => resourceMgr.getMessageOpt(s"config.$key", "config")
+    configKeys._2.map(key => resourceMgr.getMessageOpt(s"config.$key")
                                         .map(configMetadataParser.extractCategory)
                                         .getOrElse(key))
   }
@@ -54,18 +56,18 @@ class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
   }
 
   private def parseType(key: String) = SettingsType.parseString(typeStr(key))
-  private def typeStr(key: String) = resourceMgr.getMessageOpt(s"config.$key", "config")
+  private def typeStr(key: String) = resourceMgr.getMessageOpt(s"config.$key")
                                                 .map(configMetadataParser.extractType)
                                                 .getOrElse("string")
 
   class SettingsDataProviderImpl extends SettingsDataProvider {
     private val metadataParser = new ConfigMetadataParser
 
-    def itemName(key: String): String = resourceMgr.getMessageOpt(s"config.$key", "config")
+    def itemName(key: String): String = resourceMgr.getMessageOpt(s"config.$key")
                                                    .map(metadataParser.extractName)
                                                    .getOrElse(key)
 
-    private def categoryStr(key: String) = resourceMgr.getMessageOpt(s"config.$key", "config")
+    private def categoryStr(key: String) = resourceMgr.getMessageOpt(s"config.$key")
                                                       .map(metadataParser.extractCategory)
                                                       .getOrElse(key)
 
@@ -85,12 +87,12 @@ class SettingsItemFactory(config: Configuration, resourceMgr: ResourceManager) {
       orderOpt.map(_.toInt).getOrElse(-1)
     }
 
-    def itemDescription(key: String): String = resourceMgr.getMessageOpt(s"config.$key", "config")
+    def itemDescription(key: String): String = resourceMgr.getMessageOpt(s"config.$key")
                                                           .map(metadataParser.extractDescription)
                                                           .getOrElse(key)
 
 
-    def itemTypeStr(key: String): String = resourceMgr.getMessageOpt(s"config.$key", "config")
+    def itemTypeStr(key: String): String = resourceMgr.getMessageOpt(s"config.$key")
                                                       .map(configMetadataParser.extractType)
                                                       .getOrElse("string")
 
