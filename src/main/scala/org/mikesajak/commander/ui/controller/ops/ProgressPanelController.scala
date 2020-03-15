@@ -3,8 +3,8 @@ package org.mikesajak.commander.ui.controller.ops
 import java.util.{Timer, TimerTask}
 
 import com.typesafe.scalalogging.Logger
-import javafx.scene.control
 import org.mikesajak.commander.task.{BackgroundService, IOProgress, IOTaskSummary}
+import org.mikesajak.commander.ui.UIUtils
 import org.mikesajak.commander.units.{DataUnit, TimeInterval}
 import scalafx.Includes._
 import scalafx.application.Platform
@@ -62,7 +62,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Cancel)
 
-    val cancelButton = getButton(ButtonType.Cancel)
+    val cancelButton = UIUtils.dialogButton(dialog, ButtonType.Cancel)
     cancelButton.onAction = { _ =>
       logger.info(s"Cancelling operation: ${workerService.title}")
       workerService.cancel()
@@ -99,14 +99,11 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Close)
 
-    val closeButton = getButton(ButtonType.Close)
     if (!dontCloseCheckbox.isSelected) {
+      val closeButton = UIUtils.dialogButton(dialog, ButtonType.Close)
       closeButton.fire()
     }
   }
-
-  private def getButton(buttonType: ButtonType) =
-    new Button(dialog.getDialogPane.lookupButton(buttonType).asInstanceOf[control.Button])
 
   private def updateProgress(progress: IOProgress): Unit = {
     val progressValue = progress.jobStats.map(s => IOProgress.calcProgress(progress.summary, s))

@@ -2,12 +2,14 @@ package org.mikesajak.commander.ui.controller.settings
 
 import java.text.NumberFormat
 
+import com.typesafe.scalalogging.Logger
 import javafx.{scene => jfxs}
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.ui.ResourceManager
+import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import scalafx.Includes._
 import scalafx.collections.ObservableBuffer
+import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Node
 import scalafx.scene.control.{Button, _}
@@ -18,7 +20,7 @@ import scalafx.util.converter.FormatStringConverter
 import scalafxml.core.macros.sfxml
 
 trait SettingsPanelController {
-  def init(): Unit
+  def init(dialog: Dialog[Any]): Unit
 }
 
 case class SettingsGroupPanel(settingsGroup: SettingsGroup, panel: Node)
@@ -26,19 +28,31 @@ case class SettingsGroupPanel(settingsGroup: SettingsGroup, panel: Node)
 @sfxml
 class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPanel],
                                   categoryPanel: BorderPane,
-                                  okButton: Button,
-                                  applyButton: Button,
-                                  cancelButton: Button,
 
                                   config: Configuration,
                                   resourceMgr: ResourceManager,
-                                  appController: ApplicationController) extends SettingsPanelController {
-  def init() {
+                                  appController: ApplicationController)
+    extends SettingsPanelController {
+  private val logger = Logger[SettingsPanelControllerImpl]
+
+  private val itemModifiedStyle = "-fx-font-weight: bold;"
+
+  private var changedItems = Map[SettingsItem, Any]()
+
+  override def init(dialog: Dialog[Any]) {
     categoryPanel.margin = Insets(10, 10, 10, 10)
 
-    okButton.disable = true
-    applyButton.disable = true
-    cancelButton.disable = true
+    dialog.getDialogPane.buttonTypes = Seq(ButtonType.OK, ButtonType.Apply, ButtonType.Cancel)
+
+    val okButton = UIUtils.dialogButton(dialog, ButtonType.OK)
+    val applyButton = UIUtils.dialogButton(dialog, ButtonType.Apply)
+    val cancelButton = UIUtils.dialogButton(dialog, ButtonType.Cancel)
+
+    okButton.onAction = _ => applyConfigChanges()
+    applyButton.filterEvent(ActionEvent.Action) { ae: ActionEvent =>
+      ae.consume()
+      applyConfigChanges()
+    }
 
     val itemFactory = new SettingsItemFactory(config, resourceMgr)
 
@@ -69,6 +83,14 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
     }
   }
 
+  def applyConfigChanges(): Unit = {
+    println(changedItems)
+    changedItems.foreach { case (item, value) =>
+      logger.info(s"Setting change: ${item.name} -> $value")
+      item.updateConfigValue(value)
+    }
+  }
+
   def toTreeItem(settingsGroup: SettingsGroup, parents: Seq[SettingsGroup]): TreeItem[SettingsGroupPanel] = {
     if (settingsGroup.childGroups.isEmpty)
       new TreeItem(SettingsGroupPanel(settingsGroup, createSettingsPanel(settingsGroup.items, parents :+ settingsGroup)))
@@ -93,17 +115,7 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
         maxWidth = Double.MaxValue
       })
 
-      children = items.zipWithIndex.flatMap { case (item, index) =>
-        val controls = item match {
-          case boolItem: BoolSettingsItem => Seq(mkBoolEditor(boolItem))
-          case intItem: IntSettingsItem => Seq(mkLabel(intItem), mkIntEditor(intItem))
-          case colorItem: ColorSettingsItem => Seq(mkLabel(colorItem), mkColorEditor(colorItem))
-          case execFileItem: ExecFileSettingsItem => Seq(mkLabel(execFileItem), mkFileEditor(execFileItem))
-          case _ => Seq(mkLabel(item), mkStringEditor(item))
-        }
-        setupControlsPropertiesAndLayout(item, controls, index)
-        controls
-      }
+      children = items.zipWithIndex.flatMap { case (item, index) => createUIControlsForSettingItem(item, index) }
     }
 
     val titleLabel: Label = new Label {
@@ -117,11 +129,34 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
     }
   }
 
+  private def createUIControlsForSettingItem(item: SettingsItem, index: Int): Seq[Region] = {
+    val controls = item match {
+      case boolItem: BoolSettingsItem => Seq(mkBoolEditor(boolItem))
+      case intItem: IntSettingsItem =>
+        val label = mkLabel(intItem)
+        Seq(label, mkIntEditor(intItem, label))
+      case colorItem: ColorSettingsItem =>
+        val label = mkLabel(colorItem)
+        Seq(label, mkColorEditor(colorItem, label))
+      case execFileItem: ExecFileSettingsItem =>
+        val label = mkLabel(execFileItem)
+        Seq(label, mkFileEditor(execFileItem, label))
+      case _ =>
+        val label = mkLabel(item)
+        Seq(label, mkStringEditor(item, label))
+    }
+    setupControlsPropertiesAndLayout(item, controls, index)
+    controls
+  }
+
   private def setupControlsPropertiesAndLayout(item: SettingsItem, regions: Seq[Region], row: Int): Unit = {
     regions.foreach { region =>
       region.alignmentInParent = Pos.BaselineLeft
 
-      if (region.isInstanceOf[Control]) region.asInstanceOf[Control].tooltip = new Tooltip(item.description)
+      region match {
+        case control: Control => control.tooltip = new Tooltip(item.description)
+        case _ =>
+      }
     }
 
     if (regions.size == 1) GridPane.setConstraints(regions.head, 0, row, 2, 1)
@@ -130,7 +165,12 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
 
   private def mkBoolEditor(item: BoolSettingsItem) =
     new CheckBox(item.name) {
-      selected = item.value
+      selected = item.getConfigValue
+
+      this.onAction = { _ =>
+        val updated = updateChangedItems(item, selected.value)
+        style.value = if (updated) itemModifiedStyle else ""
+      }
     }
 
   private def mkLabel(item: SettingsItem) =
@@ -138,24 +178,41 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
       alignmentInParent = Pos.BaselineLeft
     }
 
-  private def mkStringEditor(item: SettingsItem) =
+  private def mkStringEditor(item: SettingsItem, label: Label) =
     new TextField() {
       alignmentInParent = Pos.BaselineLeft
-      text = item.value.toString
+      text = item.getConfigValue.toString
+
+      this.onAction = { _ =>
+        val updated = updateChangedItems(item, text.value)
+        label.style.value = if (updated) itemModifiedStyle else ""
+      }
     }
 
-  private def mkIntEditor(item: IntSettingsItem) =
+  private def mkIntEditor(item: IntSettingsItem, label: Label) =
     new TextField() {
       val converter = new FormatStringConverter[Number](NumberFormat.getIntegerInstance)
       textFormatter = new TextFormatter(converter)
-      text = item.value.toString
+      text = item.getConfigValue.toString
+
+      this.onAction = { _ =>
+        val updated = updateChangedItems(item, text.value.toLong)
+        label.style.value = if (updated) itemModifiedStyle else ""
+      }
     }
 
-  private def mkColorEditor(item: ColorSettingsItem) = new ColorPicker(item.value)
+  private def mkColorEditor(item: ColorSettingsItem, label: Label) = {
+    val picker = new ColorPicker(item.getConfigValue)
+    picker.onAction = { _ =>
+      val updated = updateChangedItems(item, picker.value.value)
+      label.style.value = if (updated) itemModifiedStyle else ""
+    }
+    picker
+  }
 
-  private def mkFileEditor(item: ExecFileSettingsItem) = {
+  private def mkFileEditor(item: ExecFileSettingsItem, label: Label) = {
     new HBox {
-      spacing = 5
+      spacing = 1
       hgrow = Priority.Always
       alignmentInParent = Pos.BaselineLeft
       alignment = Pos.BaselineLeft
@@ -168,12 +225,18 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
         hgrow = Priority.Always
         maxWidth = Double.MaxValue
         prefWidth = Region.USE_COMPUTED_SIZE
-        text = item.value.toString
+        text = item.getConfigValue.toString
         tooltip = new Tooltip(item.description)
+
+        onAction = { _ =>
+          val updated = updateChangedItems(item, text.value)
+          label.style.value = if (updated) itemModifiedStyle else ""
+        }
       }
 
       private val fileChooserButton = new Button {
         text = "..."
+        margin = Insets(0,0,0,0)
         alignmentInParent = Pos.BaselineLeft
         tooltip = new Tooltip(item.description)
         onAction = { _ =>
@@ -186,6 +249,19 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
       }
 
       children = Seq(textField, fileChooserButton)
+    }
+  }
+
+  private def updateChangedItems(item: SettingsItem, value: Any): Boolean = {
+    if (value == item.getConfigValue) {
+      logger.debug(s"Settings: value ${item.name} restored to default")
+      changedItems -= item
+      false
+    }
+    else {
+      logger.debug(s"Settings: new value ${item.name} = $value")
+      changedItems += item -> value
+      true
     }
   }
 

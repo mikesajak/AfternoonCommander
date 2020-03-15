@@ -46,9 +46,6 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     config.stringProperty(ConfigKeys.PanelSelectionBgColor) := "#E95420"
     config.stringProperty(ConfigKeys.PanelCursorColor) := "#FFFFFF"
     config.stringProperty(ConfigKeys.PanelCursorBgColor) := "#4444FF"
-
-    config.stringProperty(ConfigKeys.ToolsExternalViewer) := ""
-    config.stringProperty(ConfigKeys.ToolsExternalEditor) := ""
   }
 
   @Provides
@@ -119,10 +116,11 @@ class ApplicationContext extends AbstractModule with ScalaModule {
                               countDirStatsOperationCtrl: CountDirStatsOperationCtrl,
                               settingsCtrl: SettingsCtrl,
                               findFilesCtrl: FindFilesCtrl,
-                              propertiesCtrl: PropertiesCtrl): OperationMgr = {
+                              propertiesCtrl: PropertiesCtrl,
+                              config: Configuration): OperationMgr = {
     new OperationMgr(statusMgr, resourceMgr, fsMgr, appController,
                      copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl,
-                     countDirStatsOperationCtrl, settingsCtrl, findFilesCtrl, propertiesCtrl)
+                     countDirStatsOperationCtrl, settingsCtrl, findFilesCtrl, propertiesCtrl, config)
   }
 
   @Provides

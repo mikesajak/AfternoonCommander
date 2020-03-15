@@ -2,10 +2,9 @@ package org.mikesajak.commander.ui
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
+import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui.controller.settings.SettingsPanelController
 import scalafx.Includes._
-import scalafx.scene.Scene
-import scalafx.stage.{Modality, Stage, StageStyle}
 
 class SettingsCtrl(appController: ApplicationController) {
   private val logger = Logger[SettingsCtrl]
@@ -14,13 +13,13 @@ class SettingsCtrl(appController: ApplicationController) {
     val settingsLayout = "/layout/settings-panel-layout.fxml"
 
     val (root, ctrl) = UILoader.loadScene[SettingsPanelController](settingsLayout)
-    ctrl.init()
 
-    val stage = new Stage()
-    stage.initModality(Modality.ApplicationModal)
-    stage.initStyle(StageStyle.Utility)
-    stage.initOwner(appController.mainStage)
-    stage.scene = new Scene(root, 700, 600)
-    stage.show()
+    val dialog = UIUtils.mkModalDialogNoButtonOrder[Any](appController.mainStage, root)
+    ctrl.init(dialog)
+
+    dialog.setWindowSize(650, 450)
+    dialog.setWindowMinSize(300, 300)
+    dialog.resizable = true
+    dialog.showAndWait()
   }
 }

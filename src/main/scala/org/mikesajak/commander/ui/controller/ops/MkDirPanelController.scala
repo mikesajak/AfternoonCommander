@@ -1,9 +1,8 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import javafx.beans.value.{ChangeListener, ObservableValue}
-import javafx.scene.control
 import org.mikesajak.commander.fs.VDirectory
-import org.mikesajak.commander.ui.{IconSize, ResourceManager}
+import org.mikesajak.commander.ui.{IconSize, ResourceManager, UIUtils}
 import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control._
@@ -46,8 +45,8 @@ class MkDirPanelControllerImpl(headerImageView: ImageView,
 
 //    headerImageView.image = resourceMgr.getIcon("folder-plus-48.png")
 
-    val okButton: Button = new Button(dialog.getDialogPane.lookupButton(ButtonType.OK).asInstanceOf[control.Button])
-    val cancelButton = new Button(dialog.getDialogPane.lookupButton(ButtonType.Cancel).asInstanceOf[control.Button])
+    val okButton: Button = UIUtils.dialogButton(dialog, ButtonType.OK)
+    val cancelButton = UIUtils.dialogButton(dialog, ButtonType.Cancel)
 
     folderNameCombo.editor.value.textProperty().addListener(new ChangeListener[String] {
       override def changed(observable: ObservableValue[_ <: String], oldValue: String, newValue: String): Unit = {

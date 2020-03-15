@@ -10,7 +10,6 @@ class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControl
   private val logger = Logger[MkDirOperationCtrl]
 
   def handleMkDir(): Unit = {
-    val curTab = statusMgr.selectedTabManager.selectedTab
     val contentLayout = "/layout/ops/mkdir-dialog.fxml"
 
     val (contentPane, contentCtrl) = UILoader.loadScene[MkDirPanelController](contentLayout)
