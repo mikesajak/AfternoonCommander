@@ -12,7 +12,7 @@ class ArchiveStreamProvider(archiveFile: VFile) {
 
   private def moveArchiveStreamToEntry(archiveStream: ArchiveInputStream, archiveEntry: ArchiveEntry): Boolean = {
     var entry = archiveStream.getNextEntry
-    while (entry != null && entry != archiveEntry) {
+    while (entry != null && entry.getName != archiveEntry.getName) {
       entry = archiveStream.getNextEntry
     }
     entry != null

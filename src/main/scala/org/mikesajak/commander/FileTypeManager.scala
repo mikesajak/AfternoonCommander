@@ -131,7 +131,7 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
   }
 
   def readMetadataOf(file: VFile): Map[String, Seq[String]] = {
-    val meta = if (file.exists) {
+    val meta = if (file.exists && file.size > 0) {
       val contentHandler = new BodyContentHandler(Int.MaxValue)
       val metadata = new Metadata()
       metadata.set(TikaCoreProperties.ORIGINAL_RESOURCE_NAME, file.name)

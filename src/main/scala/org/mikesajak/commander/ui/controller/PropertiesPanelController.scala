@@ -51,7 +51,7 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
     val statsService = new BackgroundService(
       new DirWalkerTask(Seq(path), new DirStatsAndContentsProcessor(fileTypeManager)))
 
-    prepareStatsUI(path, statsService)
+    prepareStatsUI(statsService)
 
     generalPropertiesPanelController.init(path, statsService)
     prepareAccessRightsTab(path)
@@ -59,21 +59,22 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
 
     val services = Seq(Some(statsService), contentService).flatten
 
-    services.foreach { srv =>
-      srv.state.onChange { (_, _, state) =>
-        state match {
-          case State.RUNNING => notifyStarted()
-          case State.FAILED => notifyError(Option(statsService.value.value._1), statsService.message.value)
-          case State.SUCCEEDED => notifyFinished(statsService.value.value._1, services)
-          case _ =>
-        }
+    statsService.state.onChange { (_, _, state) =>
+      state match {
+        case State.RUNNING =>
+          notifyStarted()
+        case State.FAILED =>
+          notifyError(statsService.message.value)
+        case State.SUCCEEDED =>
+          notifyFinished()
+        case _ =>
       }
     }
 
     services
   }
 
-  private def prepareStatsUI(path: VPath, statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
+  private def prepareStatsUI(statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
     statusMessageLabel.text = null
     statusDetailMessageLabel.text = null
 
@@ -117,26 +118,19 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
     statusMessageLabel.text = resourceMgr.getMessage("properties_panel.general_tab.status.analyze")
   }
 
-  def notifyFinished(stats: DirStats, services: Seq[BackgroundService[_]]): Unit = {
-    if (services.forall(srv => isFinishedState(srv.state.value))) {
-      statusMessageLabel.graphic = null
-      statusMessageLabel.text = null
-      statusMessageLabel.visible = false
-      statusMessageLabel.maxHeight = 0
+  def notifyFinished(): Unit = {
+    statusMessageLabel.graphic = null
+    statusMessageLabel.text = null
+    statusMessageLabel.visible = false
+    statusMessageLabel.maxHeight = 0
 
-      statusDetailMessageLabel.graphic = null
-      statusDetailMessageLabel.text = null
-      statusDetailMessageLabel.visible = false
-      statusDetailMessageLabel.maxHeight = 0
-    }
+    statusDetailMessageLabel.graphic = null
+    statusDetailMessageLabel.text = null
+    statusDetailMessageLabel.visible = false
+    statusDetailMessageLabel.maxHeight = 0
   }
 
-  private def isFinishedState(state: Worker.State): Boolean = state match {
-    case State.SUCCEEDED | State.CANCELLED | State.FAILED => true
-    case _ => false
-  }
-
-  def notifyError(stats: Option[DirStats], message: String): Unit = {
+  def notifyError(message: String): Unit = {
     statusMessageLabel.graphic = null
     statusMessageLabel.text = message
 
