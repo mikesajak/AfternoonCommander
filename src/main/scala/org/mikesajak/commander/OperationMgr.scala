@@ -1,18 +1,19 @@
 package org.mikesajak.commander
 
-import java.awt.Desktop
 import java.io.File
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKeys, Configuration}
-import org.mikesajak.commander.fs.FilesystemsManager
+import org.mikesajak.commander.fs.PathToParent
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.OperationType._
 import org.mikesajak.commander.ui._
 
+import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.sys.process._
+import scala.util.{Failure, Success}
+
 class OperationMgr(statusMgr: StatusMgr,
-                   resourceMgr: ResourceManager,
-                   fsMgr: FilesystemsManager,
                    appController: ApplicationController,
                    transferOperationCtrl: TransferOperationController,
                    mkDirOperationCtrl: MkDirOperationCtrl,
@@ -21,30 +22,48 @@ class OperationMgr(statusMgr: StatusMgr,
                    settingsCtrl: SettingsCtrl,
                    findFilesCtrl: FindFilesCtrl,
                    propertiesCtrl: PropertiesCtrl,
-                   config: Configuration) {
+                   config: Configuration,
+                   executionContext: ExecutionContextExecutor) {
   private val logger = Logger(this.getClass)
 
-  def handleView(): Unit = {
+  def handleView(): Unit = runExternalConfiguredAppWithSelectedFile(ConfigKeys.ToolsExternalViewer)
 
-    if (Desktop.isDesktopSupported) {
-      val viewerFile = config.stringProperty(ConfigKeys.ToolsExternalViewer).value
-                             .flatMap(viewer => if (!viewer.isBlank) Some(viewer) else None)
-                             .map(new File(_))
-      viewerFile match {
-        case Some(file) if file.exists && file.isFile =>
-          Desktop.getDesktop.open(file)
+  def handleEdit(): Unit = runExternalConfiguredAppWithSelectedFile(ConfigKeys.ToolsExternalEditor)
 
-        case Some(file) =>
-          logger.warn(s"Invalid external viewer defined: ${file.getAbsolutePath}")
+  private def runExternalConfiguredAppWithSelectedFile(externalAppConfigKey: String): Unit = {
+    val editorApp = config.stringProperty(externalAppConfigKey).value
+                          .flatMap(editor => if (!editor.isBlank) Some(editor) else None)
+                          .map(new File(_))
+    editorApp match {
+      case Some(editor) if editor.exists && editor.isFile && editor.canExecute =>
+        runExternalAppWithSelectedFile(editor)
 
-        case None =>
-          logger.warn("External viewer is not defined.")
-      }
+      case Some(file) =>
+        logger.warn(s"Invalid external application $externalAppConfigKey defined: ${file.getAbsolutePath}")
+
+      case None =>
+        logger.warn(s"External application $externalAppConfigKey is not defined.")
     }
   }
 
-  def handleEdit(): Unit = {
-    logger.warn(s"handleEdit - Not implemented yet!")
+  private def runExternalAppWithSelectedFile(viewer: File): Unit = {
+    implicit val ec: ExecutionContextExecutor = executionContext
+
+    val selectedTab = statusMgr.selectedTabManager.selectedTab
+    val selectedFile = selectedTab.controller.selectedPaths
+                                  .filter(p => !p.isInstanceOf[PathToParent])
+                                  .find(p => !p.isDirectory)
+    selectedFile.foreach { selected =>
+      logger.debug(s"Running external application: ${viewer.getAbsolutePath} ${selected.absolutePath}")
+      Future {
+        Seq(viewer.getAbsolutePath, selected.absolutePath).!!
+      }.onComplete {
+        case Success(output) =>
+          logger.debug(s"Finished execution of external application. Output:\n$output")
+        case Failure(exception) =>
+          logger.warn(s"Error executing external application: ${viewer.getAbsolutePath}", exception)
+      }
+    }
   }
 
   def handleCopy(): Unit = transferOperationCtrl.handleOperation(Copy)

@@ -8,6 +8,8 @@ import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import scalafx.Includes._
+import scalafx.beans.binding.Bindings
+import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
@@ -37,7 +39,7 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
 
   private val itemModifiedStyle = "-fx-font-weight: bold;"
 
-  private var changedItems = Map[SettingsItem, Any]()
+  private val changedItems = ObjectProperty(Map[SettingsItem, Any]())
 
   override def init(dialog: Dialog[Any]) {
     categoryPanel.margin = Insets(10, 10, 10, 10)
@@ -46,7 +48,8 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
 
     val okButton = UIUtils.dialogButton(dialog, ButtonType.OK)
     val applyButton = UIUtils.dialogButton(dialog, ButtonType.Apply)
-    val cancelButton = UIUtils.dialogButton(dialog, ButtonType.Cancel)
+
+    applyButton.disable <== Bindings.createBooleanBinding(() => changedItems.value.isEmpty, changedItems)
 
     okButton.onAction = _ => applyConfigChanges()
     applyButton.filterEvent(ActionEvent.Action) { ae: ActionEvent =>
@@ -85,10 +88,13 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
 
   def applyConfigChanges(): Unit = {
     println(changedItems)
-    changedItems.foreach { case (item, value) =>
-      logger.info(s"Setting change: ${item.name} -> $value")
+    changedItems.value.foreach { case (item, value) =>
+      logger.debug(s"Applying settings change: ${item.name} -> $value")
       item.updateConfigValue(value)
     }
+    logger.debug(s"All changes applied - clearing changes list.")
+    changedItems.value = Map()
+    config.save()
   }
 
   def toTreeItem(settingsGroup: SettingsGroup, parents: Seq[SettingsGroup]): TreeItem[SettingsGroupPanel] = {
@@ -225,7 +231,7 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
         hgrow = Priority.Always
         maxWidth = Double.MaxValue
         prefWidth = Region.USE_COMPUTED_SIZE
-        text = item.getConfigValue.toString
+        text = item.getConfigValue
         tooltip = new Tooltip(item.description)
 
         onAction = { _ =>
@@ -255,12 +261,12 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
   private def updateChangedItems(item: SettingsItem, value: Any): Boolean = {
     if (value == item.getConfigValue) {
       logger.debug(s"Settings: value ${item.name} restored to default")
-      changedItems -= item
+      changedItems.value -= item
       false
     }
     else {
       logger.debug(s"Settings: new value ${item.name} = $value")
-      changedItems += item -> value
+      changedItems.value += item -> value
       true
     }
   }

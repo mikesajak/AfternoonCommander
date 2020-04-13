@@ -2,19 +2,18 @@ package org.mikesajak.commander.handler
 
 import java.awt.Desktop
 import java.io.IOException
-import java.util.concurrent.Executors
 
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.local.LocalFile
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
-class DefaultOSActionFileHandler(override val path: VPath, appCtrl: ApplicationController) extends ActionFileHandler(path) {
+class DefaultOSActionFileHandler(override val path: VPath, appCtrl: ApplicationController,
+                                 executionContext: ExecutionContextExecutor) extends ActionFileHandler(path) {
   private val logger = Logger[DefaultOSActionFileHandler]
-
-  private implicit val ec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private implicit val ec: ExecutionContextExecutor = executionContext
 
   override def handle(): Unit = try {
     if (Desktop.isDesktopSupported) path match {

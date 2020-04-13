@@ -1,5 +1,7 @@
 package org.mikesajak.commander
 
+import java.util.concurrent.Executors
+
 import com.google.inject._
 import com.google.inject.name.{Named, Names}
 import com.typesafe.scalalogging.Logger
@@ -15,6 +17,7 @@ import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
 import org.mikesajak.commander.ui.keys.{KeyActionLoader, KeyActionMapper}
 
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.io.Source
 
 /**
@@ -79,8 +82,9 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideFileHandlerFactory(appCtrl: ApplicationController, archiveManager: ArchiveManager): FileHandlerFactory = {
-    new FileHandlerFactory(appCtrl, archiveManager)
+  def provideFileHandlerFactory(appCtrl: ApplicationController, archiveManager: ArchiveManager,
+                                executionContextExecutor: ExecutionContextExecutor): FileHandlerFactory = {
+    new FileHandlerFactory(appCtrl, archiveManager, executionContextExecutor)
   }
 
   @Provides
@@ -107,8 +111,7 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideOperationManager(statusMgr: StatusMgr, resourceMgr: ResourceManager,
-                              fsMgr: FilesystemsManager,
+  def provideOperationManager(statusMgr: StatusMgr,
                               appController: ApplicationController,
                               copyOperationCtrl: TransferOperationController,
                               mkDirOperationCtrl: MkDirOperationCtrl,
@@ -117,10 +120,11 @@ class ApplicationContext extends AbstractModule with ScalaModule {
                               settingsCtrl: SettingsCtrl,
                               findFilesCtrl: FindFilesCtrl,
                               propertiesCtrl: PropertiesCtrl,
-                              config: Configuration): OperationMgr = {
-    new OperationMgr(statusMgr, resourceMgr, fsMgr, appController,
-                     copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl,
-                     countDirStatsOperationCtrl, settingsCtrl, findFilesCtrl, propertiesCtrl, config)
+                              config: Configuration,
+                              executionContextExecutor: ExecutionContextExecutor): OperationMgr = {
+    new OperationMgr(statusMgr, appController, copyOperationCtrl, mkDirOperationCtrl, deleteOperationCtrl,
+                     countDirStatsOperationCtrl, settingsCtrl, findFilesCtrl, propertiesCtrl, config,
+                     executionContextExecutor)
   }
 
   @Provides
@@ -153,6 +157,11 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideIconResolver(fileTypeManager: FileTypeManager, archiveManager: ArchiveManager, resourceMgr: ResourceManager) =
     new IconResolver(fileTypeManager, archiveManager, resourceMgr)
+
+  @Provides
+  @Singleton
+  def provideCachedThreadPoolForRunningExternalApps(): ExecutionContextExecutor =
+    ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {

@@ -39,7 +39,8 @@ class ArchiveManager extends FileTypeDetector with FileHandler {
   private var archiveHandlers = List[ArchiveHandler]()
 
   def registerArchiveHandler(handler: ArchiveHandler): Unit = {
-    logger.info(s"Loading archive handler: $handler, supported archives: ${handler.supportedArchives.map(ar => s"${ar.description}(${ar.extension})")}")
+    logger.info(s"Loading archive handler: $handler, supported archives: " +
+                  s"[${handler.supportedArchives.map(ar => s"${ar.description}(${ar.extension})").reduce(_ + ", " + _)}]")
     archiveHandlers ::= handler
   }
 

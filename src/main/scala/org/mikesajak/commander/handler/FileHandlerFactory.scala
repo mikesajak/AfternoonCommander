@@ -4,7 +4,10 @@ import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.archive.ArchiveManager
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 
-class FileHandlerFactory(appCtrl: ApplicationController, archiveManager: ArchiveManager) {
+import scala.concurrent.ExecutionContextExecutor
+
+class FileHandlerFactory(appCtrl: ApplicationController, archiveManager: ArchiveManager,
+                         executionContextExecutor: ExecutionContextExecutor) {
   def getFileHandler(path: VPath): Option[FileHandler] = {
     path match {
       case d: VDirectory => Some(new DefaultDirectoryHandler(d))
@@ -12,7 +15,7 @@ class FileHandlerFactory(appCtrl: ApplicationController, archiveManager: Archive
         archiveManager.findArchiveHandler(f)
                       .flatMap(_.getArchiveRootDir(f))
                       .map(new VirtualDirectoryHandler(_))
-      case f: VFile => Some(new DefaultOSActionFileHandler(f, appCtrl))
+      case f: VFile => Some(new DefaultOSActionFileHandler(f, appCtrl, executionContextExecutor))
       case _ => None
     }
   }
@@ -20,6 +23,6 @@ class FileHandlerFactory(appCtrl: ApplicationController, archiveManager: Archive
   def getDefaultOSActionHandler(path: VPath): FileHandler =
     path match {
       case d: VDirectory => new DefaultDirectoryHandler(d)
-      case f: VFile => new DefaultOSActionFileHandler(f, appCtrl)
+      case f: VFile => new DefaultOSActionFileHandler(f, appCtrl, executionContextExecutor)
     }
 }
