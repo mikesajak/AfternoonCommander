@@ -58,26 +58,26 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
 
   private def askForDecision(opType: OperationType, sourcePaths: Seq[VPath], targetDir: VDirectory): Either[ButtonType, (Option[DirStats], Boolean)] = {
     val (contentPane, contentCtrl) = UILoader.loadScene[CopyPanelController](copyLayout)
-    val dialog = UIUtils.mkModalDialog[ButtonType](appController.mainStage, contentPane)
+    val dialog = UIUtils.mkModalDialog[(String, Boolean)](appController.mainStage, contentPane)
 
     val statsService = opType match {
       case Copy => contentCtrl.initForCopy(sourcePaths, targetDir, dialog)
       case Move => contentCtrl.initForMove(sourcePaths, targetDir, dialog)
     }
 
-    val result = dialog.showAndWait()
+    val result = dialog.showAndWait().asInstanceOf[Option[(String, Boolean)]]
 
     statsService.cancel()
 
     result match {
-      case Some(bt) if bt == control.ButtonType.YES || bt == control.ButtonType.OK =>
+      case Some((targetName, dryRun)) =>
         val stats =
           if (statsService.getState == javafx.concurrent.Worker.State.SUCCEEDED) Some(statsService.value.value)
           else None
 
-        Right(stats, contentCtrl.dryRunSelected)
-      case Some(bt) => Left(new ButtonType(bt.asInstanceOf[control.ButtonType]))
-      case _ => Left(ButtonType.Cancel)
+        Right((targetName, stats, dryRun))
+      case _ =>
+        Left(ButtonType.Cancel)
     }
   }
 

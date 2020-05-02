@@ -16,14 +16,13 @@ import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
 
 trait CopyPanelController {
-  def initForCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats] =
+  def initForCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[(String, Boolean)]): Service[DirStats] =
     init(sourcePaths, targetDir, "copy_dialog", dialog)
 
-  def initForMove(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[ButtonType]): Service[DirStats] =
+  def initForMove(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[(String, Boolean)]): Service[DirStats] =
     init(sourcePaths, targetDir, "move_dialog", dialog)
 
-  def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialogTypePrefix: String, dialog: Dialog[ButtonType]): Service[DirStats]
-  def dryRunSelected: Boolean
+  def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialogTypePrefix: String, dialog: Dialog[(String, Boolean)]): Service[DirStats]
 }
 
 @sfxml
@@ -44,7 +43,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
   private var dialogTypePrefix: String = _
 
-  override def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialogTypePrefix: String, dialog: Dialog[ButtonType]): Service[DirStats] = {
+  override def init(sourcePaths: Seq[VPath], targetDir: VDirectory, dialogTypePrefix: String, dialog: Dialog[(String, Boolean)]): Service[DirStats] = {
     val pathType = pathTypeOf(sourcePaths)
     this.dialogTypePrefix = dialogTypePrefix
 
@@ -99,6 +98,12 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
     dialog.onShown = _ => statsService.start()
 
+    dialog.resultConverter = {
+      case bt if bt == ButtonType.OK || bt == ButtonType.Yes =>
+        (targetDirCombo.value.value, dryRunCheckbox.selected.value)
+      case _ => null
+    }
+
     Platform.runLater {
       targetDirCombo.requestFocus()
       val comboTF = targetDirCombo.editor.value
@@ -107,8 +112,6 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
     statsService
   }
-
-  override def dryRunSelected: Boolean = dryRunCheckbox.selected.value
 
   private def pathTypeOf(targetPaths: Seq[VPath]): PathType =
     targetPaths match {
