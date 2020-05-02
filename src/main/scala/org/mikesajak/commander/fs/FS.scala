@@ -5,7 +5,7 @@ trait FS {
   def rootDirectory: VDirectory
   def attributes: Map[String, String]
 
-  def resolvePath(path: String): Option[VPath]
+  def resolvePath(path: String, forceDir: Boolean = false): Option[VPath]
 
   def freeSpace: Long
   def totalSpace: Long

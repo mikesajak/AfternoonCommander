@@ -127,10 +127,15 @@ class FilesystemsManager(osResolver: OSResolver) {
 
   private val PathPattern = raw"(\S+)://(.+)".r
 
-  def resolvePath(path: String): Option[VPath] =
+  def isProperPathPattern(pathName: String): Boolean = pathName match {
+    case PathPattern(_, _) => true
+    case _ => false
+  }
+
+  def resolvePath(path: String, onlyExisting: Boolean = false, forceDir: Boolean = false): Option[VPath] =
     filesystems.toIterator
-               .map(fs => fs.resolvePath(path)
-                            .filter(_.exists))
+               .map(fs => fs.resolvePath(path, forceDir)
+                            .filter(path => !onlyExisting || path.exists))
                .collectFirst { case Some(x) => x }
 
   def homePath: String = {
@@ -145,6 +150,6 @@ class FilesystemsManager(osResolver: OSResolver) {
     matchingFss.maxBy(f => depthToRoot(f.rootDirectory))
   }
 
-  def homeDir: VDirectory = resolvePath(homePath).get.directory
+  def homeDir: VDirectory = resolvePath(homePath, onlyExisting = false).get.directory
 
 }

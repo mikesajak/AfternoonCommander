@@ -1,10 +1,10 @@
 package org.mikesajak.commander.ui
 
 import com.typesafe.scalalogging.Logger
-import javafx.scene.control
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.config.Configuration
-import org.mikesajak.commander.fs.{PathToParent, VDirectory, VPath}
+import org.mikesajak.commander.fs.local.LocalFS
+import org.mikesajak.commander.fs.{FilesystemsManager, PathToParent, VDirectory, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.OperationType._
 import org.mikesajak.commander.task._
@@ -13,12 +13,14 @@ import scalafx.Includes._
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
 
+import scala.annotation.tailrec
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 case class OperationUiData(progressDialogType: String, errorDialogType: String, iconName: String)
 
 class TransferOperationController(statusMgr: StatusMgr, appController: ApplicationController,
-                                  resourceMgr: ResourceManager,
+                                  resourceMgr: ResourceManager, fsMgr: FilesystemsManager,
                                   userDecisionCtrl: UserDecisionCtrl, config: Configuration) {
   private val logger = Logger[DeletePanelController]
 
@@ -47,8 +49,9 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
       logger.debug(s"$opType dialog decision: $result")
 
       result match {
-        case Right((jobStats, dryRun)) =>
-          executeOperation(opType, sourcePaths, targetDir, jobStats, dryRun)
+        case Right((targetName, jobStats, dryRun)) =>
+          val targetPath = resolveTarget(targetName, selectedTab.dir, sourcePaths.size > 1)
+          executeOperation(opType, sourcePaths, targetPath, jobStats, dryRun)
           selectedTab.controller.reload()
           unselectedTab.controller.reload()
         case _ => // skip
@@ -56,7 +59,37 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
     }
   }
 
-  private def askForDecision(opType: OperationType, sourcePaths: Seq[VPath], targetDir: VDirectory): Either[ButtonType, (Option[DirStats], Boolean)] = {
+  private def resolveTarget(targetPathName: String, sourceDir: VDirectory, forceDir: Boolean) = {
+    def isValidDir(name: String) =
+      fsMgr.isProperPathPattern(name) || LocalFS.isAbsolutePathPattern(name)
+
+    if (isValidDir(targetPathName)) {
+      fsMgr.resolvePath(targetPathName, onlyExisting = false, forceDir = forceDir)
+        .getOrElse(throw new IllegalStateException(s"Cannot resolve path: $targetPathName"))
+    } else {
+      val segments = LocalFS.getPathSegments(targetPathName)
+      extendDir(sourceDir, segments, forceDir)
+    }
+  }
+
+  @tailrec
+  private def extendDir(dir: VDirectory, segments: Seq[String], forceDir: Boolean): VPath = {
+    segments match {
+      case Seq() => dir
+      case Seq(lastSegment) =>
+        dir.updater.map { upd => if (forceDir || LocalFS.isPathNameDir(lastSegment)) upd.mkChildDirPath(lastSegment)
+                               else upd.mkChildFilePath(lastSegment) }
+           .getOrElse(throw new IllegalStateException(s"Cannot extend directory: $dir with $segments"))
+
+      case Seq(segment, tail @ _*) =>
+        val extendedDir = dir.updater.map(upd => upd.mkChildDirPath(segment))
+                             .getOrElse(throw new IllegalStateException(s"Cannot extend directory: $dir with $segments"))
+
+        extendDir(extendedDir, tail, forceDir)
+    }
+  }
+
+  private def askForDecision(opType: OperationType, sourcePaths: Seq[VPath], targetDir: VDirectory): Either[ButtonType, (String, Option[DirStats], Boolean)] = {
     val (contentPane, contentCtrl) = UILoader.loadScene[CopyPanelController](copyLayout)
     val dialog = UIUtils.mkModalDialog[(String, Boolean)](appController.mainStage, contentPane)
 
@@ -81,15 +114,16 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
     }
   }
 
-  private def executeOperation(opType: OperationType, sourcePaths: Seq[VPath], targetDir: VDirectory, jobStats: Option[DirStats], dryRun: Boolean): Unit = {
-    logger.debug(s"$opType: $sourcePaths -> $targetDir")
+  private def executeOperation(opType: OperationType, sourcePaths: Seq[VPath], targetPath: VPath,
+                               jobStats: Option[DirStats], dryRun: Boolean): Unit = {
+    logger.debug(s"$opType: $sourcePaths -> $targetPath")
 
-    val result = runOperation(opType, sourcePaths, targetDir, jobStats, dryRun)
+    val result = runOperation(opType, sourcePaths, targetPath, jobStats, dryRun)
 
     result match {
       case Success(copied) =>
       case Failure(exception) =>
-        logger.info(s"Error during $opType operation $sourcePaths -> $targetDir:\n", exception)
+        logger.info(s"Error during $opType operation $sourcePaths -> $targetPath:\n", exception)
         UIUtils.prepareExceptionAlert(appController.mainStage,
                                       resourceMgr.getMessage(s"${opUiData(opType).errorDialogType}.title"),
                                       resourceMgr.getMessage(s"${opUiData(opType).errorDialogType}.header"),
@@ -100,12 +134,12 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
     }
   }
 
-  private def runOperation(opType: OperationType, srcPaths: Seq[VPath], targetDir: VDirectory, stats: Option[DirStats], dryRun: Boolean): Try[Boolean] = {
+  private def runOperation(opType: OperationType, srcPaths: Seq[VPath], targetPath: VPath, stats: Option[DirStats], dryRun: Boolean): Try[Boolean] = {
     val (contentPane, ctrl) = UILoader.loadScene[ProgressPanelController](progressLayout)
 
     val progressDialog = UIUtils.mkModalDialog[IOTaskSummary](appController.mainStage, contentPane)
 
-    val transferJob = TransferJob(srcPaths.map(src => TransferDef(src, targetDir)), opType, preserveModificationDate = true)
+    val transferJob = TransferJob(srcPaths.map(src => TransferDef(src, targetPath)), opType, preserveModificationDate = true)
     
     val (headerText, statusMessage) = srcPaths match {
       case p if p.size == 1 && p.head.isDirectory =>

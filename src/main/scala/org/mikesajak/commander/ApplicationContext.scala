@@ -186,9 +186,11 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Provides
   @Singleton
   def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
-                               resourceManager: ResourceManager, userDecisionCtrl: UserDecisionCtrl,
+                               resourceManager: ResourceManager, fsManager: FilesystemsManager,
+                               userDecisionCtrl: UserDecisionCtrl,
                                configuration: Configuration) =
-    new TransferOperationController(statusMgr, appController, resourceManager, userDecisionCtrl, configuration)
+    new TransferOperationController(statusMgr, appController, resourceManager, fsManager,
+                                    userDecisionCtrl, configuration)
 
   @Provides
   @Singleton

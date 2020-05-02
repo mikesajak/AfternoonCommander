@@ -13,7 +13,7 @@ class CommonsArchiveFS(archiveRoot: CommonsArchiveRootDir) extends FS {
 
   override val attributes: Map[String, String] = Map() // TODO
 
-  override def resolvePath(path: String): Option[VPath] = ??? // TODO
+  override def resolvePath(path: String, forceDir: Boolean): Option[VPath] = ??? // TODO
 
   override def freeSpace: Long = rootDirectory.parent.map(_.fileSystem.freeSpace)
                                               .getOrElse(0)

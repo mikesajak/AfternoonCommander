@@ -11,7 +11,7 @@ class CustomListFS(val root: CustomListAsDirectory) extends FS {
 
   override def rootDirectory: VDirectory = root
 
-  override def resolvePath(path: String): Option[VPath] = None
+  override def resolvePath(path: String, forceDir: Boolean): Option[VPath] = None
 
   override def toString = s"CustomListFS($id, $rootDirectory, $attributes)"
 

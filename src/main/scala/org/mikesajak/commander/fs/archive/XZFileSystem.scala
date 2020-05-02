@@ -7,7 +7,7 @@ class XZFileSystem(override val rootDirectory: XZRootDir) extends FS {
 
   override def attributes: Map[String, String] = Map()
 
-  override def resolvePath(path: String): Option[VPath] = ???
+  override def resolvePath(path: String, forceDir: Boolean): Option[VPath] = ???
 
   override def freeSpace: Long = rootDirectory.parent.map(_.fileSystem.freeSpace)
                                               .getOrElse(0)

@@ -2,6 +2,7 @@ package org.mikesajak.commander.fs.local
 
 import java.io.File
 
+import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
 
 import scala.util.matching.Regex
@@ -15,9 +16,22 @@ object LocalFS {
   val PathPattern: Regex = "local://(.+)".r
 
   def mkLocalPathName(path: String) = s"$id://$path"
+
+  def isAbsolutePathPattern(pathName: String): Boolean = pathName.startsWith("/") || pathName.startsWith("\\")
+  def isPathNameDir(pathName: String): Boolean = pathName.endsWith("/") || pathName.endsWith("\\")
+
+  def getPathSegments(pathName: String): IndexedSeq[String] = {
+    val segments = pathName.split("[/\\\\]").toIndexedSeq
+    segments.lastOption
+            .map(last => last + (if (isPathNameDir(pathName)) "/" else ""))
+            .map(last => segments.dropRight(1).map(_ + "/") :+ last)
+            .getOrElse(IndexedSeq.empty)
+  }
 }
 
 class LocalFS(private val rootFile: File, override val attributes: Map[String, String]) extends FS {
+  private val logger = Logger[LocalFS]
+
   def this(rootFile: File, attribs: Seq[(String, String)]) = this(rootFile, attribs.toMap)
 
   override val id: String = LocalFS.id
@@ -28,18 +42,26 @@ class LocalFS(private val rootFile: File, override val attributes: Map[String, S
 
   override def rootDirectory: VDirectory = new LocalDirectory(rootFile, this)
 
-  override def resolvePath(path: String): Option[VPath] =
+  override def resolvePath(path: String, forceDir: Boolean): Option[VPath] = {
     path match {
-      case LocalFS.PathPattern(p) => resolve(p)
-      case p => resolve(p) // try also to resolve raw path
+      case LocalFS.PathPattern(p) =>
+        logger.debug(s"Resolving valid path pattern $path")
+        resolve(p, forceDir)
+      case p if LocalFS.isAbsolutePathPattern(p) =>
+        logger.debug(s"Resolving local absolute path $path")
+        resolve(p, forceDir) // try also to resolve raw path
+      case _ =>
+        logger.info(s"Cannot resolve path: $path")
+        None
     }
+  }
 
-  private def resolve(pathname: String) = {
+  private def resolve(pathname: String, forceDir: Boolean) = {
     val file = new File(pathname)
 
     if (isChild(file, rootFile)) {
       val resolved =
-        if (file.isDirectory) new LocalDirectory(file, this)
+        if (forceDir || file.exists() && file.isDirectory || LocalFS.isPathNameDir(pathname)) new LocalDirectory(file, this)
         else new LocalFile(file, this)
       Some(resolved)
     } else None

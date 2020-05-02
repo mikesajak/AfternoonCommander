@@ -89,6 +89,9 @@ trait VDirectory extends VPath {
   def childDirs: Seq[VDirectory]
   def childFiles: Seq[VFile]
 
+  def getChild(name: String): Option[VPath] =
+    children.find(child => child.name == name)
+
   def isParent(path: VPath): Boolean
 
   def updater: Option[VDirectoryUpdater]

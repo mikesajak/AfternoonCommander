@@ -3,7 +3,9 @@ package org.mikesajak.commander.task
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import org.mikesajak.commander.units.DataUnit
 
-case class TransferState(bytesDone: Long, totalBytes: Long)
+case class TransferState(bytesDone: Long, totalBytes: Long) {
+  def progress: Double = bytesDone.toDouble / totalBytes
+}
 
 case class IOTaskSummary(numDirs: Int, numFiles: Int, totalSize: Long,
                          errors: List[(VPath, String)]) {
