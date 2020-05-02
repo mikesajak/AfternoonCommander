@@ -31,6 +31,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
                               pathToSourceLabel: Label,
                               sourceNameLabel: Label,
                               sourcePathsListView: ListView[String],
+                              operationDestinationLabel: Label,
                               statsPanel: Pane,
                               @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
                               targetDirCombo: ComboBox[String],
@@ -53,6 +54,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     dialog.graphic = new ImageView(resourceMgr.getIcon(headerIconName, IconSize.Big))
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.Yes, ButtonType.No)
     sourcePathTypeLabel.text = resourceMgr.getMessage(s"$dialogTypePrefix.source_type.${pathType.name}")
+    operationDestinationLabel.text = resourceMgr.getMessage(s"$dialogTypePrefix.destination")
 
     targetDirCombo.selectionModel.value.select(targetDir.toString)
 
