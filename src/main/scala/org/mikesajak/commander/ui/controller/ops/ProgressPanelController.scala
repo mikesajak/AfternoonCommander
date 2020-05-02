@@ -25,6 +25,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
                                   detailsLabel: Label,
                                   totalProgressIndicator: ProgressIndicator,
                                   progressBar: ProgressBar,
+                                  progressLabel: Label,
                                   fileCountLabel: Label,
                                   dirCountLabel: Label,
                                   sizeLabel: Label,
@@ -105,14 +106,17 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     }
   }
 
-  private def updateProgress(progress: IOProgress): Unit = {
-    val progressValue = progress.jobStats.map(s => IOProgress.calcProgress(progress.summary, s))
-                                .getOrElse(-1.0)
+  private def updateProgress(ioProgress: IOProgress): Unit = {
+    val totalProgressValue = ioProgress.jobStats.map(s => IOProgress.calcProgress(ioProgress.summary, s))
+                                  .getOrElse(-1.0)
 
-    progressBar.progress = progress.transferState.map(ts => ts.bytesDone.toDouble / ts.totalBytes)
-                                   .getOrElse(progressValue)
+    val progressValue = ioProgress.transferState.map(ts => ts.progress)
+                                  .getOrElse(totalProgressValue)
 
-    totalProgressIndicator.progress = progressValue
+    progressBar.progress = progressValue
+    progressLabel.text = f"${progressValue * 100}%.1f%%"
+
+    totalProgressIndicator.progress = totalProgressValue
   }
 
   private def updateValue(progress: IOProgress): Unit = {
