@@ -27,7 +27,7 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
 
   private val opUiData = Map[OperationType, OperationUiData](
     Copy -> OperationUiData("copy_progress_dialog", "copy_error_dialog", "file-multiple.png"),
-    Move -> OperationUiData("move_progress_dialog", "move_error_dialog", "file-miltiple.png"))
+    Move -> OperationUiData("move_progress_dialog", "move_error_dialog", "file-multiple.png"))
 
   def handleOperation(opType: OperationType): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
