@@ -63,7 +63,7 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
 
     categoriesTreeView.root = new TreeItem[SettingsGroupPanel] {
       expanded = true
-      children = ObservableBuffer(settingsGroups map (group => toTreeItem(group, Seq())))
+      children = settingsGroups map (group => toTreeItem(group, Seq()))
     }
 
     categoriesTreeView.cellFactory = { _ =>

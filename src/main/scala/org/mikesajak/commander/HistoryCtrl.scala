@@ -21,7 +21,7 @@ class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) {
     val historyList = savedHistory.map(entries => entries.flatMap(bookmarkPath => fsMgr.resolvePath(bookmarkPath)
                                                                                        .map(_.directory)))
                                   .getOrElse(Seq())
-    dirList.enqueue(historyList: _*)
+    dirList.enqueueAll(historyList)
   }
 
   def add(dir: VDirectory): Unit = {
@@ -32,14 +32,14 @@ class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) {
     while (dirList.size > limit)
       dirList.dequeue
 
-    config.stringSeqProperty(configKey) := dirList.map(_.toString)
+    config.stringSeqProperty(configKey) := dirList.map(_.toString).toSeq
   }
 
   def removeLast(): VDirectory = {
     val dir = dirList.head
     logger.debug(s"$name - Removing element $dir")
     dirList = dirList.tail
-    config.stringSeqProperty(configKey) := dirList.map(_.toString)
+    config.stringSeqProperty(configKey) := dirList.map(_.toString).toSeq
     dir
   }
 
@@ -48,10 +48,10 @@ class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) {
   def isEmpty: Boolean = dirList.isEmpty
   def nonEmpty: Boolean = dirList.nonEmpty
 
-  def getAll: Seq[VDirectory] = dirList.reverse
+  def getAll: Seq[VDirectory] = dirList.reverse.toSeq
   def clear(): Unit = {
     dirList.clear()
-    config.stringSeqProperty(configKey) := dirList.map(_.toString)
+    config.stringSeqProperty(configKey) := dirList.map(_.toString).toSeq
   }
 
   override def toString = s"HistoryMgr($name) [$dirList]"

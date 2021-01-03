@@ -8,7 +8,7 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.fs.local.{LocalFS, LocalFile}
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object ArchiveTest {
   def main(args: Array[String]): Unit = {
@@ -26,7 +26,7 @@ object ArchiveTest {
 //    val archiveEntries = readArchiveEntries(testFile)
 //    val archiveVDir = new ArchiveRootDir(testFile, archiveEntries)
 
-    println(listContents(archiveDir.get, ""))
+    println(listContents(archiveDir.get))
   }
 
   def readArchiveEntries(archiveFile: VFile): List[ArchiveEntry] = {

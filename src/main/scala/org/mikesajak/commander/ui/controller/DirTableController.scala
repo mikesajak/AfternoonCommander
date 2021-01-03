@@ -22,7 +22,7 @@ import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
 import scalafx.stage.Popup
 import scalafxml.core.macros.{nested, sfxml}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Created by mike on 14.04.17.
@@ -148,13 +148,15 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
 
   override def focusedPath: VPath = dirTableView.selectionModel.value.getSelectedItem.path
 
-  override def selectedPaths: ObservableBuffer[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path)
+  override def selectedPaths: Seq[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path).toSeq
 
   override def init(path: VDirectory) {
     dirTableView.selectionModel.value.selectionMode = SelectionMode.Multiple
 
     dirTableView.selectionModel.value.selectedItems.onChange {
-      val selectedPaths = dirTableView.selectionModel.value.selectedItems.map(_.path)
+      val selectedPaths = dirTableView.selectionModel.value.selectedItems
+                                      .map(_.path)
+                                      .toSeq
       panelStatusBarController.setSelectedPaths(selectedPaths)
     }
 
@@ -379,7 +381,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
 
     textField.text.onChange { (_,_, textValue) =>
       val filterNamePredicate: Predicate[_ >: FileRow] = r => r.path.name.toLowerCase.contains(textValue.toLowerCase)
-      filteredRows.predicate = row => curFilterPredicate.test(row) && filterNamePredicate.test(row)
+      filteredRows.predicate = (row: FileRow) => curFilterPredicate.test(row) && filterNamePredicate.test(row)
     }
 
     textField.handleEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>

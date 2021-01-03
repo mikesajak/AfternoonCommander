@@ -54,7 +54,7 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
                            else selectedDir.toString
       val selectedDirText = PathUtils.shortenPathTo(selectedDirRep, 50)
       new MenuItem() {
-        text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array(selectedDirText))
+        text = resourceMgr.getMessageWithArgs("file_group_panel.add_bookmark_action.message", Array[String](selectedDirText))
         graphic = new ImageView(resourceMgr.getIcon("icons8-add-tag-48.png", IconSize.Tiny))
         onAction = _ => bookmarkMgr.addBookmark(selectedDir)
       }

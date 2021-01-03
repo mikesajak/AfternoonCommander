@@ -6,7 +6,7 @@ import com.ibm.icu.text.MessageFormat
 import com.typesafe.scalalogging.Logger
 import scalafx.scene.image.Image
 
-import scala.collection.convert.Wrappers.JEnumerationWrapper
+import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 
 sealed abstract class IconSize(val size: Double)
@@ -91,8 +91,8 @@ class ResourceManager {
   }
 
   def getKeys(prefix: Option[String] = None)(implicit resourceFile: String = "ui"): Seq[String] = {
-    JEnumerationWrapper(ResourceBundle.getBundle(resourceFile).getKeys)
-        .filter(key => prefix.forall(p => key.startsWith(p)))
-        .toSeq
+    ResourceBundle.getBundle(resourceFile).getKeys.asScala
+                  .filter(key => prefix.forall(p => key.startsWith(p)))
+                  .toSeq
   }
 }

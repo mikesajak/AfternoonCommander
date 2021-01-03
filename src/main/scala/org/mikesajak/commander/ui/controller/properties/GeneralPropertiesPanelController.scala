@@ -77,7 +77,7 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
 
     val unit = DataUnit.findDataSizeUnit(stats.size)
     sizeLabel.text = resourceMgr.getMessageWithArgs("properties_panel.general_tab.size.value.label",
-                                                    Array(unit.convert(stats.size), unit.symbol, stats.size))
+                                                    Array[Any](unit.convert(stats.size), unit.symbol, stats.size))
   }
 
   def notifyStarted(): Unit = {

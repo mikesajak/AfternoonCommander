@@ -8,7 +8,7 @@ object PathUtils {
 
   def splitDirsAndFiles(paths: Seq[VPath]): (Seq[VDirectory], Seq[VFile]) = {
     val (pathDirs, pathFiles) = paths.partition(_.isDirectory)
-    (pathDirs.view.map(_.asInstanceOf[VDirectory]), pathFiles.view.map(_.asInstanceOf[VFile]))
+    (pathDirs.map(_.asInstanceOf[VDirectory]), pathFiles.map(_.asInstanceOf[VFile]))
   }
 
   def shortenPathBy(path: String, length: Option[Int] = None): String = {

@@ -15,7 +15,7 @@ import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton}
 import scalafxml.core.macros.sfxml
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait FindFilesPanelController {
   def init(startDir: VDirectory, dialog: Dialog[ButtonType]): (ButtonType, ButtonType, ButtonType)
@@ -144,7 +144,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     }
   }
 
-  override def getAllResults: Seq[VPath] = List(searchResultsListView.items.value: _*)
+  override def getAllResults: Seq[VPath] = searchResultsListView.items.value.toList
 
   override def getSelectedResult: Option[VPath] =
     Option(searchResultsListView.selectionModel.value.getSelectedItem)

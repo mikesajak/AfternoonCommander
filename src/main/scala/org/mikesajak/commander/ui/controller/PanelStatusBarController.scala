@@ -34,9 +34,9 @@ class PanelStatusBarControllerImpl(leftMessageLabel: Label,
     val totalSize = files.map(_.size).sum
     val sizeUnit = DataUnit.findDataSizeUnit(totalSize)
     resourceMgr.getMessageWithArgs("file_table_panel.status.message",
-                                   Array(numDirs, files.size,
-                                         sizeUnit.convert(totalSize),
-                                         sizeUnit.symbol))
+                                   Array[Any](numDirs, files.size,
+                                              sizeUnit.convert(totalSize),
+                                              sizeUnit.symbol))
   }
 
 }

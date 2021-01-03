@@ -5,7 +5,7 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.fs.archive.CommonsArchiveRootDir
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class ApacheCommonsArchiveHandler extends ArchiveHandler {
   override def supportedArchives: Set[ArchiveType] =

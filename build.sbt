@@ -5,13 +5,13 @@ name := "AfternoonCommander"
 
 version := "1.0"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.13.4"
 
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+scalacOptions += "-Ymacro-annotations"
 
 // scalafx (and fxml)
 // Add dependency on ScalaFX library
-libraryDependencies += "org.scalafx" %% "scalafx" % "12.0.1-R17"
+libraryDependencies += "org.scalafx" %% "scalafx" % "14-R19"
 
 // Determine OS version of JavaFX binaries
 lazy val osName = System.getProperty("os.name") match {
@@ -25,9 +25,9 @@ lazy val javaFXModules = Seq("base", "controls", "fxml", "graphics", "media", "s
 libraryDependencies ++= javaFXModules.map( m => "org.openjfx" % s"javafx-$m" % "12.0.1" classifier osName)
 
 libraryDependencies ++= { // scalafx (and fxml)
-  val scalafxmlVersion = "0.4"
+  val scalafxmlVersion = "0.5"
   Seq("org.scalafx" %% "scalafxml-core-sfx8" % scalafxmlVersion,
-      "org.scalafx" % "scalafxml-guice-sfx8_2.12" % scalafxmlVersion)
+      "org.scalafx" % "scalafxml-guice-sfx8_2.13" % scalafxmlVersion)
   // todo: cleanup %% / %
 }
 
@@ -45,7 +45,7 @@ libraryDependencies += "com.google.guava" % "guava" % "26.0-jre"
 
 // logging
 libraryDependencies ++= Seq(
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3"
 )
 

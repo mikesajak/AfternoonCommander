@@ -3,6 +3,7 @@ package org.mikesajak.commander
 import com.google.common.eventbus.{DeadEvent, Subscribe}
 import com.typesafe.scalalogging.Logger
 
+//noinspection UnstableApiUsage
 class EventBus {
   private val eventBus = new com.google.common.eventbus.EventBus("App event bus")
   private val logger = Logger[EventBus]
@@ -26,6 +27,7 @@ class EventBus {
 
 }
 
+//noinspection UnstableApiUsage
 class DeadEventHandler {
   private val logger = Logger[DeadEventHandler]
   @Subscribe

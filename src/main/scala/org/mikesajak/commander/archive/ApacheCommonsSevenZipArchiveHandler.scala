@@ -6,7 +6,7 @@ import org.mikesajak.commander.fs.archive.CommonsArchiveRootDir
 import org.mikesajak.commander.fs.local.LocalFile
 import org.mikesajak.commander.fs.{VDirectory, VFile}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class ApacheCommonsSevenZipArchiveHandler extends ArchiveHandler {
   private val archiveType: ArchiveType = ArchiveType.forExtension("7z")
@@ -14,7 +14,7 @@ class ApacheCommonsSevenZipArchiveHandler extends ArchiveHandler {
 
   override def archiveType(file: VFile): Option[ArchiveType] =
     file match {
-      case f : LocalFile => getSevenZFile(f).map(s7 => archiveType)
+      case f : LocalFile => getSevenZFile(f).map(_ => archiveType)
       case _ => None
     }
 

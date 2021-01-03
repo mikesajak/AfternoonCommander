@@ -95,7 +95,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
           title = resourceMgr.getMessage("delete_error_dialog.title")
           headerText = resourceMgr.getMessage("delete_error_dialog.header")
           contentText = summary.errors.map(err => s"${err._1}: ${err._2}")
-                  .reduce((a,b) => s"$a\n$b")
+                               .mkString("\n")
         }.showAndWait()
       case _ =>
     }

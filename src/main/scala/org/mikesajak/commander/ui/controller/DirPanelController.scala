@@ -246,7 +246,7 @@ class DirPanelController(tabPane: TabPane,
 
     Platform.runLater {
       freeSpaceLabel.text = resourceMgr.getMessageWithArgs("file_group_panel.free_space.message",
-        Array(freeUnit.convert(free), freeUnit.symbol, totalUnit.convert(total), totalUnit.symbol))
+        Array[Any](freeUnit.convert(free), freeUnit.symbol, totalUnit.convert(total), totalUnit.symbol))
       freeSpaceBar.progress = (total - free).toDouble / total
     }
   }

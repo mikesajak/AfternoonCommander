@@ -124,7 +124,7 @@ class StatsPanelControllerImpl(messageLabel: Label,
       Array(stats.numDirs, stats.depth))
     val unit = DataUnit.findDataSizeUnit(stats.size)
     filesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_files.value.label",
-      Array(stats.numFiles, unit.convert(stats.size), unit.symbol))
+      Array[Any](stats.numFiles, unit.convert(stats.size), unit.symbol))
   }
 }
 

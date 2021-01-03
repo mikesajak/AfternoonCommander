@@ -6,7 +6,7 @@ import com.typesafe.config._
 import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.EventBus
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Created by mike on 17.04.17.
@@ -80,7 +80,7 @@ class TypesafeConfig(filename: String, eventBus: EventBus) extends Configuration
 
   override def getStringSeqProperty(key: String): Option[Seq[String]] = {
     val path = s"$appName.$key"
-    if (config.hasPath(path)) Some(config.getStringList(path).asScala) else None
+    if (config.hasPath(path)) Some(config.getStringList(path).asScala.toSeq) else None
   }
 
   override def setStringSeqProperty(key: String, value: Seq[String]): Unit = {
