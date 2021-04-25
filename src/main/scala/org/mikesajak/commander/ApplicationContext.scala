@@ -1,10 +1,7 @@
 package org.mikesajak.commander
 
-import java.util.concurrent.Executors
-
 import com.google.inject._
 import com.google.inject.name.{Named, Names}
-import com.typesafe.scalalogging.Logger
 import net.codingwell.scalaguice.ScalaModule
 import org.mikesajak.commander.archive.ArchiveManager
 import org.mikesajak.commander.config.{ConfigKeys, Configuration, TypesafeConfig}
@@ -16,7 +13,9 @@ import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
 import org.mikesajak.commander.ui.keys.{KeyActionLoader, KeyActionMapper}
+import scribe.Logging
 
+import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.io.Source
 
@@ -164,8 +163,7 @@ class ApplicationContext extends AbstractModule with ScalaModule {
     ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 }
 
-class PanelContext(panelId: PanelId) extends PrivateModule {//with ScalaModule {
-  private val logger = Logger(this.getClass)
+class PanelContext(panelId: PanelId) extends PrivateModule with Logging {//with ScalaModule {
 
   override def configure(): Unit = {
     logger.trace(s"Configuring PanelContext for panelId=${panelId.toString}")

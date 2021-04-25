@@ -1,11 +1,10 @@
 package org.mikesajak.commander.ui
 
-import java.util.{Locale, ResourceBundle}
-
 import com.ibm.icu.text.MessageFormat
-import com.typesafe.scalalogging.Logger
 import scalafx.scene.image.Image
+import scribe.Logging
 
+import java.util.{Locale, ResourceBundle}
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 
@@ -22,7 +21,7 @@ object IconSize {
 /**
   * Created by mike on 23.04.17.
   */
-class ResourceManager {
+class ResourceManager extends Logging {
 
   private case class CacheKey(path: String, size: Option[(Double, Double)])
   private object CacheKey {
@@ -56,7 +55,7 @@ class ResourceManager {
       getImage(CacheKey(imagePath))
     } catch {
       case e: Exception =>
-        Logger[ResourceManager].warn(s"Exception thrown during getting icon $imagePath", e)
+        logger.warn(s"Exception thrown during getting icon $imagePath", e)
         throw e
     }
   }
@@ -67,7 +66,7 @@ class ResourceManager {
       getImage(CacheKey(imagePath, Some((width, height))))
     } catch {
       case e: Exception =>
-        Logger[ResourceManager].warn(s"Exception thrown during getting icon $imagePath, width=$width, height=$height", e)
+        logger.warn(s"Exception thrown during getting icon $imagePath, width=$width, height=$height", e)
         throw e
     }
   }

@@ -1,10 +1,9 @@
 package org.mikesajak.commander.fs.local
 
-import java.io.File
-
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{FS, VDirectory, VPath}
+import scribe.Logging
 
+import java.io.File
 import scala.util.matching.Regex
 
 /**
@@ -29,8 +28,7 @@ object LocalFS {
   }
 }
 
-class LocalFS(private val rootFile: File, override val attributes: Map[String, String]) extends FS {
-  private val logger = Logger[LocalFS]
+class LocalFS(private val rootFile: File, override val attributes: Map[String, String]) extends FS with Logging {
 
   def this(rootFile: File, attribs: Seq[(String, String)]) = this(rootFile, attribs.toMap)
 

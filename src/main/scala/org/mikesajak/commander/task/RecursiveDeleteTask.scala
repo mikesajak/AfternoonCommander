@@ -1,10 +1,10 @@
 package org.mikesajak.commander.task
 
-import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.util.Utils.runWithTimer
+import scribe.Logging
 
 import scala.util.{Failure, Success, Try}
 
@@ -12,11 +12,10 @@ case class DeleteJobDef(target: VPath)
 
 class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats], dryRun: Boolean,
                           userDecisionCtrl: UserDecisionCtrl, resourceMgr: ResourceManager)
-    extends jfxc.Task[IOProgress] {
-  private implicit val logger: Logger = Logger[RecursiveDeleteTask]
+    extends jfxc.Task[IOProgress] with Logging {
 
   override def call(): IOProgress = {
-    runWithTimer(s"Delete files task: $jobDefs")(runDelete)
+    runWithTimer(s"Delete files task: $jobDefs")(runDelete)(logger)
   }
 
   private def runDelete(): IOProgress = try {
@@ -105,6 +104,7 @@ class RecursiveDeleteTask(jobDefs: Seq[DeleteJobDef], jobStats: Option[DirStats]
       case Success(true) => IOTaskSummary.success(path)
       case Success(false) if !dryRun => IOTaskSummary.failed(path, resourceMgr.getMessageWithArgs("delete_task.couldnt_delete", List(path)))
       case Failure(exception) => IOTaskSummary.failed(path, exception.getLocalizedMessage)
+      case x @ _ => IOTaskSummary.failed(path, s"Illegal state: $x")
     }
   }
 

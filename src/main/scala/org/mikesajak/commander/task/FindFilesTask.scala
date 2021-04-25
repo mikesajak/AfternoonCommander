@@ -1,23 +1,22 @@
 package org.mikesajak.commander.task
 
-import java.util.regex.Pattern
-
-import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
 import org.apache.commons.io.{FilenameUtils, IOCase}
 import org.mikesajak.commander.fs.{VDirectory, VPath}
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.util.Utils._
+import scribe.Logging
+
+import java.util.regex.Pattern
 
 case class SearchCriteria(searchString: String, caseSensitive: Boolean, regex: Boolean, inverse: Boolean)
 case class Search(filenameCriteria: SearchCriteria, contentCriteria: Option[SearchCriteria])
 
 case class SearchProgress(curPath: VPath, dirStats: DirStats, results: Seq[VPath])
 
-class FindFilesTask(searchDef: Search, startDirectory: VDirectory, resourceMgr: ResourceManager) extends jfxc.Task[SearchProgress] {
+class FindFilesTask(searchDef: Search, startDirectory: VDirectory, resourceMgr: ResourceManager)
+    extends jfxc.Task[SearchProgress] with Logging {
   private type MatchFunc = String => Boolean
-
-  private implicit val logger: Logger = Logger[FindFilesTask]
 
   override def call() : SearchProgress = try {
     updateProgress(-1, -1)

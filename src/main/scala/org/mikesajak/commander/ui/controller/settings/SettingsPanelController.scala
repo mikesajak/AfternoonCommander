@@ -1,8 +1,5 @@
 package org.mikesajak.commander.ui.controller.settings
 
-import java.text.NumberFormat
-
-import com.typesafe.scalalogging.Logger
 import javafx.{scene => jfxs}
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.config.Configuration
@@ -10,7 +7,6 @@ import org.mikesajak.commander.ui.{ResourceManager, UIUtils}
 import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.beans.property.ObjectProperty
-import scalafx.collections.ObservableBuffer
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Node
@@ -20,6 +16,9 @@ import scalafx.scene.text.{Font, FontWeight}
 import scalafx.stage.FileChooser
 import scalafx.util.converter.FormatStringConverter
 import scalafxml.core.macros.sfxml
+import scribe.Logging
+
+import java.text.NumberFormat
 
 trait SettingsPanelController {
   def init(dialog: Dialog[Any]): Unit
@@ -34,8 +33,7 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
                                   config: Configuration,
                                   resourceMgr: ResourceManager,
                                   appController: ApplicationController)
-    extends SettingsPanelController {
-  private val logger = Logger[SettingsPanelControllerImpl]
+    extends SettingsPanelController with Logging {
 
   private val itemModifiedStyle = "-fx-font-weight: bold;"
 

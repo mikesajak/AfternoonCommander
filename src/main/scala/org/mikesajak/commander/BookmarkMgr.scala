@@ -1,11 +1,10 @@
 package org.mikesajak.commander
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
+import scribe.Logging
 
-class BookmarkMgr(config: Configuration) {
-  private val logger = Logger[BookmarkMgr]
+class BookmarkMgr(config: Configuration) extends Logging {
   private var bookmarks0 = Seq[VDirectory]()
 
   def init(fsMgr: FilesystemsManager): Unit = {

@@ -1,13 +1,12 @@
 package org.mikesajak.commander.ui
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui.controller.settings.SettingsPanelController
 import scalafx.Includes._
+import scribe.Logging
 
-class SettingsCtrl(appController: ApplicationController) {
-  private val logger = Logger[SettingsCtrl]
+class SettingsCtrl(appController: ApplicationController) extends Logging{
 
   def handleSettingsAction(): Unit = {
     val settingsLayout = "/layout/settings-panel-layout.fxml"

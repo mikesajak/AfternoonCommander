@@ -1,12 +1,9 @@
 package org.mikesajak.commander.ui.controller
 
-import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
-
 import com.google.common.eventbus.Subscribe
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.google.inject.name.Names
 import com.google.inject.{Binder, Key, Module}
-import com.typesafe.scalalogging.Logger
 import javafx.scene.{Parent, control => jfxctrl}
 import org.mikesajak.commander._
 import org.mikesajak.commander.config.Configuration
@@ -25,6 +22,9 @@ import scalafx.scene.control._
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout.Pane
 import scalafxml.core.macros.sfxml
+import scribe.Logging
+
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 sealed trait PanelId
 object PanelId {
@@ -62,9 +62,8 @@ class DirPanelController(tabPane: TabPane,
                          iconResolver: IconResolver,
                          resourceMgr: ResourceManager,
                          eventBus: EventBus)
-    extends DirPanelControllerIntf {
+    extends DirPanelControllerIntf with Logging {
 
-  private val logger = Logger[DirPanelController]
   private var panelId: PanelId = _
   private var dirTabManager: DirTabManager = _
 

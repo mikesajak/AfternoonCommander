@@ -1,9 +1,9 @@
 package org.mikesajak.commander.task
 
-import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import org.mikesajak.commander.util.PathUtils
+import scribe.Logging
 
 trait PathProcessor[A] {
   def title: String
@@ -13,8 +13,7 @@ trait PathProcessor[A] {
   def merge(res1: A, res2: A): A
 }
 
-class DirWalkerTask[A](paths: Seq[VPath], pathProcessor: PathProcessor[A]) extends jfxc.Task[A] {
-  private val logger = Logger[DirWalkerTask[A]]
+class DirWalkerTask[A](paths: Seq[VPath], pathProcessor: PathProcessor[A]) extends jfxc.Task[A] with Logging {
 
   updateTitle(s"${pathProcessor.title} ($paths)")
 

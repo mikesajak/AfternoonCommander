@@ -1,8 +1,5 @@
 package org.mikesajak.commander.ui.controller.ops
 
-import java.util.{Timer, TimerTask}
-
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.task.{BackgroundService, IOProgress, IOTaskSummary}
 import org.mikesajak.commander.ui.UIUtils
 import org.mikesajak.commander.units.{DataUnit, TimeInterval}
@@ -11,7 +8,9 @@ import scalafx.application.Platform
 import scalafx.scene.control._
 import scalafx.scene.image.{Image, ImageView}
 import scalafxml.core.macros.sfxml
+import scribe.Logging
 
+import java.util.{Timer, TimerTask}
 import scala.language.implicitConversions
 
 trait ProgressPanelController {
@@ -33,9 +32,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
                                   estimatedTimeLabel: Label,
                                   speedLabel: Label,
                                   dontCloseCheckbox: CheckBox)
-    extends ProgressPanelController {
-
-  private val logger = Logger[ProgressPanelController]
+    extends ProgressPanelController with Logging {
 
   private var dialog: Dialog[IOTaskSummary] = _
 

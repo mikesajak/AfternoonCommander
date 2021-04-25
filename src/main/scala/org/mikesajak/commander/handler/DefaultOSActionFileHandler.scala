@@ -1,18 +1,17 @@
 package org.mikesajak.commander.handler
 
-import java.awt.Desktop
-import java.io.IOException
-
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.local.LocalFile
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
+import scribe.Logging
 
+import java.awt.Desktop
+import java.io.IOException
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class DefaultOSActionFileHandler(override val path: VPath, appCtrl: ApplicationController,
-                                 executionContext: ExecutionContextExecutor) extends ActionFileHandler(path) {
-  private val logger = Logger[DefaultOSActionFileHandler]
+                                 executionContext: ExecutionContextExecutor)
+    extends ActionFileHandler(path) with Logging {
   private implicit val ec: ExecutionContextExecutor = executionContext
 
   override def handle(): Unit = try {

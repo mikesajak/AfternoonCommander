@@ -1,11 +1,10 @@
 package org.mikesajak.commander.config
 
-import java.util.regex.Pattern
-
 import com.google.common.eventbus.Subscribe
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.EventBus
+import scribe.Logging
 
+import java.util.regex.Pattern
 import scala.language.implicitConversions
 
 /**
@@ -93,8 +92,7 @@ trait ConfigObserver {
   def configChanged(key: String): Unit
 }
 
-class LoggingConfigObserver(config: Configuration) {
-  private val logger = Logger[SimpleConfig]
+class LoggingConfigObserver(config: Configuration) extends Logging {
 
   //noinspection UnstableApiUsage
   @Subscribe

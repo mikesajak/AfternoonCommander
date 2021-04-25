@@ -1,16 +1,14 @@
 package org.mikesajak.commander.ui.property
 
-import java.util.{Comparator, Optional}
-
-import com.typesafe.scalalogging.Logger
 import javafx.beans.value.ObservableValue
 import org.controlsfx.control.PropertySheet
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.ui.ResourceManager
+import scribe.Logging
 
-class ConfigPropertiesFactory(config: Configuration, resourceMgr: ResourceManager) {
+import java.util.{Comparator, Optional}
 
-  private val logger = Logger[ConfigPropertiesFactory]
+class ConfigPropertiesFactory(config: Configuration, resourceMgr: ResourceManager) extends Logging {
 
   def keys: (Seq[String], Seq[String]) = {
     val (runtimeKeys, persistentKeys) = config.entriesKeys

@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui
 
-import com.typesafe.scalalogging.Logger
 import javafx.scene.control
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VPath}
@@ -10,14 +9,13 @@ import org.mikesajak.commander.ui.controller.ops.{DeletePanelController, Progres
 import scalafx.Includes._
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
+import scribe.Logging
 
 import scala.util.{Failure, Success, Try}
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                           countStatsOpCtrl: CountDirStatsOperationCtrl,
-                          userDecisionCtrl: UserDecisionCtrl, resourceMgr: ResourceManager) {
-  private val logger = Logger[DeletePanelController]
-
+                          userDecisionCtrl: UserDecisionCtrl, resourceMgr: ResourceManager) extends Logging {
   private val deleteLayout = "/layout/ops/delete-dialog.fxml"
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
 

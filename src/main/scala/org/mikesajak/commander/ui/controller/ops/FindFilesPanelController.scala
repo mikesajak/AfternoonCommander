@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller.ops
 
-import com.typesafe.scalalogging.Logger
 import javafx.concurrent.Worker.State
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.task._
@@ -14,6 +13,7 @@ import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton}
 import scalafxml.core.macros.sfxml
+import scribe.Logging
 
 import scala.jdk.CollectionConverters._
 
@@ -45,8 +45,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
 
                                    resourceMgr: ResourceManager,
                                    fsMgr: FilesystemsManager)
-    extends FindFilesPanelController {
-  private val logger = Logger[FindFilesPanelControllerImpl]
+    extends FindFilesPanelController with Logging {
 
   private var goToPathButton: Button = _
   private var showAsListButton: Button = _

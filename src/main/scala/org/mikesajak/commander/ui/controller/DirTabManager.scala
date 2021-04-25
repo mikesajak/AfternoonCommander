@@ -1,17 +1,16 @@
 package org.mikesajak.commander.ui.controller
 
 import com.google.common.eventbus.Subscribe
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.EventBus
 import org.mikesajak.commander.fs.VDirectory
 import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotification
 import org.mikesajak.commander.ui.controller.TabEvents._
+import scribe.Logging
 
 /**
   * Created by mike on 07.05.17.
   */
-class DirTabManager(panelId: PanelId, eventBus: EventBus) {
-  private val logger = Logger(this.getClass)
+class DirTabManager(panelId: PanelId, eventBus: EventBus) extends Logging {
 
   private var tabs0 = IndexedSeq[TabData]()
   private var selectedTabIdx0 = 0

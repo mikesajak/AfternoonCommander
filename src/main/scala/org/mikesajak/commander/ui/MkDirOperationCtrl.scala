@@ -1,13 +1,12 @@
 package org.mikesajak.commander.ui
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.controller.ops.MkDirPanelController
 import scalafx.Includes._
+import scribe.Logging
 
-class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController) {
-  private val logger = Logger[MkDirOperationCtrl]
+class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController) extends Logging {
 
   def handleMkDir(): Unit = {
     val contentLayout = "/layout/ops/mkdir-dialog.fxml"

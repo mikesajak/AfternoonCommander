@@ -1,6 +1,5 @@
 package org.mikesajak.commander.task
 
-import com.typesafe.scalalogging.Logger
 import enumeratum.{Enum, EnumEntry}
 import javafx.{concurrent => jfxc}
 import org.mikesajak.commander.config.{ConfigKeys, Configuration}
@@ -10,6 +9,7 @@ import org.mikesajak.commander.task.OperationType.{Copy, Move}
 import org.mikesajak.commander.task.OverwriteDecision.{NoToAll, YesToAll}
 import org.mikesajak.commander.util.IO
 import org.mikesajak.commander.util.Utils._
+import scribe.Logging
 
 import scala.collection.immutable
 import scala.util.{Failure, Success}
@@ -17,14 +17,12 @@ import scala.util.{Failure, Success}
 class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats],
                             dryRun: Boolean, config: Configuration,
                             userDecisionCtrl: UserDecisionCtrl)
-    extends jfxc.Task[IOProgress] {
-
-  private implicit val logger: Logger = Logger[RecursiveTransferTask]
+    extends jfxc.Task[IOProgress] with Logging {
 
   private var overwriteDecision: Option[OverwriteDecision] = None
 
   override def call(): IOProgress = {
-    runWithTimer(s"Transfer files task: $transferJob")(runTransfer)
+    runWithTimer(s"Transfer files task: $transferJob")(runTransfer)(logger)
   }
 
   private def runTransfer(): IOProgress = {

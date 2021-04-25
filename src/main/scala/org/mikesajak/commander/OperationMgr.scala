@@ -1,14 +1,13 @@
 package org.mikesajak.commander
 
-import java.io.File
-
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.fs.PathToParent
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.OperationType._
 import org.mikesajak.commander.ui._
+import scribe.Logging
 
+import java.io.File
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.sys.process._
 import scala.util.{Failure, Success}
@@ -23,8 +22,7 @@ class OperationMgr(statusMgr: StatusMgr,
                    findFilesCtrl: FindFilesCtrl,
                    propertiesCtrl: PropertiesCtrl,
                    config: Configuration,
-                   executionContext: ExecutionContextExecutor) {
-  private val logger = Logger(this.getClass)
+                   executionContext: ExecutionContextExecutor) extends Logging {
 
   def handleView(): Unit = runExternalConfiguredAppWithSelectedFile(ConfigKeys.ToolsExternalViewer)
 

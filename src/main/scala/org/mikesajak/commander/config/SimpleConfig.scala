@@ -1,13 +1,12 @@
 package org.mikesajak.commander.config
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.EventBus
+import scribe.Logging
 
 /**
   * Created by mike on 09.04.17.
   */
-class SimpleConfig(eventBus: EventBus) extends Configuration(eventBus) {
-  private val logger = Logger[SimpleConfig]
+class SimpleConfig(eventBus: EventBus) extends Configuration(eventBus) with Logging {
   private var settingsMap = Map[String, String]()
 
   override def entriesKeys: Seq[String] = settingsMap.keys.toSeq

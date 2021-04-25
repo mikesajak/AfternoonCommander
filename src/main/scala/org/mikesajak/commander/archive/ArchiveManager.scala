@@ -1,9 +1,9 @@
 package org.mikesajak.commander.archive
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import org.mikesajak.commander.handler.FileHandler
 import org.mikesajak.commander.{FileType, FileTypeDetector}
+import scribe.Logging
 
 class ArchiveType(val extension: String, val description: String) {
   private def canEqual(other: Any): Boolean = other.isInstanceOf[ArchiveType]
@@ -34,8 +34,7 @@ trait ArchiveHandler {
   def getArchiveRootDir(file: VFile): Option[VDirectory]
 }
 
-class ArchiveManager extends FileTypeDetector with FileHandler {
-  private val logger = Logger[ArchiveManager]
+class ArchiveManager extends FileTypeDetector with FileHandler with Logging {
   private var archiveHandlers = List[ArchiveHandler]()
 
   def registerArchiveHandler(handler: ArchiveHandler): Unit = {

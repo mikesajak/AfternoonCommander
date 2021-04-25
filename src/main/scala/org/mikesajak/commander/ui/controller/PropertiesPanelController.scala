@@ -1,7 +1,5 @@
 package org.mikesajak.commander.ui.controller
 
-import com.typesafe.scalalogging.Logger
-import javafx.concurrent.Worker
 import javafx.concurrent.Worker.State
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
@@ -15,6 +13,7 @@ import scalafx.scene.control.{Label, Tab, TabPane}
 import scalafx.scene.image.ImageView
 import scalafx.scene.layout.BorderPane
 import scalafxml.core.macros.{nested, sfxml}
+import scribe.Logging
 
 trait PropertiesPanelController {
   def init(path: VPath): Seq[BackgroundService[_]]
@@ -34,8 +33,7 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
                                     fileTypeManager: FileTypeManager,
                                     iconResolver: IconResolver,
                                     resourceMgr: ResourceManager)
-    extends PropertiesPanelController {
-  private val logger = Logger[PropertiesPanelControllerImpl]
+    extends PropertiesPanelController with Logging {
 
   private val fileContentsLayout = "/layout/properties/file-content-properties-panel.fxml"
   private val dirContentsLayout = "/layout/properties/dir-content-properties-panel.fxml"

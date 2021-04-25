@@ -1,11 +1,10 @@
 package org.mikesajak.commander.util
 
-import java.io.{PrintWriter, StringWriter}
-
 import com.google.common.base.Stopwatch
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.task.CancelledException
+import scribe.Logger
 
+import java.io.{PrintWriter, StringWriter}
 import scala.language.{implicitConversions, reflectiveCalls}
 
 /**

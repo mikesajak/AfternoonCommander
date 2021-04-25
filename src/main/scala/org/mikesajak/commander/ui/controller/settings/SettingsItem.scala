@@ -1,12 +1,12 @@
 package org.mikesajak.commander.ui.controller.settings
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.ui.controller.settings.SettingsType._
 import scalafx.scene.paint.Color
+import scribe.Logging
 
-abstract class SettingsItem(key: String, val itemType: SettingsType, settingsDataProvider: SettingsDataProvider) {
-  val logger: Logger = Logger[SettingsItem]
+abstract class SettingsItem(key: String, val itemType: SettingsType, settingsDataProvider: SettingsDataProvider)
+    extends Logging {
   
   val name: String = settingsDataProvider.itemName(key)
   val category: String = settingsDataProvider.itemCategory(key)

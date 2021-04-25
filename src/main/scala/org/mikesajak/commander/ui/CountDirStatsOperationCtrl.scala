@@ -1,12 +1,12 @@
 package org.mikesajak.commander.ui
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.controller.ops.CountStatsPanelController
 import scalafx.Includes._
+import scribe.Logging
 
 import scala.concurrent.Future
 
@@ -17,8 +17,7 @@ trait OperationController[A] {
 
 class CountDirStatsOperationCtrl(statusMgr: StatusMgr,
                                  appController: ApplicationController,
-                                 resourceMgr: ResourceManager) {
-  private val logger = Logger[CountDirStatsOperationCtrl]
+                                 resourceMgr: ResourceManager) extends Logging {
 
   def handleCountDirStats(): Unit = {
     val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.focusedPath

@@ -1,16 +1,15 @@
 package org.mikesajak.commander
 
 import com.google.common.eventbus.Subscribe
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory}
 import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotification
 import org.mikesajak.commander.ui.controller.PanelId
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.util.TextUtil.firstLowerCase
+import scribe.Logging
 
-class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) {
-  private val logger = Logger[HistoryCtrl]
+class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) extends Logging {
   private var dirList = collection.mutable.Queue[VDirectory]()
   private val configKey = s"${ConfigKeys.History}.$name"
 

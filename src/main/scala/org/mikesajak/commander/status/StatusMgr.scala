@@ -1,12 +1,12 @@
 package org.mikesajak.commander.status
 
 import com.google.common.eventbus.Subscribe
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.EventBus
 import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.status.StatusChangeEvents.{PanelSelected, PanelSelectionLogger}
 import org.mikesajak.commander.ui.controller.PanelId.LeftPanel
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
+import scribe.Logging
 
 
 trait PanelData {
@@ -16,8 +16,7 @@ trait PanelData {
 }
 
 class StatusMgr(val leftDirTabMgr: DirTabManager, val rightDirTabMgr: DirTabManager,
-                eventBus: EventBus) {
-  private val logger = Logger(getClass)
+                eventBus: EventBus) extends Logging {
 
   private var selectedPanel0: PanelId = LeftPanel
 
@@ -45,9 +44,9 @@ class StatusMgr(val leftDirTabMgr: DirTabManager, val rightDirTabMgr: DirTabMana
 object StatusChangeEvents {
   case class PanelSelected(oldPanelId: PanelId, newPanelId: PanelId)
 
-  class PanelSelectionLogger {
+  class PanelSelectionLogger extends Logging {
     @Subscribe
     def handle(event: PanelSelected): Unit =
-      Logger[StatusMgr].debug(s"Change panel selection: panelId: ${event.oldPanelId} -> ${event.newPanelId}")
+      logger.debug(s"Change panel selection: panelId: ${event.oldPanelId} -> ${event.newPanelId}")
   }
 }

@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.VDirectory
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.ui.Action
@@ -13,6 +12,7 @@ import scalafx.Includes._
 import scalafx.scene.input.KeyEvent
 import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
+import scribe.Logging
 
 /**
  * Created by mike on 25.10.14.
@@ -25,8 +25,7 @@ class MainPanelController(mainPane: Pane,
                           statusMgr: StatusMgr,
                           operationMgr: OperationMgr,
                           keyActionMapper: KeyActionMapper,
-                          eventBus: EventBus) {
-  private val logger = Logger[MainPanelController]
+                          eventBus: EventBus) extends Logging {
 
   leftDirPanelController.init(LeftPanel)
   rightDirPanelController.init(RightPanel)

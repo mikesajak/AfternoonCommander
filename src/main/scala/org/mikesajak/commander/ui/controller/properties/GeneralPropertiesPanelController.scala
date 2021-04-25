@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller.properties
 
-import com.typesafe.scalalogging.Logger
 import javafx.concurrent.Worker.State
 import org.apache.commons.io.FilenameUtils
 import org.mikesajak.commander.FileTypeManager
@@ -13,6 +12,7 @@ import org.mikesajak.commander.util.Throttler
 import scalafx.application.Platform
 import scalafx.scene.control.Label
 import scalafxml.core.macros.sfxml
+import scribe.Logging
 
 trait GeneralPropertiesPanelController {
   def init(path: VPath, statsService: BackgroundService[(DirStats, DirContents)])
@@ -32,8 +32,7 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
 
                                            fileTypeManager: FileTypeManager,
                                            resourceMgr: ResourceManager)
-    extends GeneralPropertiesPanelController {
-  private val logger = Logger[GeneralPropertiesPanelControllerImpl]
+    extends GeneralPropertiesPanelController with Logging {
 
   logger.debug("GeneralPropertiesPanelController constructor...")
 

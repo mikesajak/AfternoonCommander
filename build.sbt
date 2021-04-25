@@ -1,4 +1,3 @@
-import sbt.CrossVersion
 import sbt.Keys.libraryDependencies
 
 name := "AfternoonCommander"
@@ -43,11 +42,8 @@ libraryDependencies ++= Seq(
 // https://mvnrepository.com/artifact/com.google.guava/guava
 libraryDependencies += "com.google.guava" % "guava" % "26.0-jre"
 
-// logging
-libraryDependencies ++= Seq(
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "ch.qos.logback" % "logback-classic" % "1.2.3"
-)
+// logging - Scribe
+libraryDependencies += "com.outr" %% "scribe" % "3.3.3"
 
 // config
 libraryDependencies += "com.typesafe" % "config" % "1.3.1"

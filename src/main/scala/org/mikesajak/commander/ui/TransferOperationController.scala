@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.local.LocalFS
@@ -8,10 +7,11 @@ import org.mikesajak.commander.fs.{FilesystemsManager, PathToParent, VDirectory,
 import org.mikesajak.commander.status.StatusMgr
 import org.mikesajak.commander.task.OperationType._
 import org.mikesajak.commander.task._
-import org.mikesajak.commander.ui.controller.ops.{CopyPanelController, DeletePanelController, ProgressPanelController}
+import org.mikesajak.commander.ui.controller.ops.{CopyPanelController, ProgressPanelController}
 import scalafx.Includes._
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
+import scribe.Logging
 
 import scala.annotation.tailrec
 import scala.language.postfixOps
@@ -21,9 +21,8 @@ case class OperationUiData(progressDialogType: String, errorDialogType: String, 
 
 class TransferOperationController(statusMgr: StatusMgr, appController: ApplicationController,
                                   resourceMgr: ResourceManager, fsMgr: FilesystemsManager,
-                                  userDecisionCtrl: UserDecisionCtrl, config: Configuration) {
-  private val logger = Logger[DeletePanelController]
-
+                                  userDecisionCtrl: UserDecisionCtrl, config: Configuration)
+    extends Logging {
   private val copyLayout = "/layout/ops/copy-dialog.fxml"
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
 

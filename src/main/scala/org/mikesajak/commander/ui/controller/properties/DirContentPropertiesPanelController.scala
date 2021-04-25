@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller.properties
 
-import com.typesafe.scalalogging.Logger
 import javafx.concurrent.Worker.State
 import org.mikesajak.commander.fs.VDirectory
 import org.mikesajak.commander.task.{BackgroundService, DirContents, DirStats}
@@ -13,6 +12,7 @@ import scalafx.collections.ObservableBuffer
 import scalafx.scene.chart.PieChart
 import scalafx.scene.control.{TableColumn, TableView}
 import scalafxml.core.macros.sfxml
+import scribe.Logging
 
 trait DirContentPropertiesPanelController {
   def init(dir: VDirectory, statsService: BackgroundService[(DirStats, DirContents)])
@@ -43,8 +43,7 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
                                               extensionColumn: TableColumn[ExtensionTableRow, String],
                                               countColumn: TableColumn[ExtensionTableRow, String],
                                               fileTypeManager: FileTypeManager)
-    extends DirContentPropertiesPanelController {
-  private val logger = Logger[DirContentPropertiesPanelControllerImpl]
+    extends DirContentPropertiesPanelController with Logging {
 
   override def init(dir: VDirectory, statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
     fileTypesPieChart.data = Seq(

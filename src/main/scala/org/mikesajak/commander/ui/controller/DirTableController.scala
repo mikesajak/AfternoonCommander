@@ -1,9 +1,6 @@
 package org.mikesajak.commander.ui.controller
 
-import java.util.function.Predicate
-
 import com.google.common.eventbus.Subscribe
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKeys, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
@@ -21,7 +18,9 @@ import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
 import scalafx.stage.Popup
 import scalafxml.core.macros.{nested, sfxml}
+import scribe.Logging
 
+import java.util.function.Predicate
 import scala.jdk.CollectionConverters._
 
 /**
@@ -101,11 +100,9 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
                              eventBus: EventBus,
                              appController: ApplicationController,
                              propertiesCtrl: PropertiesCtrl)
-    extends DirTableController {
+    extends DirTableController with Logging {
 
   import org.mikesajak.commander.ui.UIParams._
-
-  private val logger = Logger[DirTableController]
 
   private var curDir: VDirectory = _
 

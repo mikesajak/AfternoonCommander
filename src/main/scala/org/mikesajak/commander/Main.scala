@@ -1,7 +1,6 @@
 package org.mikesajak.commander
 
 import com.google.inject.Key
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.config.{ConfigKeys, Configuration}
 import org.mikesajak.commander.ui.{ResourceManager, UILoader}
 import scalafx.Includes._
@@ -10,13 +9,15 @@ import scalafx.application.JFXApp.PrimaryStage
 import scalafx.application.{JFXApp, Platform}
 import scalafx.scene.Scene
 import scalafx.util.Duration
+import scribe.Logging
 
 /**
  * Created by mike on 25.10.14.
  */
-object Main extends JFXApp {
-  private val logger = Logger("Main")
+object Main extends JFXApp with Logging {
   private val mainPanelDef: String = "/layout/main-panel-layout.fxml"
+
+  ScribeCfg.initScribeLogging()
 
   logger.info(s"AfternoonCommander starting")
 

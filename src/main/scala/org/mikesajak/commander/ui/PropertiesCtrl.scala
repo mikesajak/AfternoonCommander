@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
@@ -8,11 +7,12 @@ import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui.controller.PropertiesPanelController
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
+import scribe.Logging
 
 import scala.concurrent.CancellationException
 
-class PropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController) {
-  private val logger = Logger[PropertiesCtrl]
+class PropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController) extends Logging {
+
   def handlePropertiesAction(): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val targetPaths = selectedTab.controller.selectedPaths

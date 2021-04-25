@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.custom.CustomListAsDirectory
 import org.mikesajak.commander.status.StatusMgr
@@ -8,10 +7,10 @@ import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui.controller.ops.FindFilesPanelController
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
+import scribe.Logging
 
 class FindFilesCtrl(appController: ApplicationController,
-                    statusMgr: StatusMgr) {
-  private val logger = Logger[FindFilesCtrl]
+                    statusMgr: StatusMgr) extends Logging {
 
   def handleFindAction(): Unit = {
     val findDialogLayout = "/layout/ops/search-files-dialog2.fxml"

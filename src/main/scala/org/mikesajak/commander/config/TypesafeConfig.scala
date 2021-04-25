@@ -1,19 +1,18 @@
 package org.mikesajak.commander.config
 
-import java.io.{File, FileWriter}
-
 import com.typesafe.config._
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.EventBus
+import scribe.Logging
 
+import java.io.{File, FileWriter}
 import scala.jdk.CollectionConverters._
 
 /**
   * Created by mike on 17.04.17.
   */
-class TypesafeConfig(filename: String, eventBus: EventBus) extends Configuration(eventBus) {
+class TypesafeConfig(filename: String, eventBus: EventBus)
+    extends Configuration(eventBus) with Logging {
 
-  private val logger = Logger[TypesafeConfig]
   private var config: Config = ConfigFactory.empty("Afternoon Commander settings")
 
   private val appName = "afternooncommander"

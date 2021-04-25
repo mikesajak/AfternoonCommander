@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller.properties
 
-import com.typesafe.scalalogging.Logger
 import javafx.{concurrent => jfxconcur}
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.VFile
@@ -11,6 +10,7 @@ import scalafx.beans.property.StringProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.{TableColumn, TableView}
 import scalafxml.core.macros.sfxml
+import scribe.Logging
 
 trait FileContentPropertiesPanelController {
   def init(path: VFile): BackgroundService[Map[String, Seq[String]]]
@@ -22,8 +22,7 @@ class FileContentPropertiesPanelControllerImpl(metadataTableView: TableView[Meta
                                                metadataValueColumn: TableColumn[MetadataRow, String],
 
                                                fileTypeManager: FileTypeManager)
-    extends FileContentPropertiesPanelController {
-  private val logger = Logger[FileContentPropertiesPanelControllerImpl]
+    extends FileContentPropertiesPanelController with Logging {
 
   override def init(path: VFile): BackgroundService[Map[String, Seq[String]]] = {
     metadataNameColumn.cellValueFactory = { _.value.name }

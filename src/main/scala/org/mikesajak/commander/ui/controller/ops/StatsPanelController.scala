@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller.ops
 
-import com.typesafe.scalalogging.Logger
 import org.mikesajak.commander.fs.VPath
 import org.mikesajak.commander.task.DirStats
 import org.mikesajak.commander.ui.ResourceManager
@@ -11,6 +10,7 @@ import scalafx.application.Platform
 import scalafx.scene.control.Label
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.sfxml
+import scribe.Logging
 
 trait StatsPanelController {
   def init(targetPath: Seq[VPath]): Unit
@@ -52,8 +52,7 @@ class StatsPanelControllerImpl(messageLabel: Label,
                                filesValueLabel: Label,
 
                                resourceMgr: ResourceManager)
-    extends StatsPanelController {
-  private val logger = Logger[StatsPanelControllerImpl]
+    extends StatsPanelController with Logging {
 
   override def init(targetPaths: Seq[VPath]): Unit = {
     val contentType = StatsUtils.resolveContentType(targetPaths)

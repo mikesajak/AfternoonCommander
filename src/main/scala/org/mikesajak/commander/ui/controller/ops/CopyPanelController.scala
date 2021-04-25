@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller.ops
 
-import com.typesafe.scalalogging.Logger
 import javafx.concurrent.Worker.State
 import org.mikesajak.commander.fs.{VDirectory, VPath}
 import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
@@ -14,6 +13,7 @@ import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafx.scene.layout.Pane
 import scalafxml.core.macros.{nested, sfxml}
+import scribe.Logging
 
 trait CopyPanelController {
   def initForCopy(sourcePaths: Seq[VPath], targetDir: VDirectory, dialog: Dialog[(String, Boolean)]): Service[DirStats] =
@@ -37,9 +37,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
                               summaryMessageLabel: Label,
                               dryRunCheckbox: CheckBox,
 
-                              resourceMgr: ResourceManager) extends CopyPanelController {
-
-  private val logger = Logger[CopyPanelControllerImpl]
+                              resourceMgr: ResourceManager) extends CopyPanelController with Logging {
 
   private var dialogTypePrefix: String = _
 
