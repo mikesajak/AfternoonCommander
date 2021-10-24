@@ -9,6 +9,7 @@ import org.mikesajak.commander.archive.ArchiveManager
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.ui.ResourceManager
 import org.mikesajak.commander.util.TextUtil.camelToSnake
+import scribe.Logging
 
 sealed abstract class FileType(val icon: Option[String]) {
   def this(icon: String) = this(Some(icon))
@@ -54,55 +55,50 @@ object FileType {
 }
 
 class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
-                      resourceMgr: ResourceManager, appController: ApplicationController) {
+                      resourceMgr: ResourceManager, appController: ApplicationController) extends Logging {
   import FileType._
 
   private val defaultFileTypeDetector = new DefaultFileTypeDetector
-  private var fileTypeDetectors = List[FileTypeDetector]()
-  registerFileTypeDetector(archiveManager)
-  registerFileTypeDetector(SimpleByExtensionFileDetector(ArchiveFile,
-                                                         "zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"))
+  private var fileTypeDetectors = List(
+    archiveManager,
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(GraphicFile,
-                                                         "jpg", "jpeg", "png", "gif", "tif", "tiff", "svg", "bmp"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(VideoFile,
-                                                         "avi", "mkv", "mov", "mpg", "mpv", "mp4",
-                                                         "mpeg", "flv", "m4v", "m2v", "wmv", "asf"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(MusicFile,
-                                                         "mp3", "ogg", "wav", "wma", "mpc", "m4a", "flac"))
+    SimpleByExtensionFileDetector(ArchiveFile, "zip", "tar", "gz", "tgz", "bz2", "tbz2", "7z", "rar"),
+    SimpleByExtensionFileDetector(GraphicFile, "jpg", "jpeg", "png", "gif", "tif", "tiff", "svg", "bmp"),
+    SimpleByExtensionFileDetector(VideoFile, "avi", "mkv", "mov", "mpg", "mpv", "mp4",
+                                             "mpeg", "flv", "m4v", "m2v", "wmv", "asf"),
+    SimpleByExtensionFileDetector(MusicFile, "mp3", "ogg", "wav", "wma", "mpc", "m4a", "flac"),
+    SimpleByExtensionFileDetector(XmlFile, "xml"),
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(XmlFile, "xml"))
+    SimpleByExtensionFileDetector(WordFile, "doc", "docx"),
+    SimpleByExtensionFileDetector(DocumentFile, "odt"),
+    SimpleByExtensionFileDetector(PdfFile, "pdf"),
+    SimpleByExtensionFileDetector(TextFile, "txt"),
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(WordFile, "doc", "docx"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(DocumentFile, "odt"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(PdfFile, "pdf"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(TextFile, "txt"))
+    SimpleByExtensionFileDetector(EbookFile, "epub", "mobi"),
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(EbookFile, "epub", "mobi"))
+    SimpleByExtensionFileDetector(ExcelFile, "xls", "xlsx"),
+    SimpleByExtensionFileDetector(SpreadsheetFile, "ods"),
+    SimpleByExtensionFileDetector(DelimitedFile, "csv", "tsv"),
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(ExcelFile, "xls", "xlsx"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(SpreadsheetFile, "ods"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(DelimitedFile, "csv", "tsv"))
+    SimpleByExtensionFileDetector(PowerpointFile, "ppt", "pptx"),
+    SimpleByExtensionFileDetector(PresentationFile, "odp"),
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(PowerpointFile, "ppt", "pptx"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(PresentationFile, "odp"))
+    SimpleByExtensionFileDetector(GenericSourceCodeFile,
+                                  "net", "kt", "groovy",
+                                  "html", "htm", "css",
+                                  "xml", "json",
+                                  "yml", "yaml"),
+    SimpleByExtensionFileDetector(ScalaSourceCodeFile, "scala", "sbt"),
+    SimpleByExtensionFileDetector(JavaSourceCodeFile, "java"),
+    SimpleByExtensionFileDetector(CppSourceCodeFile, "cpp", "c++", "cxx", "hpp"),
+    SimpleByExtensionFileDetector(CSourceCodeFile, "c", "h"),
+    SimpleByExtensionFileDetector(PythonSourceCodeFile, "py"),
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(GenericSourceCodeFile,
-                                                         "net",
-                                                         "kt",
-                                                         "groovy",
-                                                         "html", "htm", "css",
-                                                         "xml", "json",
-                                                         "yml", "yaml"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(ScalaSourceCodeFile, "scala", "sbt"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(JavaSourceCodeFile, "java"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(CppSourceCodeFile, "cpp", "c++", "cxx", "hpp"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(CSourceCodeFile, "c", "h"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(PythonSourceCodeFile, "py"))
+    SimpleByExtensionFileDetector(LogFile, "log"),
+    SimpleByExtensionFileDetector(PropertiesFile, "properties"),
+    SimpleByExtensionFileDetector(ShellScript, "sh", "bat"))
 
-  registerFileTypeDetector(SimpleByExtensionFileDetector(LogFile, "log"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(PropertiesFile, "properties"))
-  registerFileTypeDetector(SimpleByExtensionFileDetector(ShellScript, "sh", "bat"))
+  private val maxFileSizeForDetection = 10000000
 
   def registerFileTypeDetector(detector: FileTypeDetector): Unit =
     fileTypeDetectors ::= detector
@@ -132,18 +128,19 @@ class FileTypeManager(archiveManager: ArchiveManager, osResolver: OSResolver,
 
   def readMetadataOf(file: VFile): Map[String, Seq[String]] = {
     val meta = if (file.exists && file.size > 0) {
-      val contentHandler = new BodyContentHandler(Int.MaxValue)
+      val contentHandler = new BodyContentHandler(maxFileSizeForDetection)
       val metadata = new Metadata()
       metadata.set(TikaCoreProperties.ORIGINAL_RESOURCE_NAME, file.name)
       val parser = new AutoDetectParser()
       parser.parse(file.inStream, contentHandler, metadata)
 
       metadata.names()
+              .toSeq
               .map(name => (name, metadata.getValues(name).toSeq))
-    } else Array[(String, Seq[String])]()
+    } else Seq()
 
-    (meta :+ ("name" -> Seq(file.name))
-          :+ ("type" -> Seq("file")))
+    meta.appended("name" -> Seq(file.name))
+        .appended("type" -> Seq("file"))
         .toMap
   }
 

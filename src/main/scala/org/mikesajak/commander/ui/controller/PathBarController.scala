@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller
 
-import impl.org.controlsfx.skin.BreadCrumbBarSkin.BreadCrumbButton
 import javafx.scene.{control => jfxctrl}
 import org.controlsfx.control.BreadCrumbBar
 import org.mikesajak.commander.fs.VDirectory
@@ -41,11 +40,11 @@ class PathBarControllerImpl(curPathPanel: HBox,
     pathBreadCrumbWrapper.children.setAll(pathBreadCrumbBar)
     pathBreadCrumbBar.setCrumbFactory { item =>
       item.value.value match {
-        case null => new BreadCrumbButton(null)
-        case PathCrumbItem(p) => new BreadCrumbButton(p.name) {
+        case null => new BreadCrumbBar.BreadCrumbButton(null)
+        case PathCrumbItem(p) => new BreadCrumbBar.BreadCrumbButton(p.name) {
           setTooltip(new jfxctrl.Tooltip(p.absolutePath))
         }
-        case PrevCrumbItems(prevPaths) => new BreadCrumbButton("...") {
+        case PrevCrumbItems(prevPaths) => new BreadCrumbBar.BreadCrumbButton("...") {
           setTooltip(new jfxctrl.Tooltip(s"${prevPaths.last.absolutePath}"))
         }
       }

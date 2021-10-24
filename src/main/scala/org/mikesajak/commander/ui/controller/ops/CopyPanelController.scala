@@ -71,7 +71,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
     } else {
       sourceNameLabel.text = "[" + resourceMgr.getMessageWithArgs(s"$dialogTypePrefix.num_elements", Array(sourcePaths.size)) + "]"
       sourcePathsListView.visible = true
-      sourcePathsListView.items = ObservableBuffer(sourcePaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
+      sourcePathsListView.items = ObservableBuffer(sourcePaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name) :_*)
     }
 
     summaryMessageLabel.text = resourceMgr.getMessage(s"$dialogTypePrefix.progress_not_available.label")

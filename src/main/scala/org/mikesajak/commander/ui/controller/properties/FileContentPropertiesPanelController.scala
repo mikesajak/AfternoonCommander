@@ -6,6 +6,7 @@ import org.mikesajak.commander.fs.VFile
 import org.mikesajak.commander.task.BackgroundService
 import org.mikesajak.commander.ui.controller.FileRow
 import scalafx.Includes._
+import scalafx.animation.{KeyFrame, Timeline}
 import scalafx.beans.property.StringProperty
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.control.{TableColumn, TableView}
@@ -30,14 +31,30 @@ class FileContentPropertiesPanelControllerImpl(metadataTableView: TableView[Meta
     metadataValueColumn.cellValueFactory = { _.value.value }
     metadataValueColumn.prefWidth <== metadataTableView.width.multiply(0.7)
 
+    val duration = 500.ms
+
+    val timeline = new Timeline {
+      keyFrames = (0 to 3)
+          .map(frameNum => KeyFrame(duration * frameNum, "Parse progress ticker",
+                                    _ => metadataTableView.items = ObservableBuffer(new MetadataRow(s"Parsing file${"." * frameNum}", Seq()))))
+      cycleCount = Timeline.Indefinite
+      delay = duration
+    }
+
     new BackgroundService(new jfxconcur.Task[Map[String, Seq[String]]]() {
-      def call(): Map[String, Seq[String]] = fileTypeManager.metadataOf(path)
+      def call(): Map[String, Seq[String]] = try {
+        timeline.play()
+        fileTypeManager.metadataOf(path)
+      } finally {
+        timeline.stop()
+      }
 
       override def done(): Unit = {
         val tableRows = get().toSeq
                              .map(entry => new MetadataRow(entry))
+        logger.debug(s"File content properties service finished.\nResult=$tableRows")
 
-        metadataTableView.items = ObservableBuffer(tableRows.sortBy(_.name.value.toLowerCase))
+        metadataTableView.items = ObservableBuffer(tableRows.sortBy(_.name.value.toLowerCase): _*)
       }
     })
   }
@@ -45,7 +62,7 @@ class FileContentPropertiesPanelControllerImpl(metadataTableView: TableView[Meta
 
 class MetadataRow(entry: (String, Seq[String])) {
   val name = new StringProperty(entry._1)
-  val value = new StringProperty(entry._2.reduceLeft((acc, elem) => s"$acc, $elem"))
+  val value = new StringProperty(entry._2.reduceLeftOption((acc, elem) => s"$acc, $elem").orNull)
 
   override def toString: String = s"MetadataRow(${entry._1}, ${entry._2})"
 

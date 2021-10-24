@@ -52,7 +52,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
     } else {
       targetNameLabel.text = "[" + resourceMgr.getMessageWithArgs("delete_dialog.num_elements", Array(targetPaths.size)) + "]"
       pathsListView.visible = true
-      pathsListView.items = ObservableBuffer(targetPaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name))
+      pathsListView.items = ObservableBuffer(targetPaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name): _*)
     }
 
     summaryMessageLabel.text = resourceMgr.getMessage("delete_dialog.progress_not_available.label")
