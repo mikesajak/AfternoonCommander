@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller.properties
 import javafx.{concurrent => jfxconcur}
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.VFile
-import org.mikesajak.commander.task.BackgroundService
+import org.mikesajak.commander.task.{BackgroundService, BackgroundServiceRegistry}
 import org.mikesajak.commander.ui.controller.FileRow
 import scalafx.Includes._
 import scalafx.animation.{KeyFrame, Timeline}
@@ -22,7 +22,8 @@ class FileContentPropertiesPanelControllerImpl(metadataTableView: TableView[Meta
                                                metadataNameColumn: TableColumn[MetadataRow, String],
                                                metadataValueColumn: TableColumn[MetadataRow, String],
 
-                                               fileTypeManager: FileTypeManager)
+                                               fileTypeManager: FileTypeManager,
+                                               serviceRegistry: BackgroundServiceRegistry)
     extends FileContentPropertiesPanelController with Logging {
 
   override def init(path: VFile): BackgroundService[Map[String, Seq[String]]] = {
@@ -41,7 +42,7 @@ class FileContentPropertiesPanelControllerImpl(metadataTableView: TableView[Meta
       delay = duration
     }
 
-    new BackgroundService(new jfxconcur.Task[Map[String, Seq[String]]]() {
+    serviceRegistry.registerServiceFor(new jfxconcur.Task[Map[String, Seq[String]]]() {
       def call(): Map[String, Seq[String]] = try {
         timeline.play()
         fileTypeManager.metadataOf(path)

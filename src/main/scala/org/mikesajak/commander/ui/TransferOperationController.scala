@@ -19,9 +19,13 @@ import scala.util.{Failure, Success, Try}
 
 case class OperationUiData(progressDialogType: String, errorDialogType: String, iconName: String)
 
-class TransferOperationController(statusMgr: StatusMgr, appController: ApplicationController,
-                                  resourceMgr: ResourceManager, fsMgr: FilesystemsManager,
-                                  userDecisionCtrl: UserDecisionCtrl, config: Configuration)
+class TransferOperationController(statusMgr: StatusMgr,
+                                  appController: ApplicationController,
+                                  resourceMgr: ResourceManager,
+                                  fsMgr: FilesystemsManager,
+                                  userDecisionCtrl: UserDecisionCtrl,
+                                  config: Configuration,
+                                  serviceRegistry: BackgroundServiceRegistry)
     extends Logging {
   private val copyLayout = "/layout/ops/copy-dialog.fxml"
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
@@ -152,7 +156,7 @@ class TransferOperationController(statusMgr: StatusMgr, appController: Applicati
         resourceMgr.getMessageWithArgs(s"${opUiData(opType).progressDialogType}.status.message.paths", Seq(p.size)))
     }
 
-    val service = new BackgroundService(new RecursiveTransferTask(transferJob, stats, dryRun, config, userDecisionCtrl))
+    val service = serviceRegistry.registerServiceFor(new RecursiveTransferTask(transferJob, stats, dryRun, config, userDecisionCtrl))
 
     ctrl.init(resourceMgr.getMessage(s"${opUiData(opType).progressDialogType}.title"), headerText, statusMessage,
               resourceMgr.getIcon(opUiData(opType).iconName, IconSize.Big), progressDialog, service)

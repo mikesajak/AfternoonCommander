@@ -2,7 +2,7 @@ package org.mikesajak.commander.ui.controller.ops
 
 import javafx.concurrent.Worker.State
 import org.mikesajak.commander.fs.{VDirectory, VPath}
-import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
+import org.mikesajak.commander.task.{BackgroundServiceRegistry, DirStats, DirStatsProcessor, DirWalkerTask}
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.{PathUtils, Throttler}
 import scalafx.Includes._
@@ -37,7 +37,9 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
                               summaryMessageLabel: Label,
                               dryRunCheckbox: CheckBox,
 
-                              resourceMgr: ResourceManager) extends CopyPanelController with Logging {
+                              resourceMgr: ResourceManager,
+                              serviceRegistry: BackgroundServiceRegistry)
+    extends CopyPanelController with Logging {
 
   private var dialogTypePrefix: String = _
 
@@ -80,7 +82,8 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
 
     statsPanelController.init(sourcePaths)
 
-    val statsService = new BackgroundService(new DirWalkerTask(sourcePaths, new DirStatsProcessor()))
+    val statsService = serviceRegistry.registerServiceFor(new DirWalkerTask(sourcePaths, new DirStatsProcessor()))
+
     statsService.state.onChange { (_, _, state) =>
       state match {
         case State.RUNNING => statsPanelController.notifyStarted()

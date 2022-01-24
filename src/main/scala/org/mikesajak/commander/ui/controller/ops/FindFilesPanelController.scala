@@ -44,7 +44,8 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
                                    startSearchButton: Button,
 
                                    resourceMgr: ResourceManager,
-                                   fsMgr: FilesystemsManager)
+                                   fsMgr: FilesystemsManager,
+                                   serviceRegistry: BackgroundServiceRegistry)
     extends FindFilesPanelController with Logging {
 
   private var goToPathButton: Button = _
@@ -128,7 +129,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
 
       val criteria = mkSearchCriteria()
       logger.info(s"Starting search  in: $startDir, criteria=$criteria")
-      searchService = new BackgroundService(new FindFilesTask(criteria, startDir.directory, resourceMgr))
+      searchService = serviceRegistry.registerServiceFor(new FindFilesTask(criteria, startDir.directory, resourceMgr))
       prepareSearchService(searchService)
       searchResultsListView.items.value.clear()
       searchService.start()
@@ -148,7 +149,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
   override def getSelectedResult: Option[VPath] =
     Option(searchResultsListView.selectionModel.value.getSelectedItem)
 
-  def doUpdate(searchProgress: SearchProgress) {
+  private def doUpdate(searchProgress: SearchProgress): Unit = {
     if (searchIsPending) Platform.runLater {
       updateProgress(searchProgress, finished = false, cancelled = false)
     }

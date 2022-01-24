@@ -2,7 +2,7 @@ package org.mikesajak.commander.ui.controller.ops
 
 import javafx.concurrent.Worker.State
 import org.mikesajak.commander.fs.VPath
-import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
+import org.mikesajak.commander.task.{BackgroundServiceRegistry, DirStats, DirStatsProcessor, DirWalkerTask}
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.{PathUtils, Throttler}
 import scalafx.Includes._
@@ -12,6 +12,7 @@ import scalafx.concurrent.Service
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafxml.core.macros.{nested, sfxml}
+import scribe.Logging
 
 trait DeletePanelController {
   def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Service[DirStats]
@@ -27,7 +28,9 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
                                 summaryMessageLabel: Label,
                                 dryRunCheckbox: CheckBox,
 
-                                resourceMgr: ResourceManager) extends DeletePanelController {
+                                resourceMgr: ResourceManager,
+                                serviceRegistry: BackgroundServiceRegistry)
+    extends DeletePanelController with Logging {
 
   override def init(targetPaths: Seq[VPath], stats: DirStats, dialog: Dialog[ButtonType]): Service[DirStats] = {
     val pathType = pathTypeOf(targetPaths)
@@ -61,7 +64,7 @@ class DeletePanelControllerImpl(pathTypeLabel: Label,
 
     statsPanelController.init(targetPaths)
 
-    val statsService = new BackgroundService(new DirWalkerTask(targetPaths, new DirStatsProcessor()))
+    val statsService = serviceRegistry.registerServiceFor(new DirWalkerTask(targetPaths, new DirStatsProcessor()))
 
     val throttler = new Throttler[DirStats](50,
                                             stats => Platform.runLater(statsPanelController.updateStats(stats, None)))

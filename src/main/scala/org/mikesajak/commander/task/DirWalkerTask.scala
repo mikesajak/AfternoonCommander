@@ -7,7 +7,7 @@ import scribe.Logging
 
 trait PathProcessor[A] {
   def title: String
-  def process(files: Seq[VFile], dirs: Seq[VDirectory], level: Int): A
+  def process(name: String, files: Seq[VFile], dirs: Seq[VDirectory], level: Int): A
 
   def Empty: A
   def merge(res1: A, res2: A): A
@@ -22,7 +22,7 @@ class DirWalkerTask[A](paths: Seq[VPath], pathProcessor: PathProcessor[A]) exten
 
     val (dirs, files) = PathUtils.splitDirsAndFiles(paths)
 
-    val result = dirs.foldLeft(pathProcessor.process(files, dirs, 0)) {
+    val result = dirs.foldLeft(pathProcessor.process("top", files, dirs, 0)) {
       (state, dir) => processDir(dir, state, 1)
     }
 
@@ -45,7 +45,8 @@ class DirWalkerTask[A](paths: Seq[VPath], pathProcessor: PathProcessor[A]) exten
     updateMessage(dir.absolutePath)
 
     val curResult = pathProcessor.merge(curState,
-                                        pathProcessor.process(dir.childFiles, dir.childDirs, level))
+                                        pathProcessor.process(dir.absolutePath, dir.childFiles, dir.childDirs, level))
+    updateValue(curResult)
     val totalResult = (dir.childDirs foldLeft curResult) {
       (state, subDir) => processDir(subDir, state, level + 1)
     }

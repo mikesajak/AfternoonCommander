@@ -19,7 +19,7 @@ object DirContents {
 class DirContentsProcessor(fileTypeManager: FileTypeManager) extends PathProcessor[DirContents] {
   override def title: String = "Collect directory contents statistics"
 
-  override def process(files: Seq[VFile], dirs: Seq[VDirectory], level: Int): DirContents = {
+  override def process(name: String, files: Seq[VFile], dirs: Seq[VDirectory], level: Int): DirContents = {
     val statsByType = (files ++ dirs)
         .groupBy(f => fileTypeManager.detectFileType(f))
         .map { case (tp, files) => (tp, files.size) }
@@ -36,18 +36,18 @@ class DirContentsProcessor(fileTypeManager: FileTypeManager) extends PathProcess
   override def merge(contents1: DirContents, contents2: DirContents): DirContents = contents1 + contents2
 }
 
-class DirStatsAndContentsProcessor(fileTypeManager: FileTypeManager) extends PathProcessor[(DirStats, DirContents)] {
+class DirStatsAndContentsProcessor(fileTypeManager: FileTypeManager) extends PathProcessor[(String, DirStats, DirContents)] {
   private val statsProcessor = new DirStatsProcessor
   private val contentsProcessor = new DirContentsProcessor(fileTypeManager)
 
   override def title: String = "Analyzing directory contents and statistics"
 
-  override def process(files: Seq[VFile], dirs: Seq[VDirectory], level: Int): (DirStats, DirContents) = {
-    (statsProcessor.process(files, dirs, level), contentsProcessor.process(files, dirs, level))
+  override def process(name: String, files: Seq[VFile], dirs: Seq[VDirectory], level: Int): (String, DirStats, DirContents) = {
+    (name, statsProcessor.process(name, files, dirs, level), contentsProcessor.process(name, files, dirs, level))
   }
 
-  override def Empty: (DirStats, DirContents) = (DirStats.Empty, DirContents.Empty)
+  override def Empty: (String, DirStats, DirContents) = ("", DirStats.Empty, DirContents.Empty)
 
-  override def merge(res1: (DirStats, DirContents), res2: (DirStats, DirContents)): (DirStats, DirContents) =
-    (statsProcessor.merge(res1._1, res2._1), contentsProcessor.merge(res1._2, res2._2))
+  override def merge(res1: (String, DirStats, DirContents), res2: (String, DirStats, DirContents)): (String, DirStats, DirContents) =
+    (res1._1, statsProcessor.merge(res1._2, res2._2), contentsProcessor.merge(res1._3, res2._3))
 }

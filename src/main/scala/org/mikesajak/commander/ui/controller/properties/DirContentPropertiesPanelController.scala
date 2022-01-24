@@ -15,7 +15,7 @@ import scalafxml.core.macros.sfxml
 import scribe.Logging
 
 trait DirContentPropertiesPanelController {
-  def init(dir: VDirectory, statsService: BackgroundService[(DirStats, DirContents)])
+  def init(dir: VDirectory, statsService: BackgroundService[(String, DirStats, DirContents)]): Unit
 }
 
 class ExtensionTableRow(entry: (String, Int)) {
@@ -45,7 +45,7 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
                                               fileTypeManager: FileTypeManager)
     extends DirContentPropertiesPanelController with Logging {
 
-  override def init(dir: VDirectory, statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
+  override def init(dir: VDirectory, statsService: BackgroundService[(String, DirStats, DirContents)]): Unit = {
     fileTypesPieChart.data = Seq(
       PieChart.Data("Files", 1)
     )
@@ -55,10 +55,10 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
 
     val throttler = new Throttler[DirContents](200, value => Platform.runLater(updateChart(value)))
     Throttler.registerCancelOnServiceFinish(statsService, throttler)
-    statsService.value.onChange { (_, _, state) => throttler.update(state._2) }
+    statsService.value.onChange { (_, _, state) => throttler.update(state._3) }
 
     statsService.state.onChange { (_, _, state) => state match {
-      case State.SUCCEEDED => updateChart(statsService.value.value._2)
+      case State.SUCCEEDED => updateChart(statsService.value.value._3)
       case _ =>
     }}
   }
@@ -74,7 +74,7 @@ class DirContentPropertiesPanelControllerImpl(fileTypesPieChart: PieChart,
         .sortWith(compareByNameAndCount2)
         .map(entry => new ExtensionTableRow(entry))
 
-    extensionTableView.items = ObservableBuffer(tableRows)
+    extensionTableView.items = ObservableBuffer(tableRows: _*)
   }
 
   private def compareByNameAndCount(entry1: (FileType, Int), entry2: (FileType, Int)): Boolean = {

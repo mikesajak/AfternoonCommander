@@ -8,7 +8,7 @@ import org.mikesajak.commander.config.{ConfigKeys, Configuration, TypesafeConfig
 import org.mikesajak.commander.fs.FilesystemsManager
 import org.mikesajak.commander.handler.FileHandlerFactory
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.task.UserDecisionCtrl
+import org.mikesajak.commander.task.{BackgroundServiceRegistry, UserDecisionCtrl}
 import org.mikesajak.commander.ui._
 import org.mikesajak.commander.ui.controller.PanelId.{LeftPanel, RightPanel}
 import org.mikesajak.commander.ui.controller.{DirTabManager, PanelId}
@@ -161,6 +161,10 @@ class ApplicationContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideCachedThreadPoolForRunningExternalApps(): ExecutionContextExecutor =
     ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+
+  @Provides
+  @Singleton
+  def serviceRegistry() = new BackgroundServiceRegistry
 }
 
 class PanelContext(panelId: PanelId) extends PrivateModule with Logging {//with ScalaModule {
@@ -186,9 +190,10 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   def provideCopyOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                                resourceManager: ResourceManager, fsManager: FilesystemsManager,
                                userDecisionCtrl: UserDecisionCtrl,
-                               configuration: Configuration) =
+                               configuration: Configuration,
+                               serviceRegistry: BackgroundServiceRegistry) =
     new TransferOperationController(statusMgr, appController, resourceManager, fsManager,
-                                    userDecisionCtrl, configuration)
+                                    userDecisionCtrl, configuration, serviceRegistry)
 
   @Provides
   @Singleton
@@ -199,8 +204,8 @@ class UIOperationControllersContext extends AbstractModule with ScalaModule {
   @Singleton
   def provideDeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                                  countDirOpCtrl: CountDirStatsOperationCtrl, userDecisionCtrl: UserDecisionCtrl,
-                                 resourceMgr: ResourceManager) =
-    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl,userDecisionCtrl, resourceMgr)
+                                 resourceMgr: ResourceManager, serviceRegistry: BackgroundServiceRegistry) =
+    new DeleteOperationCtrl(statusMgr, appController, countDirOpCtrl,userDecisionCtrl, resourceMgr, serviceRegistry)
 
   @Provides
   @Singleton

@@ -3,7 +3,7 @@ package org.mikesajak.commander.ui.controller.ops
 import javafx.concurrent.Worker.State
 import javafx.scene.{control => jfxctrl}
 import org.mikesajak.commander.fs.VPath
-import org.mikesajak.commander.task.{BackgroundService, DirStats, DirStatsProcessor, DirWalkerTask}
+import org.mikesajak.commander.task.{BackgroundServiceRegistry, DirStats, DirStatsProcessor, DirWalkerTask}
 import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.Throttler
 import scalafx.Includes._
@@ -24,7 +24,8 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
                                     statsPanel: Pane,
                                     @nested[StatsPanelControllerImpl] statsPanelController: StatsPanelController,
 
-                                    resourceMgr: ResourceManager)
+                                    resourceMgr: ResourceManager,
+                                    serviceRegistry: BackgroundServiceRegistry)
     extends CountStatsPanelController {
   private var dialog: Dialog[DirStats] = _
   private var autoClose: Boolean = false
@@ -47,7 +48,7 @@ class CountStatsPanelControllerImpl(headerImageView: ImageView,
     }
     statsPanelController.init(paths)
 
-    val statsService = new BackgroundService(new DirWalkerTask(paths, new DirStatsProcessor()))
+    val statsService = serviceRegistry.registerServiceFor(new DirWalkerTask(paths, new DirStatsProcessor()))
 
     statsService.state.onChange { (_, _, state) =>
       state match {

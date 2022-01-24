@@ -32,7 +32,8 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
 
                                     fileTypeManager: FileTypeManager,
                                     iconResolver: IconResolver,
-                                    resourceMgr: ResourceManager)
+                                    resourceMgr: ResourceManager,
+                                    serviceRegistry: BackgroundServiceRegistry)
     extends PropertiesPanelController with Logging {
 
   private val fileContentsLayout = "/layout/properties/file-content-properties-panel.fxml"
@@ -46,8 +47,8 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
 
     pathLabel.text = path.absolutePath
 
-    val statsService = new BackgroundService(
-      new DirWalkerTask(Seq(path), new DirStatsAndContentsProcessor(fileTypeManager)))
+    val statsService = serviceRegistry.registerServiceFor(new DirWalkerTask(Seq(path),
+                                                                            new DirStatsAndContentsProcessor(fileTypeManager)))
 
     prepareStatsUI(statsService)
 
@@ -72,7 +73,7 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
     services
   }
 
-  private def prepareStatsUI(statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
+  private def prepareStatsUI(statsService: BackgroundService[(String, DirStats, DirContents)]): Unit = {
     statusMessageLabel.text = null
     statusDetailMessageLabel.text = null
 
@@ -81,7 +82,7 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
     statsService.message.onChange { (_, _, msg) => msgThrottler.update(msg) }
   }
 
-  private def prepareContentTab(path: VPath, statsService: BackgroundService[(DirStats, DirContents)]): Option[BackgroundService[_]] = {
+  private def prepareContentTab(path: VPath, statsService: BackgroundService[(String, DirStats, DirContents)]): Option[BackgroundService[_]] = {
     val (title, contentPane, tabService) = path match {
       case f: VFile =>
         val (pane, ctrl) = UILoader.loadScene[FileContentPropertiesPanelController](fileContentsLayout)

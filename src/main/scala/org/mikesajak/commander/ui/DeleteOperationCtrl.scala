@@ -15,7 +15,10 @@ import scala.util.{Failure, Success, Try}
 
 class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationController,
                           countStatsOpCtrl: CountDirStatsOperationCtrl,
-                          userDecisionCtrl: UserDecisionCtrl, resourceMgr: ResourceManager) extends Logging {
+                          userDecisionCtrl: UserDecisionCtrl,
+                          resourceMgr: ResourceManager,
+                          serviceRegistry: BackgroundServiceRegistry)
+    extends Logging {
   private val deleteLayout = "/layout/ops/delete-dialog.fxml"
   private val progressLayout = "/layout/ops/progress-dialog.fxml"
 
@@ -77,7 +80,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
     val jobs = paths.map(p => DeleteJobDef(p))
 
-    val deleteService = new BackgroundService(new RecursiveDeleteTask(jobs, stats, dryRun, userDecisionCtrl, resourceMgr))
+    val deleteService = serviceRegistry.registerServiceFor(new RecursiveDeleteTask(jobs, stats, dryRun, userDecisionCtrl, resourceMgr))
 
     ctrl.init(resourceMgr.getMessage("delete_progress_dialog.title"),
               headerText, statusMessage,

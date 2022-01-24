@@ -15,7 +15,7 @@ import scalafxml.core.macros.sfxml
 import scribe.Logging
 
 trait GeneralPropertiesPanelController {
-  def init(path: VPath, statsService: BackgroundService[(DirStats, DirContents)])
+  def init(path: VPath, statsService: BackgroundService[(String, DirStats, DirContents)])
 }
 
 @sfxml
@@ -36,7 +36,7 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
 
   logger.debug("GeneralPropertiesPanelController constructor...")
 
-  override def init(path: VPath, statsService: BackgroundService[(DirStats, DirContents)]): Unit = {
+  override def init(path: VPath, statsService: BackgroundService[(String, DirStats, DirContents)]): Unit = {
     pathLabel.text = FilenameUtils.getFullPath(path.absolutePath)
     nameLabel.text = FilenameUtils.getName(path.absolutePath)
     val fileType = fileTypeManager.detectFileType(path)
@@ -56,13 +56,13 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
 
     val throttler = new Throttler[DirStats](50, stats => Platform.runLater(updateStats(stats)))
     Throttler.registerCancelOnServiceFinish(statsService, throttler)
-    statsService.value.onChange { (_, _, stats) => throttler.update(stats._1) }
+    statsService.value.onChange { (_, _, stats) => throttler.update(stats._2) }
 
     statsService.state.onChange { (_, _, state) =>
       state match {
         case State.RUNNING =>   notifyStarted()
-        case State.FAILED =>    notifyError(Option(statsService.value.value._1), statsService.message.value)
-        case State.SUCCEEDED => notifyFinished(statsService.value.value._1, None)
+        case State.FAILED =>    notifyError(Option(statsService.value.value._2), statsService.message.value)
+        case State.SUCCEEDED => notifyFinished(statsService.value.value._2, None)
         case _ =>
       }
     }

@@ -13,7 +13,7 @@ case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
 }
 
 object DirStats {
-  val Empty = DirStats(0,0,0,0)
+  val Empty: DirStats = DirStats(0, 0, 0, 0)
 
   def ofDir(dir: VDirectory, level: Int = 0): DirStats = {
     val subDirs = dir.childDirs
@@ -25,7 +25,7 @@ object DirStats {
   }
 
   def ofDirs(dirs: Seq[VDirectory], level: Int = 0): DirStats =
-    dirs.map(DirStats.ofDir(_)).foldLeft(Empty)((acc, dir) => acc + dir)
+    dirs.map(d => DirStats.ofDir(d, level)).foldLeft(Empty)((acc, dir) => acc + dir)
 
   def ofFile(file: VFile, level: Int= 0): DirStats =
     DirStats(1, 0, file.size, level)
