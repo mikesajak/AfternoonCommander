@@ -2,6 +2,7 @@ package org.mikesajak.commander.task
 
 import org.mikesajak.commander.fs.{VDirectory, VFile}
 import org.mikesajak.commander.units.DataUnit
+import scribe.Logging
 
 case class DirStats(numFiles: Int, numDirs: Int, size: Long, depth: Int) {
   def +(other: DirStats): DirStats =
@@ -33,11 +34,13 @@ object DirStats {
     DirStats(files.size, 0, files.map(_.size).sum, level)
 }
 
-class DirStatsProcessor extends PathProcessor[DirStats] {
+class DirStatsProcessor extends PathProcessor[DirStats] with Logging {
   override val title = "Count directory statistics"
 
-  override def process(files: Seq[VFile], dirs: Seq[VDirectory], level: Int): DirStats =
-    DirStats.ofFiles(files, level) + DirStats.ofDirs(dirs, level)
+  override def process(name: String, files: Seq[VFile], dirs: Seq[VDirectory], level: Int): DirStats = {
+    DirStats.ofFiles(files, level) +
+        DirStats(0, dirs.length, 0, level) // don't go deeper, the DirWalker will go through dir tree
+  }
 
   override def Empty: DirStats = DirStats.Empty
 

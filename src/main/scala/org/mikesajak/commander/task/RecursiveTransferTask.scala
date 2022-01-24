@@ -69,10 +69,10 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
 
     val resultDir = copyDir(source, targetDir)
 
-    val dirSummary = source.childDirs.foldLeft(summary)((result, childDir) =>
-                                                          transferDir(childDir, resultDir, result, opType))
-    val totalSummary = source.childFiles.foldLeft(dirSummary)((result, childFile) =>
-                                                                transferFile(childFile, resultDir, result, opType))
+    val dirSummary = source.childDirs.foldLeft(summary)((accSummary, childDir) =>
+                                                          transferDir(childDir, resultDir, accSummary, opType))
+    val totalSummary = source.childFiles.foldLeft(dirSummary)((accSummary, childFile) =>
+                                                                transferFile(childFile, resultDir, accSummary, opType))
 
     val resultSummary = totalSummary + IOTaskSummary.success(source)
     reportProgress(resultSummary, source)
@@ -97,7 +97,7 @@ class RecursiveTransferTask(transferJob: TransferJob, jobStats: Option[DirStats]
         case Copy => copyFile(source, target, summary)
         case Move => moveFile(source, target, summary)
       }
-      summary + IOTaskSummary.success(target)
+      summary + IOTaskSummary.success(source)
     }
 
     reportProgress(resultSummary, target)
