@@ -88,8 +88,8 @@ class ApplicationContext extends AbstractModule with ScalaModule {
 
   @Provides
   @Singleton
-  def provideFilesystemsManager(osResolver: OSResolver): FilesystemsManager = {
-    val fsMgr = new FilesystemsManager(osResolver)
+  def provideFilesystemsManager(osResolver: OSResolver, config: Configuration): FilesystemsManager = {
+    val fsMgr = new FilesystemsManager(osResolver, config)
     fsMgr.init()
     fsMgr
   }

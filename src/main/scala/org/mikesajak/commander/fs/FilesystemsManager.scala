@@ -1,22 +1,24 @@
 package org.mikesajak.commander.fs
 
-import java.io.File
-import java.nio.file.{FileStore, FileSystems}
-
-import javax.swing.filechooser.FileSystemView
 import net.samuelcampos.usbdrivedetector.USBDeviceDetectorManager
 import org.mikesajak.commander.OSResolver
 import org.mikesajak.commander.OSType.Windows
+import org.mikesajak.commander.config.Configuration
 import org.mikesajak.commander.fs.local.LocalFS
 import org.mikesajak.commander.util.PathUtils.{depthToRoot, findParent}
 import org.mikesajak.commander.util.Utils
+import scribe.Logging
 
-import scala.collection.JavaConverters._
+import java.io.File
+import java.nio.file.{FileStore, FileSystems}
+import javax.swing.filechooser.FileSystemView
+import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 /**
 *  Created by mike on 25.10.14.
 */
-class FilesystemsManager(osResolver: OSResolver) {
+class FilesystemsManager(osResolver: OSResolver, config: Configuration) extends Logging {
   private lazy val driveDetector = new USBDeviceDetectorManager()
 
   private var filesystems = Seq[FS]()
@@ -35,7 +37,7 @@ class FilesystemsManager(osResolver: OSResolver) {
   def discoverFilesystems(): Seq[FS] = {
     val fss =
       FileSystems.getDefault.getFileStores.asScala
-        .filter(fs => !internalFilesystems.exists(r => r.findFirstMatchIn(fs.`type`()).isDefined))
+        .filter(fs => !isInternalFs(fs.`type`()))
         .flatMap(fs0 => parseFileStore(fs0))
         .toMap
 
@@ -43,14 +45,14 @@ class FilesystemsManager(osResolver: OSResolver) {
     val usbFilesystems = discoverUsbDrives()
 
     val filesystems =
-      Utils.merge(usbFilesystems, fss, fallbackFss) { (rootDir, attribs1, attribs2) =>
-        Utils.merge(attribs1, attribs1) { (k, v1, v2) => v1 }
+      Utils.merge(usbFilesystems, fss, fallbackFss) { (_, attribs1, attribs2) =>
+        Utils.merge(attribs1, attribs2) { (_, v1, _) => v1 }
       }
 
     val fsView = FileSystemView.getFileSystemView
     val fss2 = filesystems
-        .filter { case (rootDir, attribs) => attribs.get("type").forall(isInternalFs) }
-        .filter { case (rootDir, attribs) => new File(rootDir).exists }
+        .filter { case (_, attribs) => attribs.get("type").forall(fs => !isInternalFs(fs)) }
+        .filter { case (rootDir, _) => new File(rootDir).exists }
         .map { case (rootDir, attribs) =>
           val rootDirFile = new File(rootDir)
           val attribs2 = List(Option(fsView.getSystemDisplayName(rootDirFile)).map(l => "label" -> l),
@@ -58,7 +60,7 @@ class FilesystemsManager(osResolver: OSResolver) {
                             .flatten
                             .toMap
 
-          val attribs3 = Utils.merge(attribs, attribs2) { case (k, v1, v2) => v1 }
+          val attribs3 = Utils.merge(attribs, attribs2) { case (_, v1, _) => v1 }
           new LocalFS(rootDirFile, attribs3)
         }
       .toSeq
@@ -66,13 +68,26 @@ class FilesystemsManager(osResolver: OSResolver) {
     fss2
   }
 
-  // TODO: find better/proper way to filter out unwanted filesystems (TODO2: what about windows??)
-  private val internalFilesystems = List("cgroup.*", "systemd.*",
-    "udev", "devpts", "proc", "(tmp|sys|security|config|debug|hugetlb|squash|auto|ns|gv)fs",
-    "pstore", "mqueue", "fusectl").map(_.r)
+  private val internalFilesystems = prepareInternalFilesystems()
 
-  private def isInternalFs(fsType: String): Boolean =
-    !internalFilesystems.exists(r => r.findFirstMatchIn(fsType).isDefined)
+  private final def prepareInternalFilesystems() = {
+    // TODO: find better/proper way to filter out unwanted filesystems (TODO2: what about windows??)
+
+    def compilePattern(pattern: String) = {
+      val compiledOpt = Try { pattern.r }
+      if (compiledOpt.isFailure) logger.info(s"Ignoring invalid internal filesystem pattern: $pattern")
+      compiledOpt
+    }
+
+    config.stringSeqProperty("internal.internalFilesystems").value
+          .getOrElse(List())
+          .flatMap(pattern => compilePattern(pattern).toOption)
+  }
+
+  private def isInternalFs(fsType: String): Boolean = {
+    val internal = internalFilesystems.exists(r => r.findFirstMatchIn(fsType).isDefined)
+    internal
+  }
 
   private def parseFileStore(fileStore: FileStore) =
     if (osResolver.getOSType == Windows) parseWindowsFileStore(fileStore)
@@ -80,7 +95,7 @@ class FilesystemsManager(osResolver: OSResolver) {
 
   private def parseWindowsFileStore(fileStore: FileStore): Option[(String, Map[String, String])] = {
     fileStore.toString match {
-      case FileStorePattern(name, drive) =>
+      case FileStorePattern(_, drive) =>
         val rootDir = sanitizeDir(drive)
         val attributes = Map("type" -> fileStore.`type`(),
                              "drive" -> drive)
@@ -133,7 +148,7 @@ class FilesystemsManager(osResolver: OSResolver) {
   }
 
   def resolvePath(path: String, onlyExisting: Boolean = false, forceDir: Boolean = false): Option[VPath] =
-    filesystems.toIterator
+    filesystems.view
                .map(fs => fs.resolvePath(path, forceDir)
                             .filter(path => !onlyExisting || path.exists))
                .collectFirst { case Some(x) => x }
@@ -150,6 +165,6 @@ class FilesystemsManager(osResolver: OSResolver) {
     matchingFss.maxBy(f => depthToRoot(f.rootDirectory))
   }
 
-  def homeDir: VDirectory = resolvePath(homePath, onlyExisting = false).get.directory
+  def homeDir: VDirectory = resolvePath(homePath).get.directory
 
 }
