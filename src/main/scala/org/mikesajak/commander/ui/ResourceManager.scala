@@ -1,5 +1,6 @@
 package org.mikesajak.commander.ui
 
+import com.google.common.cache.{CacheBuilder, CacheLoader}
 import com.ibm.icu.text.MessageFormat
 import scalafx.scene.image.Image
 import scribe.Logging
@@ -23,18 +24,18 @@ object IconSize {
   */
 class ResourceManager extends Logging {
 
-  private case class CacheKey(path: String, size: Option[(Double, Double)])
-  private object CacheKey {
-    def apply(path: String): CacheKey = new CacheKey(path, None)
-  }
-  private var cache: Map[CacheKey, Image] = Map()
+  private case class ImageKey(path: String, size: Option[(Double, Double)] = None)
+  private val imageCache = CacheBuilder.newBuilder().build[ImageKey, Image](new CacheLoader[ImageKey, Image] {
+    override def load(key: ImageKey): Image = mkImage(key.path, key.size)
+  })
 
-  private def getImage(key: CacheKey) = {
-    if (!cache.contains(key)) {
-      val image = mkImage(key.path, key.size)
-      cache += key -> image
-    }
-    cache(key)
+  private case class MessageKey(key: String, locale: Locale, file: String)
+  private val messageCache = CacheBuilder.newBuilder().build[MessageKey, String](new CacheLoader[MessageKey, String] {
+    override def load(key: MessageKey): String = getMessageImpl(key.key, key.locale, key.file)
+  })
+
+  private def getImage(key: ImageKey) = {
+    imageCache.get(key)
   }
 
   private def mkImage(path: String, size: Option[(Double, Double)]) =
@@ -52,7 +53,7 @@ class ResourceManager extends Logging {
   def getIcon(name: String): Image = {
     val imagePath = s"/images/$name"
     try {
-      getImage(CacheKey(imagePath))
+      getImage(ImageKey(imagePath))
     } catch {
       case e: Exception =>
         logger.warn(s"Exception thrown during getting icon $imagePath", e)
@@ -63,7 +64,7 @@ class ResourceManager extends Logging {
   def getIcon(name: String, width: Double, height: Double): Image = {
     val imagePath = s"/images/$name"
     try {
-      getImage(CacheKey(imagePath, Some((width, height))))
+      getImage(ImageKey(imagePath, Some((width, height))))
     } catch {
       case e: Exception =>
         logger.warn(s"Exception thrown during getting icon $imagePath, width=$width, height=$height", e)
@@ -72,6 +73,9 @@ class ResourceManager extends Logging {
   }
 
   def getMessage(key: String, locale: Locale = Locale.getDefault())(implicit resourceFile: String = "ui"): String =
+    messageCache.get(MessageKey(key, locale, resourceFile))
+
+  private def getMessageImpl(key: String, locale: Locale, resourceFile: String) =
     ResourceBundle.getBundle(resourceFile, locale).getString(key)
 
   def getMessageOpt(key: String, locale: Locale = Locale.getDefault())(implicit resourceFile: String = "ui"): Option[String] =
