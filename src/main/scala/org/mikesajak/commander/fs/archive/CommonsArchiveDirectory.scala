@@ -1,11 +1,11 @@
 package org.mikesajak.commander.fs.archive
 
-import java.time.Instant
-
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.mikesajak.commander.archive.ArchiveType
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.util.PathUtils
+
+import java.time.Instant
 
 trait CommonsArchiveDirectory extends VDirectory {
   val archiveFile: VFile
@@ -52,6 +52,8 @@ class CommonsArchiveRootDir(override val archiveFile: VFile, archiveType: Archiv
   override val parent: Option[VDirectory] = Some(archiveFile.directory)
   override val absolutePath: String = s"${archiveFile.absolutePath}/${archiveType.extension}/"
   override val modificationDate: Instant = archiveFile.modificationDate
+  override val creationDate: Instant = archiveFile.creationDate
+  override val accessDate: Instant = archiveFile.accessDate
   override val attributes: Attribs = archiveFile.attributes
   override lazy val fileSystem: FS = new CommonsArchiveFS(this)
   override val size: Long = 0
@@ -77,6 +79,8 @@ class CommonsArchiveSubDir(override val archiveFile: VFile,
   override val parent: Option[VDirectory] = Some(parentDir)
   override def absolutePath: String = s"${parentDir.absolutePath}/$name"
   override def modificationDate: Instant = parent.get.modificationDate
+  override def creationDate: Instant = parent.get.creationDate
+  override def accessDate: Instant = parent.get.accessDate
   override val attributes: Attribs = new Attribs(Attrib.Directory, Attrib.Readable)
   override val size: Long = 0
 

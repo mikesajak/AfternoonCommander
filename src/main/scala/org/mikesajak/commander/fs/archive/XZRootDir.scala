@@ -1,14 +1,16 @@
 package org.mikesajak.commander.fs.archive
 
-import java.time.Instant
-
 import org.mikesajak.commander.fs._
+
+import java.time.Instant
 
 class XZRootDir(file: VFile) extends VDirectory {
   override val name: String = file.name
   override val parent: Option[VDirectory] = Some(file.directory)
   override val absolutePath: String = s"${file.absolutePath}/xz:/"
   override val modificationDate: Instant = file.modificationDate
+  override val creationDate: Instant = file.creationDate
+  override val accessDate: Instant = file.accessDate
   override val attributes: Attribs = file.attributes
   override val size = 1
   override val exists = true

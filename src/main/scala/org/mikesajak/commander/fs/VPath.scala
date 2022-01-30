@@ -1,10 +1,9 @@
 package org.mikesajak.commander.fs
 
-import java.io.{InputStream, OutputStream}
-import java.time.Instant
-
 import enumeratum._
 
+import java.io.{InputStream, OutputStream}
+import java.time.Instant
 import scala.collection.immutable
 import scala.language.implicitConversions
 import scala.util.Try
@@ -54,6 +53,8 @@ trait VPath {
   def directory: VDirectory
   def absolutePath: String
   def modificationDate: Instant
+  def creationDate: Instant
+  def accessDate: Instant
   def attributes: Attribs
   def isDirectory: Boolean
   def isFile: Boolean = !isDirectory

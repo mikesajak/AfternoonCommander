@@ -14,8 +14,11 @@ import scalafx.scene.control.Label
 import scalafxml.core.macros.sfxml
 import scribe.Logging
 
+import java.time.ZoneId
+import java.time.format.{DateTimeFormatter, FormatStyle}
+
 trait GeneralPropertiesPanelController {
-  def init(path: VPath, statsService: BackgroundService[(String, DirStats, DirContents)])
+  def init(path: VPath, statsService: BackgroundService[(String, DirStats, DirContents)]): Unit
 }
 
 @sfxml
@@ -23,6 +26,8 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
                                            nameLabel: Label,
                                            typeLabel: Label,
                                            modifiedLabel: Label,
+                                           createdLabel: Label,
+                                           lastAccessedLabel: Label,
                                            attributesLabel: Label,
                                            sizeLabel: Label,
                                            numDirsLabel: Label,
@@ -34,7 +39,8 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
                                            resourceMgr: ResourceManager)
     extends GeneralPropertiesPanelController with Logging {
 
-  logger.debug("GeneralPropertiesPanelController constructor...")
+  private val timeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.LONG)
+                                               .withZone(ZoneId.systemDefault())
 
   override def init(path: VPath, statsService: BackgroundService[(String, DirStats, DirContents)]): Unit = {
     pathLabel.text = FilenameUtils.getFullPath(path.absolutePath)
@@ -44,7 +50,10 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
     val mimeType = fileTypeManager.mimeTypeOf(path)
     typeLabel.text = s"$fileTypeName ($mimeType)"
 
-    modifiedLabel.text = path.modificationDate.toString
+    modifiedLabel.text = timeFormatter.format(path.modificationDate)
+    createdLabel.text = timeFormatter.format(path.creationDate)
+    lastAccessedLabel.text = timeFormatter.format(path.accessDate)
+
     attributesLabel.text = path.attributes.toString
 
     if (path.isFile) {
@@ -62,7 +71,7 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
       state match {
         case State.RUNNING =>   notifyStarted()
         case State.FAILED =>    notifyError(Option(statsService.value.value._2), statsService.message.value)
-        case State.SUCCEEDED => notifyFinished(statsService.value.value._2, None)
+        case State.SUCCEEDED => notifyFinished(statsService.value.value._2)
         case _ =>
       }
     }
@@ -82,11 +91,12 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
   def notifyStarted(): Unit = {
   }
 
-  def notifyFinished(stats: DirStats, message: Option[String] = None): Unit = {
+  def notifyFinished(stats: DirStats): Unit = {
     updateStats(stats)
   }
 
   def notifyError(stats: Option[DirStats], message: String): Unit = {
+    logger.warn(s"Stats collecting service reported an error: $message. Stats: $stats")
     stats.foreach(s => updateStats(s))
   }
 }

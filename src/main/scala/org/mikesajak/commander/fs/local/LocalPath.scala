@@ -1,11 +1,12 @@
 package org.mikesajak.commander.fs.local
 
-import java.io.File
-import java.nio.file.Files
-import java.time.Instant
-
 import org.mikesajak.commander.fs.Attrib._
 import org.mikesajak.commander.fs.{Attrib, Attribs, VDirectory, VPath}
+
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
+import java.time.Instant
 
 trait LocalPath extends VPath {
 
@@ -35,7 +36,20 @@ trait LocalPath extends VPath {
     b.build()
   }
 
-  override def modificationDate: Instant = Instant.ofEpochMilli(file.lastModified())
+  override def modificationDate: Instant = {
+    val attr = Files.readAttributes(file.toPath, classOf[BasicFileAttributes])
+    attr.lastModifiedTime().toInstant
+  }
+
+  override def creationDate: Instant = {
+    val attr = Files.readAttributes(file.toPath, classOf[BasicFileAttributes])
+    attr.creationTime().toInstant
+  }
+
+  override def accessDate: Instant = {
+    val attr = Files.readAttributes(file.toPath, classOf[BasicFileAttributes])
+    attr.lastAccessTime().toInstant
+  }
 
   override def parent: Option[VDirectory] = {
     if (file.getParent != null) Some(new LocalDirectory(file.getParentFile, fileSystem))

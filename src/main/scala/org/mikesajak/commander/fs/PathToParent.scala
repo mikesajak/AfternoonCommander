@@ -22,6 +22,10 @@ class PathToParent(val currentDir: VDirectory) extends VDirectory {
 
   override def modificationDate: Instant = currentDir.parent.get.modificationDate
 
+  override def creationDate: Instant = currentDir.parent.get.creationDate
+
+  override def accessDate: Instant = currentDir.parent.get.accessDate
+
   override def size: Long = currentDir.parent.get.size
 
   override def children: Seq[VPath] = currentDir.parent.get.children

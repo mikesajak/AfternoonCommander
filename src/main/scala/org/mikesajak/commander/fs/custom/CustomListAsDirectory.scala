@@ -1,8 +1,8 @@
 package org.mikesajak.commander.fs.custom
 
-import java.time.Instant
-
 import org.mikesajak.commander.fs._
+
+import java.time.Instant
 
 class CustomListAsDirectory(override val name: String, parentDir: VDirectory,
                             pathList: Seq[VPath]) extends VDirectory {
@@ -10,6 +10,8 @@ class CustomListAsDirectory(override val name: String, parentDir: VDirectory,
   override val directory: VDirectory = this
   override def absolutePath: String = parentDir.absolutePath
   override def modificationDate: Instant = Instant.now()
+  override def creationDate: Instant = Instant.now()
+  override def accessDate: Instant = Instant.now()
   override val attributes: Attribs = new Attribs()
   override val isDirectory: Boolean = true
   override def fileSystem: FS = parentDir.fileSystem

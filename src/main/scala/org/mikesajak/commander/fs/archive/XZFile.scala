@@ -1,11 +1,11 @@
 package org.mikesajak.commander.fs.archive
 
-import java.io.{BufferedInputStream, InputStream}
-import java.time.Instant
-
 import org.apache.commons.compress.compressors.xz.XZUtils
 import org.mikesajak.commander.fs._
 import org.tukaani.xz.XZInputStream
+
+import java.io.{BufferedInputStream, InputStream}
+import java.time.Instant
 
 class XZFile(file: VFile, parentDir: XZRootDir) extends VFile {
 
@@ -18,6 +18,10 @@ class XZFile(file: VFile, parentDir: XZRootDir) extends VFile {
   override def absolutePath: String = s"${parentDir.absolutePath}/$name"
 
   override def modificationDate: Instant = file.modificationDate
+
+  override def creationDate: Instant = file.creationDate
+
+  override def accessDate: Instant = file.accessDate
 
   override def attributes: Attribs = file.attributes
 
