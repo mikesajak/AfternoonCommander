@@ -1,7 +1,7 @@
 package org.mikesajak.commander.handler
 
 import org.mikesajak.commander.ApplicationController
-import org.mikesajak.commander.fs.local.LocalFile
+import org.mikesajak.commander.fs.local.LocalPath
 import org.mikesajak.commander.fs.{VDirectory, VFile, VPath}
 import scribe.Logging
 
@@ -16,15 +16,10 @@ class DefaultOSActionFileHandler(override val path: VPath, appCtrl: ApplicationC
 
   override def handle(): Unit = try {
     if (Desktop.isDesktopSupported) path match {
-      case file: LocalFile => Future {
-        try {
-          logger.debug(s"Executing default (defined in desktop) action for file $file")
-          Desktop.getDesktop.open(file.file)
-          logger.debug(s"Finished Executing default (defined in desktop) action for file $file")
-        } catch {
-          case e: Exception => logger.warn(s"An error occurred while executing (desktop) action for file $file")
+      case file: LocalPath =>
+        Future {
+          executeOSAction(file)
         }
-      }
 
       case file: VFile => logger.info(s"The file $file is not a local file, skipping desktop action.")
 
@@ -38,5 +33,15 @@ class DefaultOSActionFileHandler(override val path: VPath, appCtrl: ApplicationC
       logger.info(
         s"""Error while opening file $path by default OS/Desktop environment application.
            |Most probably there's no association defined for this file.""".stripMargin, e)
+  }
+
+  private def executeOSAction(file: LocalPath): Unit = {
+    try {
+      logger.debug(s"Executing default (defined in desktop) action for file $file")
+      Desktop.getDesktop.open(file.file)
+      logger.debug(s"Finished Executing default (defined in desktop) action for file $file")
+    } catch {
+      case e: Exception => logger.warn(s"An error occurred while executing (desktop) action for file $file. $e")
+    }
   }
 }
