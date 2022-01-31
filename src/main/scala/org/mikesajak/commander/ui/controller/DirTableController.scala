@@ -8,8 +8,10 @@ import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotif
 import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
+import org.mikesajak.commander.util.Utils.runWithTimer
 import org.mikesajak.commander.{ApplicationController, EventBus, FileTypeManager}
 import scalafx.Includes._
+import scalafx.application.Platform
 import scalafx.beans.property.{ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.transformation.{FilteredBuffer, SortedBuffer}
@@ -18,7 +20,7 @@ import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton, MouseEvent}
 import scalafx.stage.Popup
 import scalafxml.core.macros.{nested, sfxml}
-import scribe.Logging
+import scribe.{Logger, Logging}
 
 import java.util.function.Predicate
 import scala.jdk.CollectionConverters._
@@ -30,11 +32,11 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
 
   private val (pname, pext) = PathUtils.splitNameByExt(path.name)
 
-  val name = new StringProperty(mkName(path))
-  val extension = new StringProperty(mkExt(path))
-  val size = new StringProperty(formatSize(path))
-  val modifyDate = new StringProperty(path.modificationDate.toString)
-  val attributes = new StringProperty(path.attributes.toString)
+  lazy val name = new StringProperty(mkName(path))
+  lazy val extension = new StringProperty(mkExt(path))
+  lazy val size = new StringProperty(formatSize(path))
+  lazy val modifyDate = new StringProperty(path.modificationDate.toString)
+  lazy val attributes = new StringProperty(path.attributes.toString)
 
   private def mkName(p: VPath): String = if (p.isDirectory) s"[${p.name}]" else pname
   private def mkExt(p: VPath): String = if (p.isDirectory) "" else pext
@@ -103,6 +105,8 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     extends DirTableController with Logging {
 
   import org.mikesajak.commander.ui.UIParams._
+
+  private implicit val log: Logger = logger
 
   private var curDir: VDirectory = _
 
@@ -257,19 +261,18 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   override def currentDirectory: VDirectory = curDir
 
   override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit = {
-    val prevDir = curDir
-    val newDir = resolveTargetDir(directory)
-    curDir = newDir
+    runWithTimer(s"setCurrentDirectory: directory=$directory, focusedPath=$focusedPath") { () =>
+      val prevDir = curDir
+      val newDir = resolveTargetDir(directory)
+      curDir = newDir
 
-    curPathBarController.setDirectory(newDir)
+      Platform.runLater { panelStatusBarController.setDirectory(newDir) }
+      Platform.runLater { curPathBarController.setDirectory(newDir) }
+      initTable(newDir)
+      setTableFocusOn(focusedPath)
 
-    initTable(newDir)
-
-    setTableFocusOn(focusedPath)
-
-    panelStatusBarController.setDirectory(newDir)
-
-    eventBus.publish(CurrentDirChangeNotification(panelId, Option(prevDir), newDir))
+      eventBus.publish(CurrentDirChangeNotification(panelId, Option(prevDir), newDir))
+    }
   }
 
   private def resolveTargetDir(directory: VDirectory): VDirectory = {
@@ -283,8 +286,8 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     setCurrentDirectory(curDir, Some(focusedPath))
   }
 
-  override def setTableFocusOn(pathOption: Option[VPath]): Unit = {
-    val selIndex = pathOption.map { path =>
+  override def setTableFocusOn(pathOption: Option[VPath]): Unit = runWithTimer(s"setTableFocusOn($pathOption"){ () =>
+    val selIndex: Int = pathOption.map { path =>
       math.max(0, dirTableView.items.value.indexWhere(row => row.path.name == path.name))
     }.getOrElse(0)
 
@@ -303,7 +306,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   }
 
   private def handleKeyEvent(event: KeyEvent): Unit = {
-    logger.debug(s"handleKeyEvent: $event")
+    logger.trace(s"handleKeyEvent: $event")
     event.code match {
       case KeyCode.Enter =>
         val items = dirTableView.selectionModel.value.selectedItems
@@ -413,13 +416,15 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     val files = directory.childFiles.sortBy(f => f.name)
 
     val fileRows = (dirs ++ files).view
-      .map(f => new FileRow(f, resourceMgr))
-      .toList
+                                  .map(f => new FileRow(f, resourceMgr))
+                                  .toList
 
-    tableRows.setAll(fileRows.asJava)
+    runWithTimer("tableRows.set rows") { () =>
+      tableRows.setAll(fileRows.asJava)
+    }
   }
 
-  private def selectIndex(index: Int): Unit = {
+  private def selectIndex(index: Int): Unit = runWithTimer(s"selectIndex($index)") { () =>
     val prevSelection = dirTableView.getSelectionModel.getSelectedIndex
     if (prevSelection != index) {
       dirTableView.getSelectionModel.select(math.max(index, 0), nameColumn) // column is needed in selection to prevent bug in javafx implementation (NPE for null column)
@@ -438,7 +443,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     }
   }
 
-  private def scrollTo(index: Int): Unit = {
+  private def scrollTo(index: Int): Unit = runWithTimer(s"scrollTo($index)") { () =>
     dirTableView.scrollTo(math.max(index - NumPrevVisibleItems, 0))
   }
 }
