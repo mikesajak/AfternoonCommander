@@ -4,7 +4,7 @@ name := "AfternoonCommander"
 
 version := "1.0"
 
-scalaVersion := "2.13.4"
+scalaVersion := "2.13.7"
 
 scalacOptions += "-Ymacro-annotations"
 
