@@ -1,14 +1,14 @@
 package org.mikesajak.commander.util
 
+import org.mikesajak.commander.util.Utils.using
+
 import java.io.{InputStream, OutputStream}
 import java.nio.ByteBuffer
 import java.nio.channels.{Channels, ReadableByteChannel, WritableByteChannel}
 
-import org.mikesajak.commander.util.Utils.using
-
 object IO {
   trait CopyListener {
-    def notifyBytesWritten(size: Long)
+    def notifyBytesWritten(size: Long): Unit
   }
 
   def bufferedCopy(inStream: InputStream, outStream: OutputStream, bufferSize: Int, copyListener: IO.CopyListener): Unit =

@@ -17,7 +17,7 @@ class VirtualDirectoryHandler(dir: VDirectory) extends ContainerFileHandler(dir)
 }
 
 abstract class ActionFileHandler(val path: VPath) extends FileHandler {
-  def handle()
+  def handle(): Unit
 }
 
 

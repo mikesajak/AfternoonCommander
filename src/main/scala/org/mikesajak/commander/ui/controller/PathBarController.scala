@@ -12,12 +12,12 @@ import scalafxml.core.macros.sfxml
 import scala.annotation.tailrec
 
 trait PathBarController {
-  def init(listener: CurrentDirAware)
-  def setDirectory(directory: VDirectory)
+  def init(listener: CurrentDirAware): Unit
+  def setDirectory(directory: VDirectory): Unit
 }
 
 trait CurrentDirAware {
-  def setDirectory(directory: VDirectory)
+  def setDirectory(directory: VDirectory): Unit
 }
 
 @sfxml

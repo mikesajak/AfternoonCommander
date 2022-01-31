@@ -36,13 +36,13 @@ abstract class Configuration(eventBus: EventBus) { config =>
   protected def setStringProperty(key: String, value: String): Unit
 
   protected def getStringSeqProperty(key: String): Option[Seq[String]]
-  protected def setStringSeqProperty(key: String, value: Seq[String])
+  protected def setStringSeqProperty(key: String, value: Seq[String]): Unit
 
   def notifyConfigChanged(key: String): Unit =
     eventBus.publish(key)
 
-  def save()
-  def load()
+  def save(): Unit
+  def load(): Unit
 
   abstract class PropertyOperator[A] (key: String) {
     def value: Option[A]

@@ -1,3 +1,2 @@
-
-mainClass in assembly := Some("org.mikesajak.commander.Main")
-assemblyJarName in assembly := s"AfternoonCommander-${version.value}.jar"
+assembly / mainClass := Some("org.mikesajak.commander.Main")
+assembly / assemblyJarName := s"AfternoonCommander-${version.value}.jar"

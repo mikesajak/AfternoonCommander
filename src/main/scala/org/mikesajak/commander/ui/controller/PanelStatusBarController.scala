@@ -7,8 +7,8 @@ import scalafx.scene.control.Label
 import scalafxml.core.macros.sfxml
 
 trait PanelStatusBarController extends CurrentDirAware {
-  def init()
-  def setSelectedPaths(selectedPaths: Seq[VPath])
+  def init(): Unit
+  def setSelectedPaths(selectedPaths: Seq[VPath]): Unit
 }
 
 @sfxml
@@ -32,11 +32,10 @@ class PanelStatusBarControllerImpl(leftMessageLabel: Label,
   private def prepareSummary(dirs: Seq[VDirectory], files: Seq[VFile]): String = {
     val numDirs = dirs.size
     val totalSize = files.map(_.size).sum
-    val sizeUnit = DataUnit.findDataSizeUnit(totalSize)
+    val sizeUnit = DataUnit.findDataSizeUnit(totalSize.toDouble)
     resourceMgr.getMessageWithArgs("file_table_panel.status.message",
-                                   Array[Any](numDirs, files.size,
-                                              sizeUnit.convert(totalSize),
-                                              sizeUnit.symbol))
+                                   IndexedSeq[Any](numDirs, files.size, sizeUnit.convert(totalSize.toDouble),
+                                                   sizeUnit.symbol))
   }
 
 }

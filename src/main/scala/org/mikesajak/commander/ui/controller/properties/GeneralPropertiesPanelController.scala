@@ -57,7 +57,7 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
     attributesLabel.text = path.attributes.toString
 
     if (path.isFile) {
-      sizeLabel.text = DataUnit.mkDataSize(path.size).toString
+      sizeLabel.text = DataUnit.mkDataSize(path.size.toDouble).toString
       (numDirsNameLabel, numDirsLabel, numFilesNameLabel, numFilesLabel).visible = false
     } else {
       (sizeLabel, numDirsLabel, numFilesLabel).text = ""
@@ -80,12 +80,12 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
 
   private def updateStats(stats: DirStats): Unit = {
     numDirsLabel.text = resourceMgr.getMessageWithArgs("properties_panel.general_tab.num_directories.value.label",
-                                                       Array(stats.numDirs, stats.depth))
+                                                       Seq(stats.numDirs, stats.depth))
     numFilesLabel.text = s"${stats.numFiles}"
 
-    val unit = DataUnit.findDataSizeUnit(stats.size)
+    val unit = DataUnit.findDataSizeUnit(stats.size.toDouble)
     sizeLabel.text = resourceMgr.getMessageWithArgs("properties_panel.general_tab.size.value.label",
-                                                    Array[Any](unit.convert(stats.size), unit.symbol, stats.size))
+                                                    Seq[Any](unit.convert(stats.size.toDouble), unit.symbol, stats.size))
   }
 
   def notifyStarted(): Unit = {

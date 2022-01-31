@@ -8,6 +8,8 @@ scalaVersion := "2.13.7"
 
 scalacOptions += "-Ymacro-annotations"
 
+scalacOptions += "-deprecation"
+
 // scalafx (and fxml)
 // Add dependency on ScalaFX library
 libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R22"

@@ -11,7 +11,7 @@ import scala.language.{implicitConversions, reflectiveCalls}
   * Created by mike on 07.05.17.
   */
 object Utils {
-  type ClosableResource = { def close() }
+  type ClosableResource = { def close(): Unit }
 
   def using[A <: ClosableResource, B](res: A)(f: A => B): B =
     try {

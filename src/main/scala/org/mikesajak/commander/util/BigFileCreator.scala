@@ -1,9 +1,9 @@
 package org.mikesajak.commander.util
 
+import org.mikesajak.commander.units.DataUnit
+
 import java.io.BufferedOutputStream
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
-
-import org.mikesajak.commander.units.DataUnit
 
 sealed abstract class SizeUnit(val multiplier: Long)
 object SizeUnit {
@@ -51,7 +51,7 @@ object BigFileCreator {
       current += value
       val percent = (current * 100) / target
       if (last != percent) {
-        println(s"$percent% (${DataUnit.formatDataSize(current)} written)")
+        println(s"$percent% (${DataUnit.formatDataSize(current.toDouble)} written)")
         last = percent
       }
     }

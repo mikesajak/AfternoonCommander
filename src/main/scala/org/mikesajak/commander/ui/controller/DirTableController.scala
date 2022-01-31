@@ -43,8 +43,8 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
     pathToFormat match {
       case _: PathToParent => resourceMgr.getMessage("file_row.parent")
       case _: VDirectory => resourceMgr.getMessageWithArgs("file_row.num_elements",
-                                                           Array(path.directory.children.size))
-      case _: VFile => DataUnit.formatDataSize(path.size)
+                                                           Seq(path.directory.children.size))
+      case _: VFile => DataUnit.formatDataSize(path.size.toDouble)
     }
 
   override def toString: String = s"FileRow(path=$path, $name, $extension, $size, $modifyDate, $attributes)"
@@ -65,17 +65,17 @@ class FileRow(val path: VPath, resourceMgr: ResourceManager) {
 }
 
 trait DirTableController {
-  def init(path: VDirectory)
-  def dispose()
+  def init(path: VDirectory): Unit
+  def dispose(): Unit
   def currentDirectory: VDirectory
-  def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None)
+  def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None): Unit
   def focusedPath: VPath
   def selectedPaths: Seq[VPath]
   def reload(): Unit
-  def setTableFocusOn(pathOption: Option[VPath])
-  def setTableFocusOn(pathName: String) // TODO: change to some matcher, or first occurrence, or startsWith etc.
+  def setTableFocusOn(pathOption: Option[VPath]): Unit
+  def setTableFocusOn(pathName: String): Unit // TODO: change to some matcher, or first occurrence, or startsWith etc.
 
-  def requestFocus()
+  def requestFocus(): Unit
 }
 
 @sfxml
@@ -147,7 +147,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
 
   override def selectedPaths: Seq[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path).toSeq
 
-  override def init(path: VDirectory) {
+  override def init(path: VDirectory): Unit = {
     dirTableView.selectionModel.value.selectionMode = SelectionMode.Multiple
 
     dirTableView.selectionModel.value.selectedItems.onChange {
@@ -302,7 +302,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     dirTableView.requestFocus()
   }
 
-  private def handleKeyEvent(event: KeyEvent) {
+  private def handleKeyEvent(event: KeyEvent): Unit = {
     logger.debug(s"handleKeyEvent: $event")
     event.code match {
       case KeyCode.Enter =>
@@ -406,7 +406,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     popup.show(appController.mainStage, bounds.minX, bounds.maxY)
   }
 
-  private def initTable(directory: VDirectory) {
+  private def initTable(directory: VDirectory): Unit = {
     val sortedChildDirs = directory.childDirs.sortBy(d => d.name)
     val dirs = if (directory.parent.isDefined) new PathToParent(directory) +: sortedChildDirs
                else sortedChildDirs

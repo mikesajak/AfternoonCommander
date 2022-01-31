@@ -1,10 +1,10 @@
 package org.mikesajak.commander.util
 
-import java.util.{Timer, TimerTask}
-
 import javafx.concurrent.Worker.State
 import scalafx.concurrent.Service
 import scalafx.event.subscriptions.Subscription
+
+import java.util.{Timer, TimerTask}
 
 object Throttler {
   val commonTimer = new Timer()
@@ -37,7 +37,7 @@ class Throttler[A](minUpdateTime: Long, updateFunc: A => Unit, timer0: => Timer 
       updateFunc(state)
       lastUpdated = curTime
     } else {
-      task = new TimerTask() { def run() { updateFunc(state)} }
+      task = new TimerTask() { def run(): Unit = {updateFunc(state)} }
       timer.schedule(task, minUpdateTime)
     }
   }

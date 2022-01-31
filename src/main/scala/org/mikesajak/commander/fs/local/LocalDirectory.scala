@@ -1,11 +1,10 @@
 package org.mikesajak.commander.fs.local
 
+import org.mikesajak.commander.fs.{VDirectory, VDirectoryUpdater, VPath}
+
 import java.io.File
 import java.nio.file.{Files, Paths}
 import java.time.Instant
-
-import org.mikesajak.commander.fs.{VDirectory, VDirectoryUpdater, VPath}
-
 import scala.util.Try
 
 /**
@@ -17,7 +16,7 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
   override def childFiles: Seq[LocalFile] = {
     val files = file.listFiles()
     if (files != null)
-      files.filter(f => !f.isDirectory).map(resolveFile)
+      files.filter(f => !f.isDirectory).map(resolveFile).toSeq
     else Seq()
   }
 
@@ -32,7 +31,7 @@ class LocalDirectory(override val file: File, override val fileSystem: LocalFS)
   override def childDirs: Seq[LocalDirectory] ={
     val files = file.listFiles()
     if (files != null)
-      files.filter(f => f.isDirectory).map(resolveDir)
+      files.filter(f => f.isDirectory).map(resolveDir).toSeq
     else Seq()
   }
 

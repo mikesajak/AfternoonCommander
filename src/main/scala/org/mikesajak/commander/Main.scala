@@ -41,7 +41,7 @@ object Main extends JFXApp with Logging {
     appController.exitApplication { () =>
       new Timeline {
         keyFrames.add(KeyFrame(Duration(800), "fadeOut", null, Set(KeyValue(stage.opacity, 0))))
-        onFinished = () => Platform.exit
+        onFinished = () => Platform.exit()
       }.play()
       true
     }

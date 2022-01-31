@@ -29,7 +29,7 @@ class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) exte
     dirList.enqueue(dir)
 
     while (dirList.size > limit)
-      dirList.dequeue
+      dirList.dequeue()
 
     config.stringSeqProperty(configKey) := dirList.map(_.toString).toSeq
   }

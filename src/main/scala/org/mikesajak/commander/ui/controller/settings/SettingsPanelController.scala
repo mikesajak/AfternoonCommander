@@ -10,7 +10,7 @@ import scalafx.beans.property.ObjectProperty
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Node
-import scalafx.scene.control.{Button, _}
+import scalafx.scene.control._
 import scalafx.scene.layout._
 import scalafx.scene.text.{Font, FontWeight}
 import scalafx.stage.FileChooser
@@ -39,7 +39,7 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
 
   private val changedItems = ObjectProperty(Map[SettingsItem, Any]())
 
-  override def init(dialog: Dialog[Any]) {
+  override def init(dialog: Dialog[Any]): Unit = {
     categoryPanel.margin = Insets(10, 10, 10, 10)
 
     dialog.getDialogPane.buttonTypes = Seq(ButtonType.OK, ButtonType.Apply, ButtonType.Cancel)

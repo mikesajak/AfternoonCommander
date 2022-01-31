@@ -21,7 +21,7 @@ case class IOTaskSummary(numDirs: Int, numFiles: Int, totalSize: Long,
                   errors ::: that.errors)
 
   override def toString: String =
-    s"IOTaskSumary(numDirs=$numDirs, numFiles=$numFiles, totalSize=${DataUnit.formatDataSize(totalSize)}, errors=$errors)"
+    s"IOTaskSumary(numDirs=$numDirs, numFiles=$numFiles, totalSize=${DataUnit.formatDataSize(totalSize.toDouble)}, errors=$errors)"
 }
 
 object IOTaskSummary {

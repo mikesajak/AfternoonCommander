@@ -6,6 +6,7 @@ import org.mikesajak.commander.fs._
 import org.mikesajak.commander.util.PathUtils
 
 import java.time.Instant
+import scala.collection.compat.immutable.ArraySeq
 
 trait CommonsArchiveDirectory extends VDirectory {
   val archiveFile: VFile
@@ -45,7 +46,7 @@ class CommonsArchiveRootDir(override val archiveFile: VFile, archiveType: Archiv
   override val archiveNode: ArchiveNode = ArchiveNode(IndexedSeq())
   override val childNodes: Seq[ArchiveNode] = archiveEntries.map { entry =>
     val segments = PathUtils.pathSegments(entry.getName)
-    ArchiveNode(segments, entry)
+    ArchiveNode(ArraySeq.unsafeWrapArray(segments), entry)
   }
 
   override val name: String = archiveFile.name

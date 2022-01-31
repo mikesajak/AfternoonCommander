@@ -71,7 +71,7 @@ class CopyPanelControllerImpl(sourcePathTypeLabel: Label,
       sourceNameLabel.text = targetPath.name
       sourcePathsListView.visible = false
     } else {
-      sourceNameLabel.text = "[" + resourceMgr.getMessageWithArgs(s"$dialogTypePrefix.num_elements", Array(sourcePaths.size)) + "]"
+      sourceNameLabel.text = "[" + resourceMgr.getMessageWithArgs(s"$dialogTypePrefix.num_elements", Seq(sourcePaths.size)) + "]"
       sourcePathsListView.visible = true
       sourcePathsListView.items = ObservableBuffer(sourcePaths.map(p => if (p.isDirectory) s"${p.name}/" else p.name) :_*)
     }

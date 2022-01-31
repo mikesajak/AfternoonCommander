@@ -34,7 +34,7 @@ class FindFilesTask(searchDef: Search, startDirectory: VDirectory, resourceMgr: 
   }
 
   case class SearchStatus(results: Seq[VPath], stats: DirStats) {
-    def add(partResults: Seq[VPath], partStats: DirStats) =
+    def add(partResults: Seq[VPath], partStats: DirStats): SearchStatus =
       SearchStatus(results ++ partResults, stats + partStats)
   }
 

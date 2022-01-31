@@ -1,10 +1,10 @@
 package org.mikesajak.commander.util
 
+import com.google.common.base.Stopwatch
+
 import java.io.BufferedOutputStream
 import java.nio.file._
 import java.util.concurrent.{ForkJoinPool, RecursiveAction}
-
-import com.google.common.base.Stopwatch
 
 object TestDataCreator {
 
@@ -61,7 +61,7 @@ object TestDataCreator {
     val stream = new BufferedOutputStream(Files.newOutputStream(filePath, StandardOpenOption.WRITE))
     //      println(s"${indent}  Creating file with size ${numBytesToWrite}B")
 
-    val data = Stream.tabulate(numBytesToWrite)(i => 0xff.toByte)
+    val data = LazyList.tabulate(numBytesToWrite)(i => 0xff.toByte)
     data.sliding(1024, 1024).foreach(frag => stream.write(frag.toArray))
     stream.close()
   }

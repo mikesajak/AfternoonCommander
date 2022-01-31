@@ -42,7 +42,7 @@ case class PathCrumbItem(path: VPath) extends BreadCrumbItem
 case class PrevCrumbItems(prevPaths: Seq[VPath]) extends BreadCrumbItem
 
 trait DirPanelControllerIntf extends CurrentDirAware {
-  def init(panelId: PanelId)
+  def init(panelId: PanelId): Unit
 }
 /**
   * Created by mike on 14.04.17.
@@ -67,7 +67,7 @@ class DirPanelController(tabPane: TabPane,
   private var panelId: PanelId = _
   private var dirTabManager: DirTabManager = _
 
-  override def init(panelId: PanelId) {
+  override def init(panelId: PanelId): Unit = {
     this.panelId = panelId
 
     dirTabManager = ApplicationContext.globalInjector.getInstance(Key.get(classOf[DirTabManager],
@@ -155,7 +155,7 @@ class DirPanelController(tabPane: TabPane,
                fs.attributes.get("type").map(t => s"[$t]"))
             .flatten
             .reduce((a,b) => s"$a, $b") +
-          s" [${DataUnit.mkDataSize(fs.freeSpace)} / ${DataUnit.mkDataSize(fs.totalSpace)}]"
+          s" [${DataUnit.mkDataSize(fs.freeSpace.toDouble)} / ${DataUnit.mkDataSize(fs.totalSpace.toDouble)}]"
         graphic = iconResolver.findIconFor(fs, IconSize.Small)//, 24)))
 
         onAction = _ => setDirectory(fs.rootDirectory)
@@ -207,7 +207,7 @@ class DirPanelController(tabPane: TabPane,
     }
   }
 
-  private def updateCurTabUIAfterDirChange(dir: VDirectory) {
+  private def updateCurTabUIAfterDirChange(dir: VDirectory): Unit = {
     val curTab = tabPane.tabs(tabPane.selectionModel.value.getSelectedIndex)
     DirTab.updateTab(curTab, dir)
 
@@ -240,12 +240,12 @@ class DirPanelController(tabPane: TabPane,
     val curFs = fsMgr.findFilesystemFor(dirTabManager.selectedTab.dir)
     val free = curFs.freeSpace
     val total = curFs.totalSpace
-    val freeUnit = DataUnit.findDataSizeUnit(free)
-    val totalUnit = DataUnit.findDataSizeUnit(total)
+    val freeUnit = DataUnit.findDataSizeUnit(free.toDouble)
+    val totalUnit = DataUnit.findDataSizeUnit(total.toDouble)
 
     Platform.runLater {
       freeSpaceLabel.text = resourceMgr.getMessageWithArgs("file_group_panel.free_space.message",
-        Array[Any](freeUnit.convert(free), freeUnit.symbol, totalUnit.convert(total), totalUnit.symbol))
+        IndexedSeq[Any](freeUnit.convert(free.toDouble), freeUnit.symbol, totalUnit.convert(total.toDouble), totalUnit.symbol))
       freeSpaceBar.progress = (total - free).toDouble / total
     }
   }

@@ -16,7 +16,7 @@ import scala.language.implicitConversions
 trait ProgressPanelController {
   def init(title: String, headerText: String, statusMessage: String,
            operationIcon: Image, dialog: Dialog[IOTaskSummary],
-           workerService: BackgroundService[IOProgress])
+           workerService: BackgroundService[IOProgress]): Unit
 }
 
 @sfxml
@@ -119,7 +119,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
   private def updateValue(progress: IOProgress): Unit = {
     fileCountLabel.text = progress.summary.numFiles.toString
     dirCountLabel.text = progress.summary.numDirs.toString
-    sizeLabel.text = DataUnit.formatDataSize(progress.summary.totalSize)
+    sizeLabel.text = DataUnit.formatDataSize(progress.summary.totalSize.toDouble)
 
     progress.curMessage.foreach(msg => detailsLabel.text = msg)
   }

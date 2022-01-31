@@ -88,7 +88,7 @@ class StatsPanelControllerImpl(messageLabel: Label,
       modifiedValueLabel.text = path.modificationDate.toString // TODO: format
       attribsValueLabel.text = path.attributes.toString
       if (path.isFile)
-        sizeValueLabel.text = DataUnit.formatDataSize(path.size)
+        sizeValueLabel.text = DataUnit.formatDataSize(path.size.toDouble)
     }
   }
 
@@ -120,10 +120,10 @@ class StatsPanelControllerImpl(messageLabel: Label,
     message.foreach(msg => messageLabel.text = msg)
 
     directoriesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_directories.value.label",
-      Array(stats.numDirs, stats.depth))
-    val unit = DataUnit.findDataSizeUnit(stats.size)
+      Seq(stats.numDirs, stats.depth))
+    val unit = DataUnit.findDataSizeUnit(stats.size.toDouble)
     filesValueLabel.text = resourceMgr.getMessageWithArgs("stats_panel.num_files.value.label",
-      Array[Any](stats.numFiles, unit.convert(stats.size), unit.symbol))
+      Seq[Any](stats.numFiles, unit.convert(stats.size.toDouble), unit.symbol))
   }
 }
 
