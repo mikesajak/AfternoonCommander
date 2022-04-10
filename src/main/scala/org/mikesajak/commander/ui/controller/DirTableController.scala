@@ -70,11 +70,12 @@ trait DirTableController {
   def init(path: VDirectory): Unit
   def dispose(): Unit
   def currentDirectory: VDirectory
-  def setCurrentDirectory(path: VDirectory, focusedPath: Option[VPath] = None): Unit
-  def focusedPath: VPath
-  def selectedPaths: Seq[VPath]
+  def setCurrentDirectory(path: VDirectory, focusedPath: Option[Int] = None): Unit
+  def focusedPath: (Int, VPath)
+  def selectedPaths: Seq[(Int, VPath)]
   def reload(): Unit
-  def setTableFocusOn(pathOption: Option[VPath]): Unit
+  def setTableFocusOn(rowIndex: Int): Unit
+  def setTableFocusOn(path: VPath): Unit
   def setTableFocusOn(pathName: String): Unit // TODO: change to some matcher, or first occurrence, or startsWith etc.
 
   def requestFocus(): Unit
@@ -147,9 +148,16 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     }
   }
 
-  override def focusedPath: VPath = dirTableView.selectionModel.value.getSelectedItem.path
+  override def focusedPath: (Int, VPath) = {
+    val selectionModel = dirTableView.selectionModel.value
+    (selectionModel.getSelectedIndex, selectionModel.getSelectedItem.path)
+  }
 
-  override def selectedPaths: Seq[VPath] = dirTableView.selectionModel.value.getSelectedItems.map(_.path).toSeq
+  override def selectedPaths: Seq[(Int, VPath)] = {
+    dirTableView.selectionModel.value.getSelectedIndices
+                .map(idx => (idx.toInt, dirTableView.getItems.get(idx).path))
+                .toSeq
+  }
 
   override def init(path: VDirectory): Unit = {
     dirTableView.selectionModel.value.selectionMode = SelectionMode.Multiple
@@ -260,7 +268,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
 
   override def currentDirectory: VDirectory = curDir
 
-  override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[VPath] = None): Unit = {
+  override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[Int] = None): Unit = {
     runWithTimer(s"setCurrentDirectory: directory=$directory, focusedPath=$focusedPath") { () =>
       val prevDir = curDir
       val newDir = resolveTargetDir(directory)
@@ -269,7 +277,8 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
       Platform.runLater { panelStatusBarController.setDirectory(newDir) }
       Platform.runLater { curPathBarController.setDirectory(newDir) }
       initTable(newDir)
-      setTableFocusOn(focusedPath)
+      dirTableView.selectionModel.value.clearSelection()
+      setTableFocusOn(focusedPath.getOrElse(0))
 
       eventBus.publish(CurrentDirChangeNotification(panelId, Option(prevDir), newDir))
     }
@@ -283,13 +292,15 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   }
 
   override def reload(): Unit = {
-    setCurrentDirectory(curDir, Some(focusedPath))
+    setCurrentDirectory(curDir, Some(focusedPath._1))
   }
 
-  override def setTableFocusOn(pathOption: Option[VPath]): Unit = runWithTimer(s"setTableFocusOn($pathOption"){ () =>
-    val selIndex: Int = pathOption.map { path =>
-      math.max(0, dirTableView.items.value.indexWhere(row => row.path.name == path.name))
-    }.getOrElse(0)
+  def setTableFocusOn(index: Int): Unit = runWithTimer(s"setTableFocusOn($index)") { () =>
+    selectIndex(index)
+  }
+
+  override def setTableFocusOn(path: VPath): Unit = runWithTimer(s"setTableFocusOn($path") { () =>
+    val selIndex = math.max(0, dirTableView.items.value.indexWhere(row => row.path.name == path.name))
 
     selectIndex(selIndex)
   }
@@ -313,8 +324,9 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
         if (items.nonEmpty) {
           handleAction(items.head.path)
         }
+        event.consume() // prevent propagating "Enter" to table view (which would try to start edit table cell)
 
-      case KeyCode.S if event.shortcutDown => showFilterPopup()
+      case KeyCode.S if event.shortcutDown => showFilterPopup() // TODO: make configurable
 
       case _ =>
     }
@@ -332,11 +344,16 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   }
 
   private def changeDir(directory: VDirectory): Unit = {
-    val selection = directory match {
-      case _: PathToParent => Some(curDir)
-      case _ => None
+    val prevDir = curDir
+    setCurrentDirectory(directory)
+    focusPrevDirWhenTraversingToParentDir(prevDir, directory)
+  }
+
+  private def focusPrevDirWhenTraversingToParentDir(prevDir: VDirectory, newDir: VDirectory): Unit = {
+    newDir match {
+      case _: PathToParent => setTableFocusOn(prevDir)
+      case _ => // do nothing
     }
-    setCurrentDirectory(directory, selection)
   }
 
   private def showContextMenu(row: TableRow[FileRow], event: MouseEvent): Unit = {
@@ -373,9 +390,8 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
       // TODO: disable configuration changes while popup is opened? is it necessary?
       onHiding = { _ =>
         filteredRows.predicate = createShowHiddenFilesPredicate()
-        val selection =
-          dirTableView.items.value.indexWhere(row => row.path.name == itemToFocusOnExit.path.name)
-        focusIndex(selection)
+        val selection = dirTableView.items.value.indexWhere(row => row.path.name == itemToFocusOnExit.path.name)
+        selectIndex(selection)
       }
     }
 
@@ -427,8 +443,11 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   private def selectIndex(index: Int): Unit = runWithTimer(s"selectIndex($index)") { () =>
     val prevSelection = dirTableView.getSelectionModel.getSelectedIndex
     if (prevSelection != index) {
-      dirTableView.getSelectionModel.select(math.max(index, 0), nameColumn) // column is needed in selection to prevent bug in javafx implementation (NPE for null column)
-      scrollTo(index)
+      val indexToSelect = math.max(math.min(index, dirTableView.items.value.size - 1), 0)
+      dirTableView.getSelectionModel.clearSelection()
+      dirTableView.getSelectionModel.select(indexToSelect, nameColumn) // column is needed in selection to prevent bug in javafx implementation (NPE for null column)
+      dirTableView.getFocusModel.focus(indexToSelect)
+      scrollTo(indexToSelect)
     }
   }
 

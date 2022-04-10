@@ -49,6 +49,7 @@ class OperationMgr(statusMgr: StatusMgr,
 
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val selectedFile = selectedTab.controller.selectedPaths
+                                  .map(_._2)
                                   .filter(p => !p.isInstanceOf[PathToParent])
                                   .find(p => !p.isDirectory)
     selectedFile.foreach { selected =>

@@ -87,8 +87,8 @@ class MainPanelController(mainPane: Pane,
 
   private def handleSelectTargetDirInOtherPanel(): Unit = {
     val dir = statusMgr.selectedTabManager.selectedTab.controller.selectedPaths.headOption
-                                .map(_.directory)
-                                .getOrElse(statusMgr.selectedTabManager.selectedTab.dir)
+                       .map(_._2.directory)
+                       .getOrElse(statusMgr.selectedTabManager.selectedTab.dir)
     handleSelectDirInOtherPanel(dir)
   }
 

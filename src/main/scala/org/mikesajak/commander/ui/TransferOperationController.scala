@@ -37,11 +37,12 @@ class TransferOperationController(statusMgr: StatusMgr,
   def handleOperation(opType: OperationType): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val sourcePaths = selectedTab.controller.selectedPaths
-      .filter(p => !p.isInstanceOf[PathToParent])
+                                 .map(_._2)
+                                 .filter(p => !p.isInstanceOf[PathToParent])
 
     if (sourcePaths.nonEmpty) {
       val unselectedTab = statusMgr.unselectedTabManager.selectedTab
-      val targetDir = unselectedTab.controller.focusedPath match {
+      val targetDir = unselectedTab.controller.focusedPath._2 match {
         case p: PathToParent => p.currentDir
         case d: VDirectory => d
         case _ => unselectedTab.dir

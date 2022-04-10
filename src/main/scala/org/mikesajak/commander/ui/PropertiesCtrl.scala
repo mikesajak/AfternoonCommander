@@ -16,6 +16,7 @@ class PropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController)
   def handlePropertiesAction(): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
     val targetPaths = selectedTab.controller.selectedPaths
+                                 .map(_._2)
                                  .filter(p => !p.isInstanceOf[PathToParent])
 
     if (targetPaths.nonEmpty) {

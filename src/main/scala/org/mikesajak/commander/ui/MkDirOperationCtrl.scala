@@ -27,7 +27,7 @@ class MkDirOperationCtrl(statusMgr: StatusMgr, appController: ApplicationControl
             .getOrElse(throw new MkDirException("Cannot create directory $newDirName. Target directory ${selectedTab.dir} is not writable."))
         newDir.updater.foreach(_.create())
         selectedTab.controller.reload()
-        selectedTab.controller.setTableFocusOn(Some(newDir))
+        selectedTab.controller.setTableFocusOn(newDir)
       } catch {
         case e: Exception =>
           logger.info(s"Error during creating directory $newDirName in parent dir ${selectedTab.dir}", e)

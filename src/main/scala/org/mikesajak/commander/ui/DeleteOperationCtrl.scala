@@ -24,10 +24,12 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
 
   def handleDelete(): Unit = {
     val selectedTab = statusMgr.selectedTabManager.selectedTab
-    val targetPaths = selectedTab.controller.selectedPaths
-      .filter(p => !p.isInstanceOf[PathToParent])
+    val targetPathPositions = selectedTab.controller.selectedPaths
+                                         .filter(p => !p._2.isInstanceOf[PathToParent])
 
-    if (targetPaths.nonEmpty) {
+    if (targetPathPositions.nonEmpty) {
+      val firstSelectedIdx = targetPathPositions.minBy(_._1)._1
+      val targetPaths = targetPathPositions.map(_._2)
       val result = askForDecision(targetPaths)
 
       logger.debug(s"Delete confirm decision: $result")
@@ -36,6 +38,7 @@ class DeleteOperationCtrl(statusMgr: StatusMgr, appController: ApplicationContro
         case Some((ButtonType.Yes, stats, dryRun)) =>
           executeDelete(targetPaths, stats, dryRun)
           selectedTab.controller.reload()
+          selectedTab.controller.setTableFocusOn(firstSelectedIdx)
         case _ => // operation cancelled
       }
     }

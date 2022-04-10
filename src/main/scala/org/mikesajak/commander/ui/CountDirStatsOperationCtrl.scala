@@ -20,7 +20,7 @@ class CountDirStatsOperationCtrl(statusMgr: StatusMgr,
                                  resourceMgr: ResourceManager) extends Logging {
 
   def handleCountDirStats(): Unit = {
-    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.focusedPath
+    val selectedPath = statusMgr.selectedTabManager.selectedTab.controller.focusedPath._2
     selectedPath match {
       case sp if !sp.isDirectory => logger.debug(s"Cannot run count stats on file: $selectedPath")
       case sp if sp.isInstanceOf[PathToParent] => logger.debug(s"Cannot run count stats on PathToParent: $sp")
