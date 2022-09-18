@@ -1,20 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ProgressBar?>
-<?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="500.0" spacing="7.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.ProgressPanelControllerImpl">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="500.0" spacing="7.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.ops.ProgressPanelControllerImpl">
 <children>
       <HBox spacing="10.0">
          <children>
@@ -25,20 +15,24 @@
                   <Font name="System Bold" size="13.0" />
                 </font>
               </Label>
-              <Label fx:id="detailsLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="details" textAlignment="LEFT" textOverrun="LEADING_ELLIPSIS" VBox.vgrow="ALWAYS">
-                <font>
-                  <Font size="12.0" />
-                </font>
-              </Label>
+                  <HBox VBox.vgrow="ALWAYS">
+                     <children>
+                    <Label fx:id="detailsLabel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="details" textAlignment="LEFT" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="ALWAYS">
+                      <font>
+                        <Font size="12.0" />
+                      </font>
+                    </Label>
+                        <ProgressBar fx:id="progressBar" minWidth="100.0" prefWidth="100.0" progress="0.0" />
+                     </children>
+                  </HBox>
                </children>
             </VBox>
-            <ProgressIndicator fx:id="totalProgressIndicator" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" progress="0.64" HBox.hgrow="NEVER" />
          </children>
       </HBox>
       <StackPane>
          <children>
-            <ProgressBar fx:id="progressBar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" progress="0.0" />
-            <Label fx:id="progressLabel" text="0%" />
+            <ProgressBar fx:id="totalProgressBar" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" progress="0.0" />
+            <Label fx:id="totalProgressLabel" text="0%" />
          </children>
       </StackPane>
       <TitledPane animated="false" text="Details">

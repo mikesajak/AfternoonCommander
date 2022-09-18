@@ -22,9 +22,9 @@ trait ProgressPanelController {
 @sfxml
 class ProgressPanelControllerImpl(nameLabel: Label,
                                   detailsLabel: Label,
-                                  totalProgressIndicator: ProgressIndicator,
                                   progressBar: ProgressBar,
-                                  progressLabel: Label,
+                                  totalProgressBar: ProgressBar,
+                                  totalProgressLabel: Label,
                                   fileCountLabel: Label,
                                   dirCountLabel: Label,
                                   sizeLabel: Label,
@@ -90,7 +90,7 @@ class ProgressPanelControllerImpl(nameLabel: Label,
 
   private def updateFinished(): Unit = {
     progressBar.progress = 1.0
-    totalProgressIndicator.progress = 1.0
+//    totalProgressIndicator.progress = 1.0
 
     timer.cancel()
     updateTimes(None)
@@ -110,10 +110,12 @@ class ProgressPanelControllerImpl(nameLabel: Label,
     val progressValue = ioProgress.transferState.map(ts => ts.progress)
                                   .getOrElse(totalProgressValue)
 
-    progressBar.progress = progressValue
-    progressLabel.text = f"${progressValue * 100}%.1f%%"
 
-    totalProgressIndicator.progress = totalProgressValue
+    progressBar.progress = progressValue
+    totalProgressBar.progress = totalProgressValue
+    totalProgressLabel.text = f"${totalProgressValue * 100}%.1f%%"
+
+//    totalProgressIndicator.progress = progressValue
   }
 
   private def updateValue(progress: IOProgress): Unit = {
