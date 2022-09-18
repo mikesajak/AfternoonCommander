@@ -11,7 +11,6 @@ import scalafx.Includes._
 import scalafx.application.Platform
 import scalafx.scene.control.{Label, Tab, TabPane}
 import scalafx.scene.image.ImageView
-import scalafx.scene.layout.BorderPane
 import scalafxml.core.macros.{nested, sfxml}
 import scribe.Logging
 
@@ -36,8 +35,12 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
                                     serviceRegistry: BackgroundServiceRegistry)
     extends PropertiesPanelController with Logging {
 
-  private val fileContentsLayout = "/layout/properties/file-content-properties-panel.fxml"
-  private val dirContentsLayout = "/layout/properties/dir-content-properties-panel.fxml"
+  private val layoutsDir = "/layout/properties"
+
+  private val fileContentsLayout = s"$layoutsDir/file-content-properties-panel.fxml"
+  private val accessPermissionsLayout = s"$layoutsDir/access-permissions-properties-panel.fxml"
+  private val dirContentsLayout = s"$layoutsDir/dir-content-properties-panel.fxml"
+  private val dirSizeTreeLayout = s"$layoutsDir/dir-size-tree-properties-panel.fxml"
 
   override def init(path: VPath): Seq[BackgroundService[_]] = {
     nameLabel.text = path.name
@@ -103,11 +106,12 @@ class PropertiesPanelControllerImpl(nameLabel: Label,
   }
 
   private def prepareAccessRightsTab(path: VPath): Unit = {
+    val (pane, ctrl) = UILoader.loadScene[AccessPermissionsPropertiesPanelController](accessPermissionsLayout)
+    ctrl.init(path)
+
     propertyPanelsTabPane += new Tab() {
       text = resourceMgr.getMessage("properties_panel.access_rights_tab.title")
-      content = new BorderPane() {
-        top = new Label("Access rights -> TODO")
-      }
+      content = pane
     }
   }
 

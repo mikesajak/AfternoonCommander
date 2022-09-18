@@ -58,6 +58,7 @@ class CommonsArchiveRootDir(override val archiveFile: VFile, archiveType: Archiv
   override val attributes: Attribs = archiveFile.attributes
   override lazy val fileSystem: FS = new CommonsArchiveFS(this)
   override val size: Long = 0
+  override val permissions: AccessPermissions = archiveFile.permissions
 
   def isParent(path: VPath): Boolean =
     if (childFiles.contains(path)) true
@@ -95,6 +96,8 @@ class CommonsArchiveSubDir(override val archiveFile: VFile,
   override val updater: Option[VDirectoryUpdater] = None
 
   override val exists: Boolean = true
+
+  override def permissions: AccessPermissions = archiveFile.permissions
 
   override def toString = s"ArchiveSubDir($name)"
 }

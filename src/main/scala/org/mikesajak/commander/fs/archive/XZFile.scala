@@ -31,6 +31,8 @@ class XZFile(file: VFile, parentDir: XZRootDir) extends VFile {
 
   override val exists: Boolean = true
 
+  override def permissions: AccessPermissions = file.permissions
+
   override def inStream: InputStream = new BufferedInputStream(new XZInputStream(file.inStream))
 
   override def updater: Option[VFileUpdater] = None

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<GridPane hgap="10.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" vgap="5.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.properties.UnixAccessPanelControllerImpl">
+  <columnConstraints>
+    <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+    <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+      <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+      <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+      <ColumnConstraints halignment="RIGHT" hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+      <ColumnConstraints hgrow="NEVER" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints vgrow="SOMETIMES" />
+    <RowConstraints vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+    <RowConstraints vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+      <RowConstraints vgrow="SOMETIMES" />
+  </rowConstraints>
+   <children>
+      <Label text="%properties_panel.access_rights_tab.unix_panel.owner" textFill="#00000098" />
+      <Label fx:id="ownerNameLabel" text="Label" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.halignment="LEFT" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.owner_permissions" textFill="#00000098" GridPane.rowIndex="1" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.read_permission" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.group" textFill="#00000098" GridPane.rowIndex="3" />
+      <Label fx:id="groupNameLabel" text="Label" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.halignment="LEFT" GridPane.rowIndex="3" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.group_permissions" textFill="#00000098" GridPane.rowIndex="4" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.others_permissions" textFill="#00000098" GridPane.rowIndex="7" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.read_permission" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.read_permission" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.others" textFill="#00000098" GridPane.rowIndex="6" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.write_permission" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+      <Label text="%properties_panel.access_rights_tab.unix_panel.execute_permission" GridPane.columnIndex="6" GridPane.rowIndex="1" />
+      <Label fx:id="ownerExecuteAccessLabel" text="Label" GridPane.columnIndex="7" GridPane.rowIndex="1">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label fx:id="ownerReadAccessLabel" text="Label" GridPane.columnIndex="3" GridPane.rowIndex="1">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label fx:id="ownerWriteAccessLabel" text="Label" GridPane.columnIndex="5" GridPane.rowIndex="1">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label fx:id="groupReadAccessLabel" text="Label" GridPane.columnIndex="3" GridPane.rowIndex="4">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label fx:id="othersReadAccessLabel" text="Label" GridPane.columnIndex="3" GridPane.rowIndex="7">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label text="%properties_panel.access_rights_tab.unix_panel.write_permission" GridPane.columnIndex="4" GridPane.rowIndex="4" />
+      <Label fx:id="groupWriteAccessLabel" text="Label" GridPane.columnIndex="5" GridPane.rowIndex="4">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label text="%properties_panel.access_rights_tab.unix_panel.execute_permission" GridPane.columnIndex="6" GridPane.rowIndex="4" />
+      <Label fx:id="groupExecuteAccessLabel" text="Label" GridPane.columnIndex="7" GridPane.rowIndex="4">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label text="%properties_panel.access_rights_tab.unix_panel.write_permission" GridPane.columnIndex="4" GridPane.rowIndex="7" />
+      <Label fx:id="othersWriteAccessLabel" text="Label" GridPane.columnIndex="5" GridPane.rowIndex="7">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label text="%properties_panel.access_rights_tab.unix_panel.execute_permission" GridPane.columnIndex="6" GridPane.rowIndex="7" />
+      <Label fx:id="othersExecuteAccessLabel" text="Label" GridPane.columnIndex="7" GridPane.rowIndex="7">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label fx:id="ownerAccessLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <Label fx:id="groupAccessLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+      <Label fx:id="othersAccessLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+   </children>
+   <padding>
+      <Insets left="5.0" right="5.0" top="5.0" />
+   </padding>
+</GridPane>

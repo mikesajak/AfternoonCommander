@@ -16,6 +16,7 @@ class CustomListAsDirectory(override val name: String, parentDir: VDirectory,
   override val isDirectory: Boolean = true
   override def fileSystem: FS = parentDir.fileSystem
   override val size: Long = 0
+  override def permissions = new AccessPermissions("n/a")
 
   override def children: Seq[VPath] = pathList
   def childDirs: Seq[VDirectory] = pathList.filter(_.isDirectory).map(_.asInstanceOf[VDirectory])

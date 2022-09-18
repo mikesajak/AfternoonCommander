@@ -14,31 +14,33 @@ class PathToParent(val currentDir: VDirectory) extends VDirectory {
 
   override def fileSystem: FS = currentDir.fileSystem
 
-  override def parent: Option[VDirectory] = currentDir.parent.get.parent
+  override def parent: Option[VDirectory] = targetDir.parent
 
-  override def absolutePath: String = currentDir.parent.get.absolutePath
+  override def absolutePath: String = targetDir.absolutePath
 
-  override def attributes: Attribs = currentDir.parent.get.attributes
+  override def attributes: Attribs = targetDir.attributes
 
-  override def modificationDate: Instant = currentDir.parent.get.modificationDate
+  override def modificationDate: Instant = targetDir.modificationDate
 
-  override def creationDate: Instant = currentDir.parent.get.creationDate
+  override def creationDate: Instant = targetDir.creationDate
 
-  override def accessDate: Instant = currentDir.parent.get.accessDate
+  override def accessDate: Instant = targetDir.accessDate
 
-  override def size: Long = currentDir.parent.get.size
+  override def size: Long = targetDir.size
 
-  override def children: Seq[VPath] = currentDir.parent.get.children
+  override def children: Seq[VPath] = targetDir.children
 
-  override def childDirs: Seq[VDirectory] = currentDir.parent.get.childDirs
+  override def childDirs: Seq[VDirectory] = targetDir.childDirs
 
-  override def childFiles: Seq[VFile] = currentDir.parent.get.childFiles
+  override def childFiles: Seq[VFile] = targetDir.childFiles
 
   override val updater: Option[VDirectoryUpdater] = None
 
-  override def isParent(path: VPath): Boolean = currentDir.parent.get.isParent(path)
+  override def isParent(path: VPath): Boolean = targetDir.isParent(path)
 
   override val exists: Boolean = true
+
+  override def permissions: AccessPermissions = targetDir.permissions
 
   override def toString = s".. -> ($absolutePath)"
 }

@@ -34,5 +34,7 @@ class CommonsArchiveFile(archiveStreamProvider: ArchiveStreamProvider, archiveEn
 
   override val exists = true
 
+  override def permissions: AccessPermissions = parentDir.permissions
+
   override val toString: String = name
 }

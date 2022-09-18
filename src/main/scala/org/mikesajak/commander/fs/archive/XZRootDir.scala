@@ -19,6 +19,8 @@ class XZRootDir(file: VFile) extends VDirectory {
   override val childDirs: Seq[VDirectory] = Seq.empty
   override val childFiles: Seq[VFile] = Seq(new XZFile(file, this))
 
+  override def permissions: AccessPermissions = file.permissions
+
   override def isParent(path: VPath): Boolean = path match {
     case xzFile: XZFile if xzFile.parent.contains(this) => true
     case _ => false

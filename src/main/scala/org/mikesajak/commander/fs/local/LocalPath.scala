@@ -1,11 +1,11 @@
 package org.mikesajak.commander.fs.local
 
 import org.mikesajak.commander.fs.Attrib._
-import org.mikesajak.commander.fs.{Attrib, Attribs, VDirectory, VPath}
+import org.mikesajak.commander.fs._
 
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.attribute._
+import java.nio.file.{Files, Paths}
 import java.time.Instant
 
 trait LocalPath extends VPath {
@@ -59,6 +59,14 @@ trait LocalPath extends VPath {
   override def directory: VDirectory = {
     if (isDirectory) this.asInstanceOf[VDirectory]
     else parent.get
+  }
+
+  override def permissions: AccessPermissions = {
+    val fsPath = Paths.get(absolutePath)
+    val ownerAttrView = Files.getFileAttributeView(fsPath, classOf[FileOwnerAttributeView])
+    Option(Files.getFileAttributeView(fsPath, classOf[PosixFileAttributeView]))
+      .map(posixFileAttributeView => AccessPermissions.apply(posixFileAttributeView))
+      .getOrElse(new AccessPermissions(ownerAttrView.getOwner.getName))
   }
 
   override def toString: String = s"${LocalFS.id}://$absolutePath"
