@@ -5,7 +5,7 @@ import org.mikesajak.commander.fs._
 
 import java.io.File
 import java.nio.file.attribute._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.time.Instant
 
 trait LocalPath extends VPath {
@@ -63,11 +63,26 @@ trait LocalPath extends VPath {
 
   override def permissions: AccessPermissions = {
     val fsPath = Paths.get(absolutePath)
-    val ownerAttrView = Files.getFileAttributeView(fsPath, classOf[FileOwnerAttributeView])
+
+    getAclFilePermissions(fsPath)
+      .orElse(getUnixFilePermissions(fsPath))
+      .getOrElse(getBasicFilePermissions(fsPath))
+  }
+
+  private def getUnixFilePermissions(fsPath: Path): Option[UnixAccessPermissions] =
     Option(Files.getFileAttributeView(fsPath, classOf[PosixFileAttributeView]))
       .map(posixFileAttributeView => AccessPermissions.apply(posixFileAttributeView))
-      .getOrElse(new AccessPermissions(ownerAttrView.getOwner.getName))
+
+  private def getAclFilePermissions(fsPath: Path): Option[AccessPermissions] =
+    Option(Files.getFileAttributeView(fsPath, classOf[AclFileAttributeView]))
+      .map(aclFileAttributeView1 => AccessPermissions.apply(aclFileAttributeView1))
+
+  private def getBasicFilePermissions(fsPath: Path): AccessPermissions = {
+    Option(Files.getFileAttributeView(fsPath, classOf[FileOwnerAttributeView]))
+      .map(fileOwnerAttributeView => new AccessPermissions(fileOwnerAttributeView.getOwner.getName))
+      .getOrElse(new AccessPermissions("n/a"))
   }
+
 
   override def toString: String = s"${LocalFS.id}://$absolutePath"
 

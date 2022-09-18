@@ -1,8 +1,7 @@
 package org.mikesajak.commander.ui.controller.properties
 
-import org.apache.tika.metadata.AccessPermissions
 import org.mikesajak.commander.fs.Permission.{READ_DATA, WRITE_DATA}
-import org.mikesajak.commander.fs.{Permission, UnixAccessPermissions, VPath}
+import org.mikesajak.commander.fs.{AccessPermissions, Permission, UnixAccessPermissions, VPath}
 import scalafx.beans.property.StringProperty
 import scalafx.scene.control.{TreeItem, TreeTableColumn, TreeTableView}
 import scalafx.scene.layout.Pane
@@ -42,9 +41,10 @@ object UserOrdering extends Ordering[(String, Set[Permission])] {
 }
 
 @sfxml
-class AccessPermissionsPropertiesPanelControllerImpl(@nested[UnixAccessPanelControllerImpl] unixAccessPanelController: UnixAccessPanelController,
-                                                     unixAccessPanel: Pane,
+class AccessPermissionsPropertiesPanelControllerImpl(unixAccessPanel: Pane,
+                                                     @nested[UnixAccessPanelControllerImpl] unixAccessPanelController: UnixAccessPanelController,
                                                      windowsAccessPanel: Pane,
+                                                     @nested[WindowsAccessPanelControllerImpl] windowsAccessPanelController: WindowsAccessPanelController,
                                                      permsTreeTableView: TreeTableView[PermsTableRow],
                                                      nameTreeTableColumn: TreeTableColumn[PermsTableRow, String],
                                                      permTreeTableColumn: TreeTableColumn[PermsTableRow, String])
@@ -69,6 +69,7 @@ class AccessPermissionsPropertiesPanelControllerImpl(@nested[UnixAccessPanelCont
         unixAccessPanelController.init(path, unixPermissions)
       case accessPermissions: AccessPermissions =>
         unixAccessPanel.visible = false
+        windowsAccessPanelController.init(path, accessPermissions)
     }
   }
 
@@ -81,7 +82,7 @@ class AccessPermissionsPropertiesPanelControllerImpl(@nested[UnixAccessPanelCont
     }
 
   private def mkSinglePermTreeItem(who: String, perm: Permission) =
-    new TreeItem[PermsTableRow](PermsTableRow(who, perm.toString, Set.empty)) {
+    new TreeItem[PermsTableRow](PermsTableRow("", perm.toString, Set.empty)) {
       expanded = true
     }
 }
