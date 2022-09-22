@@ -12,7 +12,7 @@ scalacOptions += "-deprecation"
 
 // scalafx (and fxml)
 // Add dependency on ScalaFX library
-libraryDependencies += "org.scalafx" %% "scalafx" % "16.0.0-R22"
+libraryDependencies += "org.scalafx" %% "scalafx" % "18.0.2-R29"
 
 // Determine OS version of JavaFX binaries
 lazy val osName = System.getProperty("os.name") match {
@@ -23,7 +23,7 @@ lazy val osName = System.getProperty("os.name") match {
 }
 
 lazy val javaFXModules = Seq("base", "controls", "fxml", "graphics", "media", "swing", "web")
-libraryDependencies ++= javaFXModules.map( m => "org.openjfx" % s"javafx-$m" % "12.0.1" classifier osName)
+libraryDependencies ++= javaFXModules.map( m => "org.openjfx" % s"javafx-$m" % "17.0.2" classifier osName)
 
 libraryDependencies ++= { // scalafx (and fxml)
   val scalafxmlVersion = "0.5"
@@ -33,49 +33,47 @@ libraryDependencies ++= { // scalafx (and fxml)
 }
 
 // https://mvnrepository.com/artifact/org.controlsfx/controlsfx
-libraryDependencies += "org.controlsfx" % "controlsfx" % "11.1.0"
+libraryDependencies += "org.controlsfx" % "controlsfx" % "11.1.1"
 
 // guice dependency injection
 libraryDependencies ++= Seq(
-  "com.google.inject" % "guice" % "5.0.1",
-  "net.codingwell" %% "scala-guice" % "5.0.0"
+  "com.google.inject" % "guice" % "5.1.0",
+  "net.codingwell" %% "scala-guice" % "5.1.0"
 )
 
 // https://mvnrepository.com/artifact/com.google.guava/guava
-libraryDependencies += "com.google.guava" % "guava" % "30.1.1-jre"
+libraryDependencies += "com.google.guava" % "guava" % "31.1-jre"
 
 // logging - Scribe
-libraryDependencies += "com.outr" %% "scribe" % "3.3.3"
+libraryDependencies += "com.outr" %% "scribe" % "3.10.3"
 
 // config
-libraryDependencies += "com.typesafe" % "config" % "1.3.1"
+libraryDependencies += "com.typesafe" % "config" % "1.4.2"
 
 // ICU4J https://mvnrepository.com/artifact/com.ibm.icu/icu4j
-libraryDependencies += "com.ibm.icu" % "icu4j" % "60.2"
+libraryDependencies += "com.ibm.icu" % "icu4j" % "71.1"
 
 // detecting usb drives
-libraryDependencies += "net.samuelcampos" % "usbdrivedetector" % "2.1.1"
+libraryDependencies += "net.samuelcampos" % "usbdrivedetector" % "2.2.1"
 
-libraryDependencies += "com.beachape" %% "enumeratum" % "1.6.1"
-
-libraryDependencies += "com.typesafe.akka" % "akka-actor-typed_2.12" % "2.6.1"
+libraryDependencies += "com.beachape" %% "enumeratum" % "1.7.0"
 
 // Apache Tika - mime type detection and file content scanning lib
 libraryDependencies ++= {
-  val tikaVersion = "1.26"
-  val bouncyCastleVersion = "1.68"
+  val tikaVersion = "2.4.1"
+  val bouncyCastleVersion = "1.71.1"
   Seq("org.apache.tika" % "tika-core" % tikaVersion,
       "org.apache.tika" % "tika-parsers" % tikaVersion,
-      "org.xerial" % "sqlite-jdbc" % "3.34.0",
-      "org.apache.pdfbox" % "jbig2-imageio" % "3.0.3",
+      "org.xerial" % "sqlite-jdbc" % "3.39.3.0",
+      "org.apache.pdfbox" % "jbig2-imageio" % "3.0.4",
       "com.github.jai-imageio" % "jai-imageio-core" % "1.4.0",
-      "org.bouncycastle" % "bcprov-jdk15on" % bouncyCastleVersion,
-      "org.bouncycastle" % "bcmail-jdk15on" % bouncyCastleVersion,
-      "org.bouncycastle" % "bcpkix-jdk15on" % bouncyCastleVersion)
+      "org.bouncycastle" % "bcprov-jdk18on" % bouncyCastleVersion,
+      "org.bouncycastle" % "bcmail-jdk18on" % bouncyCastleVersion,
+      "org.bouncycastle" % "bcpkix-jdk18on" % bouncyCastleVersion)
 }
 
 // for apache commons archive formats
-libraryDependencies += "org.apache.commons" % "commons-compress" % "1.20"
+libraryDependencies += "org.apache.commons" % "commons-compress" % "1.21"
 
 // for xz,7z
 libraryDependencies += "org.tukaani" % "xz" % "1.9"

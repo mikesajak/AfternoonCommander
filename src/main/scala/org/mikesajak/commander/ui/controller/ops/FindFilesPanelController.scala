@@ -80,7 +80,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     goToPathButton.disable = true
     showAsListButton.disable = true
 
-    searchResultsListView.cellFactory = { _ =>
+    searchResultsListView.cellFactory = { (_, _) =>
       val cell = new ListCell[VPath]
       cell.item.onChange { (_,_,elem) => cell.text = if (elem != null) elem.absolutePath else null }
       cell

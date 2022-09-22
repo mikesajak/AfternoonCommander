@@ -64,7 +64,7 @@ class SettingsPanelControllerImpl(categoriesTreeView: TreeView[SettingsGroupPane
       children = settingsGroups map (group => toTreeItem(group, Seq()))
     }
 
-    categoriesTreeView.cellFactory = { _ =>
+    categoriesTreeView.cellFactory = { (_, _) =>
       new jfxs.control.TreeCell[SettingsGroupPanel]() {
         val self: TreeCell[SettingsGroupPanel] = this
 

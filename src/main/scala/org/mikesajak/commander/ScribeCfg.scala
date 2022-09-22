@@ -1,11 +1,11 @@
 package org.mikesajak.commander
 
-import scribe.format.{Formatter, FormatterInterpolator, date, levelColored, mdc, message, positionAbbreviated, string}
-import scribe.{Level, format}
+import scribe.Level
+import scribe.format.{Formatter, FormatterInterpolator, date, green, levelColored, mdc, messages, positionAbbreviated, string}
 
 object ScribeCfg {
   lazy val compactAbbreviatedFormatter: Formatter =
-    formatter"$date ${string("[")}$levelColored${string("]")} ${format.green(positionAbbreviated)} - $message$mdc"
+    formatter"$date ${string("[")}$levelColored${string("]")} ${ green(positionAbbreviated)} - $messages$mdc"
 
   def initScribeLogging(): Unit = {
     scribe.Logger.root
