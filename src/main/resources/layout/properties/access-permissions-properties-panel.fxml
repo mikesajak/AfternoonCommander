@@ -3,15 +3,20 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.TreeTableColumn?>
 <?import javafx.scene.control.TreeTableView?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="15.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.properties.AccessPermissionsPropertiesPanelControllerImpl">
+<?import javafx.scene.layout.*?>
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="25.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.properties.AccessPermissionsPropertiesPanelControllerImpl">
    <children>
-      <StackPane prefHeight="150.0" prefWidth="200.0">
+      <StackPane VBox.vgrow="NEVER">
          <children>
             <fx:include fx:id="unixAccessPanel" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" source="unix-access-permissions-panel.fxml" />
             <fx:include fx:id="windowsAccessPanel" source="windows-access-permissions-panel.fxml" />
          </children>
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+         <padding>
+            <Insets bottom="10.0" />
+         </padding>
       </StackPane>
       <TreeTableView fx:id="permsTreeTableView" prefHeight="200.0" prefWidth="200.0" showRoot="false" VBox.vgrow="ALWAYS">
         <columns>
@@ -21,6 +26,6 @@
       </TreeTableView>
    </children>
    <padding>
-      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+      <Insets bottom="5.0" left="5.0" right="5.0" top="10.0" />
    </padding>
 </VBox>

@@ -7,8 +7,10 @@ class SymlinkFile(file: File, fileSystem: LocalFS) extends LocalFile(file, fileS
     throw new IllegalStateException(s"Cannot create SymlinkFile for directory target. file=$file")
 
   def target: LocalPath = {
-    val targetFile = Files.readSymbolicLink(file.toPath).toFile
-    new LocalDirectory(targetFile, fileSystem)
+    val symlinkNioPath = Files.readSymbolicLink(file.toPath)
+    val targetFile = if (symlinkNioPath.isAbsolute) symlinkNioPath.toFile
+                     else new File(file.getParentFile, symlinkNioPath.toString)
+    new LocalFile(targetFile, fileSystem)
   }
 }
 
@@ -17,7 +19,9 @@ class SymlinkDir(file: File, fileSystem: LocalFS) extends LocalDirectory(file, f
     throw new IllegalStateException(s"Cannot create SymlinkDirectory for not directory target. file=$file")
 
   def target: LocalPath = {
-    val targetFile = Files.readSymbolicLink(file.toPath).toFile
+    val symlinkNioPath = Files.readSymbolicLink(file.toPath)
+    val targetFile = if (symlinkNioPath.isAbsolute) symlinkNioPath.toFile
+                     else new File(file.getParentFile, symlinkNioPath.toString)
     new LocalDirectory(targetFile, fileSystem)
   }
 }

@@ -3,7 +3,6 @@ package org.mikesajak.commander.ui
 import org.mikesajak.commander.ApplicationController
 import org.mikesajak.commander.fs.{PathToParent, VPath}
 import org.mikesajak.commander.status.StatusMgr
-import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui.controller.PropertiesPanelController
 import scalafx.Includes._
 import scalafx.scene.control.ButtonType
@@ -36,7 +35,8 @@ class PropertiesCtrl(statusMgr: StatusMgr, appController: ApplicationController)
     val backgroundServices = ctrl.init(path)
 
     dialog.onShown = _ => backgroundServices.foreach(_.start())
-    dialog.setWindowSize(700, 600)
+    dialog.getDialogPane.getScene.getWindow.sizeToScene()
+    dialog.resizable = false
     dialog.showAndWait()
 
     backgroundServices.foreach { bgService =>

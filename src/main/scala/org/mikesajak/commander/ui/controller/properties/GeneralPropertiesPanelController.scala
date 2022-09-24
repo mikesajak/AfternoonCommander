@@ -4,6 +4,7 @@ import javafx.concurrent.Worker.State
 import org.apache.commons.io.FilenameUtils
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.VPath
+import org.mikesajak.commander.fs.local.{SymlinkDir, SymlinkFile}
 import org.mikesajak.commander.task.{BackgroundService, DirContents, DirStats}
 import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui.ResourceManager
@@ -29,6 +30,8 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
                                            createdLabel: Label,
                                            lastAccessedLabel: Label,
                                            attributesLabel: Label,
+                                           symbolicLinkNameLabel: Label,
+                                           symbolicLinkLabel: Label,
                                            sizeLabel: Label,
                                            numDirsLabel: Label,
                                            numDirsNameLabel: Label,
@@ -55,6 +58,18 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
     lastAccessedLabel.text = timeFormatter.format(path.accessDate)
 
     attributesLabel.text = path.attributes.toString
+
+    symbolicLinkLabel.visible <==> symbolicLinkLabel.managed
+    symbolicLinkNameLabel.visible <==> symbolicLinkNameLabel.managed
+
+    symbolicLinkLabel.text = path match {
+      case sf: SymlinkFile =>  sf.target.absolutePath
+      case sd: SymlinkDir => sd.target.absolutePath
+      case _ =>
+        symbolicLinkLabel.visible = false
+        symbolicLinkNameLabel.visible = false
+        "-"
+    }
 
     if (path.isFile) {
       sizeLabel.text = DataUnit.mkDataSize(path.size.toDouble).toString

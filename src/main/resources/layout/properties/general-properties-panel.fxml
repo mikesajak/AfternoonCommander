@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?><?import javafx.scene.control.*?><?import javafx.scene.layout.*?><?import javafx.scene.text.Font?>
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="15.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.properties.GeneralPropertiesPanelControllerImpl">
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" spacing="15.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.mikesajak.commander.ui.controller.properties.GeneralPropertiesPanelControllerImpl">
    <children>
       <GridPane fx:id="filePropsPanel" hgap="10.0" vgap="5.0">
          <columnConstraints>
@@ -17,6 +20,7 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            <RowConstraints fx:id="symbolicLinkGridRow" minHeight="0.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="5.0" prefHeight="20.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES" />
@@ -24,9 +28,9 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <Label text="%properties_panel.general_tab.size.label" textFill="#797979" GridPane.rowIndex="9" />
-            <Label fx:id="sizeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="9" />
-            <Label text="Ścieżka:" textFill="#797979" />
+            <Label text="%properties_panel.general_tab.size.label" textFill="#797979" GridPane.rowIndex="10" />
+            <Label fx:id="sizeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+            <Label text="%properties_panel.general_tab.path.label" textFill="#797979" />
             <HBox GridPane.columnIndex="1">
                <children>
                   <Label fx:id="pathLabel" text="Label" />
@@ -37,20 +41,22 @@
                   </Label>
                </children>
             </HBox>
-            <Label text="Typ:" textFill="#797979" GridPane.rowIndex="1" />
+            <Label text="%properties_panel.general_tab.type.label" textFill="#797979" GridPane.rowIndex="1" />
             <Label fx:id="typeLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Label text="Data modyfikacji:" textFill="#797979" GridPane.rowIndex="3" />
+            <Label text="%properties_panel.general_tab.modification_time.label" textFill="#797979" GridPane.rowIndex="3" />
             <Label fx:id="modifiedLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Label text="Atrybuty:" textFill="#797979" GridPane.rowIndex="7" />
+            <Label text="%properties_panel.general_tab.attributes.label" textFill="#797979" GridPane.rowIndex="7" />
             <Label fx:id="attributesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-            <Label fx:id="numDirsNameLabel" text="%properties_panel.general_tab.num_directories.label" textFill="#797979" GridPane.rowIndex="11" />
-            <Label fx:id="numFilesNameLabel" text="%properties_panel.general_tab.num_files.label" textFill="#797979" GridPane.rowIndex="12" />
-            <Label fx:id="numDirsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="11" />
-            <Label fx:id="numFilesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="12" />
-            <Label text="Czas utworzenia:" textFill="#797979" GridPane.rowIndex="4" />
-            <Label text="Ostatni dostęp:" textFill="#797979" GridPane.rowIndex="5" />
+            <Label fx:id="numDirsNameLabel" text="%properties_panel.general_tab.num_directories.label" textFill="#797979" GridPane.rowIndex="12" />
+            <Label fx:id="numFilesNameLabel" text="%properties_panel.general_tab.num_files.label" textFill="#797979" GridPane.rowIndex="13" />
+            <Label fx:id="numDirsLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="12" />
+            <Label fx:id="numFilesLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="13" />
+            <Label text="%properties_panel.general_tab.creation_time.label" textFill="#797979" GridPane.rowIndex="4" />
+            <Label text="%properties_panel.general_tab.last_access_time.label" textFill="#797979" GridPane.rowIndex="5" />
             <Label fx:id="createdLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="4" />
             <Label fx:id="lastAccessedLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+            <Label fx:id="symbolicLinkNameLabel" minHeight="0.0" text="%properties_panel.general_tab.symbolic_link.label" textFill="#797979" GridPane.rowIndex="8" />
+            <Label fx:id="symbolicLinkLabel" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="8" />
          </children>
       </GridPane>
    </children>
