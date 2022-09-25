@@ -4,7 +4,7 @@ import javafx.concurrent.Worker.State
 import org.apache.commons.io.FilenameUtils
 import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.VPath
-import org.mikesajak.commander.fs.local.{SymlinkDir, SymlinkFile}
+import org.mikesajak.commander.fs.local.SymlinkPath
 import org.mikesajak.commander.task.{BackgroundService, DirContents, DirStats}
 import org.mikesajak.commander.ui.MyScalaFxImplicits._
 import org.mikesajak.commander.ui.ResourceManager
@@ -63,8 +63,7 @@ class GeneralPropertiesPanelControllerImpl(pathLabel: Label,
     symbolicLinkNameLabel.visible <==> symbolicLinkNameLabel.managed
 
     symbolicLinkLabel.text = path match {
-      case sf: SymlinkFile =>  sf.target.absolutePath
-      case sd: SymlinkDir => sd.target.absolutePath
+      case s: SymlinkPath => s.target.absolutePath
       case _ =>
         symbolicLinkLabel.visible = false
         symbolicLinkNameLabel.visible = false
