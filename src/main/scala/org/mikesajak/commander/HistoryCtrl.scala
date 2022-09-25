@@ -43,6 +43,10 @@ class HistoryCtrl(val name: String, config: Configuration, limit: Int = 15) exte
   }
 
   def last: Option[VDirectory] = dirList.lastOption
+  def last(num: Int): Option[VDirectory] = {
+    val it = dirList.reverseIterator.drop(num)
+    it.nextOption()
+  }
 
   def isEmpty: Boolean = dirList.isEmpty
   def nonEmpty: Boolean = dirList.nonEmpty

@@ -1,6 +1,5 @@
 package org.mikesajak.commander.ui.controller
 
-import com.google.common.eventbus.Subscribe
 import org.mikesajak.commander.EventBus
 import org.mikesajak.commander.fs.VDirectory
 import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotification
@@ -55,11 +54,10 @@ class DirTabManager(panelId: PanelId, eventBus: EventBus) extends Logging {
     eventBus.publish(TabSelected(panelId, newIdx))
   }
 
-  //noinspection UnstableApiUsage
-  @Subscribe
-  def onCurrentDirChange(event: CurrentDirChangeNotification): Unit = {
-    if (event.panelId == panelId)
-      selectedTab.dir = event.curDir
+  def changeSelectedTabDir(dir: VDirectory): Unit = {
+    val prevDir = Option(selectedTab.dir)
+    selectedTab.dir = dir
+    eventBus.publish(CurrentDirChangeNotification(panelId, prevDir, dir))
   }
 }
 

@@ -42,7 +42,7 @@ class TransferOperationController(statusMgr: StatusMgr,
 
     if (sourcePaths.nonEmpty) {
       val unselectedTab = statusMgr.unselectedTabManager.selectedTab
-      val targetDir = unselectedTab.controller.focusedPath._2 match {
+      val targetDir = unselectedTab.controller.focusedPath match {
         case p: PathToParent => p.currentDir
         case d: VDirectory => d
         case _ => unselectedTab.dir

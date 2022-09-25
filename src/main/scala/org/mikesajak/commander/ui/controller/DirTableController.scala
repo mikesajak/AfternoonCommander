@@ -4,7 +4,6 @@ import com.google.common.eventbus.Subscribe
 import org.mikesajak.commander.config.{ConfigKeys, ConfigObserver, Configuration}
 import org.mikesajak.commander.fs._
 import org.mikesajak.commander.handler.{ActionFileHandler, ContainerFileHandler, FileHandlerFactory}
-import org.mikesajak.commander.ui.controller.DirViewEvents.CurrentDirChangeNotification
 import org.mikesajak.commander.ui.{IconResolver, PropertiesCtrl, ResourceManager}
 import org.mikesajak.commander.units.DataUnit
 import org.mikesajak.commander.util.PathUtils
@@ -70,8 +69,8 @@ trait DirTableController {
   def init(path: VDirectory): Unit
   def dispose(): Unit
   def currentDirectory: VDirectory
-  def setCurrentDirectory(path: VDirectory, focusedPath: Option[Int] = None): Unit
-  def focusedPath: (Int, VPath)
+  def setCurrentDirectory(path: VDirectory): Unit
+  def focusedPath: VPath
   def selectedPaths: Seq[(Int, VPath)]
   def reload(): Unit
   def setTableFocusOn(rowIndex: Int): Unit
@@ -95,6 +94,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
                              @nested[PanelStatusBarControllerImpl] panelStatusBarController: PanelStatusBarController,
 
                              panelId: PanelId,
+                             dirTabManager: DirTabManager,
                              fileTypeMgr: FileTypeManager,
                              fileHandlerFactory: FileHandlerFactory,
                              resourceMgr: ResourceManager,
@@ -148,9 +148,9 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     }
   }
 
-  override def focusedPath: (Int, VPath) = {
+  override def focusedPath: VPath = {
     val selectionModel = dirTableView.selectionModel.value
-    (selectionModel.getSelectedIndex, selectionModel.getSelectedItem.path)
+    selectionModel.getSelectedItem.path
   }
 
   override def selectedPaths: Seq[(Int, VPath)] = {
@@ -235,8 +235,8 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
     dirTableView.items = sortedRows
 
     panelStatusBarController.init()
-    curPathBarController.init(directory => setCurrentDirectory(directory))
-    panelActionsBarController.init(directory => setCurrentDirectory(directory))
+    curPathBarController.init(setCurrentDirectory)
+    panelActionsBarController.init(setCurrentDirectory)
 
     setCurrentDirectory(path)
   }
@@ -268,19 +268,21 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
 
   override def currentDirectory: VDirectory = curDir
 
-  override def setCurrentDirectory(directory: VDirectory, focusedPath: Option[Int] = None): Unit = {
-    runWithTimer(s"setCurrentDirectory: directory=$directory, focusedPath=$focusedPath") { () =>
+  override def setCurrentDirectory(directory: VDirectory): Unit = {
+    runWithTimer(s"setCurrentDirectory: directory=$directory") { () =>
       val prevDir = curDir
-      val newDir = resolveTargetDir(directory)
-      curDir = newDir
+      curDir = resolveTargetDir(directory)
 
-      Platform.runLater { panelStatusBarController.setDirectory(newDir) }
-      Platform.runLater { curPathBarController.setDirectory(newDir) }
-      initTable(newDir)
-      dirTableView.selectionModel.value.clearSelection()
-      setTableFocusOn(focusedPath.getOrElse(0))
+      Platform.runLater { panelStatusBarController.setDirectory(curDir) }
+      Platform.runLater { curPathBarController.setDirectory(curDir) }
+      initTable(curDir)
+      val selectionModel = dirTableView.selectionModel.value
+      selectionModel.clearSelection()
 
-      eventBus.publish(CurrentDirChangeNotification(panelId, Option(prevDir), newDir))
+      if (prevDir != null && curDir.isParent(prevDir)) setTableFocusOn(prevDir)
+      else setTableFocusOn(math.max(selectionModel.getSelectedIndex, 0))
+
+      dirTabManager.changeSelectedTabDir(curDir)
     }
   }
 
@@ -292,7 +294,7 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
   }
 
   override def reload(): Unit = {
-    setCurrentDirectory(curDir, Some(focusedPath._1))
+    setCurrentDirectory(curDir)
   }
 
   def setTableFocusOn(index: Int): Unit = runWithTimer(s"setTableFocusOn($index)") { () =>
@@ -337,16 +339,10 @@ class DirTableControllerImpl(dirTableView: TableView[FileRow],
                   else fileHandlerFactory.getFileHandler(path)
 
     handler.foreach {
-      case containerHandler: ContainerFileHandler => changeDir(containerHandler.getContainerDir)
+      case containerHandler: ContainerFileHandler => setCurrentDirectory(containerHandler.getContainerDir)
       case actionHandler: ActionFileHandler => actionHandler.handle()
       case _ => logger.debug(s"File handler couldn't be found for path $path.")
     }
-  }
-
-  private def changeDir(directory: VDirectory): Unit = {
-    val prevDir = curDir
-    setCurrentDirectory(directory)
-    focusPrevDirWhenTraversingToParentDir(prevDir, directory)
   }
 
   private def focusPrevDirWhenTraversingToParentDir(prevDir: VDirectory, newDir: VDirectory): Unit = {

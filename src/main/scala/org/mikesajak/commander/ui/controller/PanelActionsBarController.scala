@@ -100,7 +100,7 @@ class PanelActionsBarControllerImpl(favDirsButton: Button,
   }
 
   def handlePrevDirButton(): Unit = {
-    historyMgr.panelHistoryCtrl(panelId).last
+    historyMgr.panelHistoryCtrl(panelId).last(1)
               .foreach(notifyDirectoryChange)
   }
 
