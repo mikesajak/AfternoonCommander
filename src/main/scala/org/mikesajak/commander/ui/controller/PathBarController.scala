@@ -16,9 +16,6 @@ trait PathBarController {
   def setDirectory(directory: VDirectory): Unit
 }
 
-trait CurrentDirAware {
-  def setDirectory(directory: VDirectory): Unit
-}
 
 @sfxml
 class PathBarControllerImpl(curPathPanel: HBox,
@@ -55,9 +52,7 @@ class PathBarControllerImpl(curPathPanel: HBox,
       event.getSelectedCrumb.getValue match {
         case null =>
         case PathCrumbItem(path) => notifyDirectoryChange(path.directory)
-        case x@PrevCrumbItems(paths) =>
-          println(s"Hit prev .... $x")
-          notifyDirectoryChange(paths.last.directory)
+        case x@PrevCrumbItems(paths) => notifyDirectoryChange(paths.last.directory)
       }
     }
   }

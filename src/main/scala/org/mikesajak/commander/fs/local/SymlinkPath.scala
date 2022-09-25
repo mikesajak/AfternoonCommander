@@ -2,11 +2,15 @@ package org.mikesajak.commander.fs.local
 import java.io.File
 import java.nio.file.Files
 
-class SymlinkFile(file: File, fileSystem: LocalFS) extends LocalFile(file, fileSystem) {
+trait SymlinkPath {
+  def target: LocalPath
+}
+
+class SymlinkFile(file: File, fileSystem: LocalFS) extends LocalFile(file, fileSystem) with SymlinkPath {
   if (file.isDirectory)
     throw new IllegalStateException(s"Cannot create SymlinkFile for directory target. file=$file")
 
-  def target: LocalPath = {
+  override def target: LocalPath = {
     val symlinkNioPath = Files.readSymbolicLink(file.toPath)
     val targetFile = if (symlinkNioPath.isAbsolute) symlinkNioPath.toFile
                      else new File(file.getParentFile, symlinkNioPath.toString)
@@ -14,11 +18,11 @@ class SymlinkFile(file: File, fileSystem: LocalFS) extends LocalFile(file, fileS
   }
 }
 
-class SymlinkDir(file: File, fileSystem: LocalFS) extends LocalDirectory(file, fileSystem) {
+class SymlinkDir(file: File, fileSystem: LocalFS) extends LocalDirectory(file, fileSystem) with SymlinkPath {
   if (!file.isDirectory)
     throw new IllegalStateException(s"Cannot create SymlinkDirectory for not directory target. file=$file")
 
-  def target: LocalPath = {
+  override def target: LocalPath = {
     val symlinkNioPath = Files.readSymbolicLink(file.toPath)
     val targetFile = if (symlinkNioPath.isAbsolute) symlinkNioPath.toFile
                      else new File(file.getParentFile, symlinkNioPath.toString)
