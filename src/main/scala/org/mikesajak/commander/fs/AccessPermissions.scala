@@ -3,7 +3,7 @@ package org.mikesajak.commander.fs
 import enumeratum.{Enum, EnumEntry}
 import org.mikesajak.commander.fs.Permission.{EXECUTE, READ_DATA, WRITE_DATA}
 
-import java.nio.file.attribute.{AclEntry, AclEntryPermission, AclFileAttributeView, PosixFileAttributeView, PosixFileAttributes, PosixFilePermission}
+import java.nio.file.attribute._
 import scala.collection.immutable
 import scala.jdk.CollectionConverters.IterableHasAsScala
 
@@ -66,17 +66,19 @@ object AccessPermissions {
   }
 
   private def from(posixAttribs: PosixFileAttributes): Map[String, Set[Permission]] = {
-    posixAttribs.permissions().asScala.toSet
-                .map(p => resolvePosixPermission(posixAttribs, p))
-                .groupBy(p => p._1)
-                .map(p => p._1 -> p._2.map(_._2))
+    val perms = posixAttribs.permissions().asScala.toSet
+                            .map(p => resolvePosixPermission(posixAttribs, p))
+                            .groupBy(p => p._1)
+                            .map(p => p._1 -> p._2.map(_._2))
+    if (perms.contains("others")) perms
+    else perms + ("others" -> Set[Permission]())
   }
 
   private def from(aclList: List[AclEntry]): Map[String, Set[Permission]] =
     aclList.map(aclEntry => aclEntry.principal().getName -> aclEntry.permissions().asScala.map(p => Permission.apply(p)).toSet)
            .toMap
 
-  private def resolvePosixPermission(posixAttribs: PosixFileAttributes, perm: PosixFilePermission) = perm match {
+  private def resolvePosixPermission(posixAttribs: PosixFileAttributes, perm: PosixFilePermission): (String, Permission) = perm match {
     case PosixFilePermission.OWNER_READ => "owner: " + posixAttribs.owner().getName -> READ_DATA
     case PosixFilePermission.OWNER_WRITE => "owner: " + posixAttribs.owner().getName -> WRITE_DATA
     case PosixFilePermission.OWNER_EXECUTE => "owner: " + posixAttribs.owner().getName -> EXECUTE
