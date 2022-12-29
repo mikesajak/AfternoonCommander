@@ -37,18 +37,26 @@ trait LocalPath extends VPath {
   }
 
   override def modificationDate: Instant = {
-    val attr = Files.readAttributes(file.toPath, classOf[BasicFileAttributes])
-    attr.lastModifiedTime().toInstant
+    readOSAttributes().map(_.lastModifiedTime().toInstant)
+                    .getOrElse(Instant.ofEpochMilli(file.lastModified()))
   }
 
   override def creationDate: Instant = {
-    val attr = Files.readAttributes(file.toPath, classOf[BasicFileAttributes])
-    attr.creationTime().toInstant
+    readOSAttributes().map(_.creationTime().toInstant)
+                    .getOrElse(Instant.ofEpochMilli(file.lastModified()))
   }
 
   override def accessDate: Instant = {
-    val attr = Files.readAttributes(file.toPath, classOf[BasicFileAttributes])
-    attr.lastAccessTime().toInstant
+    readOSAttributes().map(_.lastAccessTime().toInstant)
+                    .getOrElse(Instant.ofEpochMilli(file.lastModified()))
+  }
+
+  private def readOSAttributes() = try {
+    Some(Files.readAttributes(file.toPath, classOf[BasicFileAttributes]))
+  } catch {
+    case e: Exception =>
+      scribe.info(s"Error reading attributes: ${ e.getMessage }", e)
+      None
   }
 
   override def parent: Option[VDirectory] = {
