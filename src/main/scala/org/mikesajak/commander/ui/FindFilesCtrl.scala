@@ -38,7 +38,7 @@ class FindFilesCtrl(appController: ApplicationController,
                           else result.directory
           val selectedTabController = statusMgr.selectedTabManager.selectedTab.controller
           selectedTabController.setCurrentDirectory(directory)
-          selectedTabController.setTableFocusOn(directory)
+          selectedTabController.setTableFocusOn(result)
         }
 
       case Some(showAsListButtonType.delegate) =>

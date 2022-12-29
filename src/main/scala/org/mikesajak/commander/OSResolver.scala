@@ -11,7 +11,7 @@ object OSType extends Enum[OSType] {
 
   case object Windows extends OSType("win")
   case object Mac extends OSType("mac")
-  case object Unix extends OSType("nix", "nux", "aix")
+  case object Unix extends OSType("nix", "inux", "aix")
   case object Solaris extends OSType("sunos")
 }
 

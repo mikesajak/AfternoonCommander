@@ -72,6 +72,8 @@ libraryDependencies ++= {
       "org.bouncycastle" % "bcpkix-jdk18on" % bouncyCastleVersion)
 }
 
+libraryDependencies += "org.codehaus.guessencoding" % "guessencoding" % "1.4"
+
 // for apache commons archive formats
 libraryDependencies += "org.apache.commons" % "commons-compress" % "1.21"
 

@@ -1,6 +1,7 @@
 package org.mikesajak.commander.ui.controller.ops
 
 import javafx.concurrent.Worker.State
+import org.mikesajak.commander.FileTypeManager
 import org.mikesajak.commander.fs.{FilesystemsManager, VDirectory, VPath}
 import org.mikesajak.commander.task._
 import org.mikesajak.commander.ui.UIUtils.dialogButton
@@ -8,14 +9,13 @@ import org.mikesajak.commander.ui.{IconSize, ResourceManager}
 import org.mikesajak.commander.util.Throttler
 import scalafx.Includes._
 import scalafx.application.Platform
+import scalafx.beans.property.BooleanProperty
 import scalafx.concurrent.Service
 import scalafx.scene.control._
 import scalafx.scene.image.ImageView
 import scalafx.scene.input.{KeyCode, KeyEvent, MouseButton}
 import scalafxml.core.macros.sfxml
 import scribe.Logging
-
-import scala.jdk.CollectionConverters._
 
 trait FindFilesPanelController {
   def init(startDir: VDirectory, dialog: Dialog[ButtonType]): (ButtonType, ButtonType, ButtonType)
@@ -44,6 +44,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
                                    startSearchButton: Button,
 
                                    resourceMgr: ResourceManager,
+                                   fileTypeMgr: FileTypeManager,
                                    fsMgr: FilesystemsManager,
                                    serviceRegistry: BackgroundServiceRegistry)
     extends FindFilesPanelController with Logging {
@@ -52,7 +53,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
   private var showAsListButton: Button = _
   private var closeButton: Button = _
 
-  private var searchIsPending = false
+  private val searchIsPendingProperty = BooleanProperty(false)
   private var searchService: Service[SearchProgress] = _
 
   headerImageView.image = resourceMgr.getIcon("file-find.png", IconSize.Big)
@@ -67,37 +68,43 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
 
     dialog.title = resourceMgr.getMessage("find_files_dialog.title")
 
-    val goToPathButtonType = new ButtonType(resourceMgr.getMessage("find_files_dialog.go_to_path_button"))
+    val goToPathButtonType   = new ButtonType(resourceMgr.getMessage("find_files_dialog.go_to_path_button"))
     val showAsListButtonType = new ButtonType(resourceMgr.getMessage("find_files_dialog.show_as_list_button"))
-    val closeButtonType = new ButtonType(resourceMgr.getMessage("general.close_button"))
+    val closeButtonType      = new ButtonType(resourceMgr.getMessage("general.close_button"))
 
     dialogPane.buttonTypes = Seq(goToPathButtonType, showAsListButtonType, closeButtonType)
 
-    goToPathButton = dialogButton(dialog, goToPathButtonType)
+    goToPathButton   = dialogButton(dialog, goToPathButtonType)
     showAsListButton = dialogButton(dialog, showAsListButtonType)
-    closeButton = dialogButton(dialog, closeButtonType)
+    closeButton      = dialogButton(dialog, closeButtonType)
 
-    goToPathButton.disable = true
+    goToPathButton.disable   = true
     showAsListButton.disable = true
 
-    searchResultsListView.cellFactory = { (_, _) =>
-      val cell = new ListCell[VPath]
-      cell.item.onChange { (_,_,elem) => cell.text = if (elem != null) elem.absolutePath else null }
-      cell
+    searchResultsListView.cellFactory = { (cell, value) =>
+      cell.text = if (value!= null) value.absolutePath else null
     }
+
+    filenameSearchTextCombo.disable <== searchIsPendingProperty
+    filenameCaseCheckbox.disable    <== searchIsPendingProperty
+    filenameRegexCheckbox.disable   <== searchIsPendingProperty
+    filenameInverseCheckbox.disable <== searchIsPendingProperty
+
+    searchContentCheckbox.disable  <== searchIsPendingProperty
+    contentSearchTextCombo.disable <== searchIsPendingProperty || !searchContentCheckbox.selected
+    contentCaseCheckbox.disable    <== searchIsPendingProperty || !searchContentCheckbox.selected
+    contentRegexCheckbox.disable   <== searchIsPendingProperty || !searchContentCheckbox.selected
+    contentInverseCheckbox.disable <== searchIsPendingProperty || !searchContentCheckbox.selected
 
     startSearchButton.disable = true
 
     startSearchButton.onAction = { _ =>
-      if (!searchIsPending) startSearch()
+      if (!searchIsPendingProperty.value) startSearch()
       else stopSearch()
     }
 
-    filenameSearchTextCombo.editor.value.text.onChange { (_, _, searchText) =>
-      if (!searchIsPending) {
-        startSearchButton.disable = searchText.isBlank
-      }
-    }
+    filenameSearchTextCombo.editor.value.text.onChange { (_, _, _) => updateStartSearchButtonState() }
+    contentSearchTextCombo.editor.value.text.onChange { (_, _, _) => updateStartSearchButtonState() }
 
     dialogPane.filterEvent(KeyEvent.KeyPressed) { ke: KeyEvent =>
       if (ke.code == KeyCode.Escape)
@@ -123,13 +130,25 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     (goToPathButtonType, showAsListButtonType, closeButtonType)
   }
 
-  def startSearch(): Unit = {
+  private def updateStartSearchButtonState(): Unit = startSearchButton.disable = !canStartSearch
+
+  private def canStartSearch: Boolean = {
+    if (!searchIsPendingProperty.value) {
+      val filenameSearchText = filenameSearchTextCombo.editor.value.text.value
+      val contentSearchText = contentSearchTextCombo.editor.value.text.value
+      filenameSearchText.isBlank ||
+        !(contentCaseCheckbox.selected.value && !contentSearchText.isBlank)
+    }
+    else false
+  }
+
+  private def startSearch(): Unit = {
     fsMgr.resolvePath(searchInTextField.text.value).foreach { startDir =>
       stopSearch()
 
       val criteria = mkSearchCriteria()
       logger.info(s"Starting search  in: $startDir, criteria=$criteria")
-      searchService = serviceRegistry.registerServiceFor(new FindFilesTask(criteria, startDir.directory, resourceMgr))
+      searchService = serviceRegistry.registerServiceFor(new FindFilesTask(criteria, startDir.directory, resourceMgr, fileTypeMgr))
       prepareSearchService(searchService)
       searchResultsListView.items.value.clear()
       searchService.start()
@@ -150,7 +169,7 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
     Option(searchResultsListView.selectionModel.value.getSelectedItem)
 
   private def doUpdate(searchProgress: SearchProgress): Unit = {
-    if (searchIsPending) Platform.runLater {
+    if (searchIsPendingProperty.value) Platform.runLater {
       updateProgress(searchProgress, finished = false, cancelled = false)
     }
   }
@@ -170,14 +189,14 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
   }
 
   private def searchStarted(): Unit = {
-    searchIsPending = true
+    searchIsPendingProperty.value = true
     updateButtons()
     searchStatusLabel.graphic = new ImageView(resourceMgr.getIcon("loading-chasing-arrows.gif", IconSize(14)))
     searchStatusLabel.text = resourceMgr.getMessage("find_files_dialog.status.in_progress")
   }
 
   private def searchStopped(finalStatus: SearchProgress, cancelled: Boolean): Unit = {
-    searchIsPending = false
+    searchIsPendingProperty.value = false
     updateButtons()
     searchStatusLabel.graphic = null
     searchStatusLabel.text = if (cancelled) resourceMgr.getMessage("find_files_dialog.status.aborted")
@@ -186,17 +205,17 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
   }
 
   private def updateButtons(): Unit = {
-    startSearchButton.text = if (searchIsPending) resourceMgr.getMessage("find_files_dialog.action.stop")
+    startSearchButton.text = if (searchIsPendingProperty.value) resourceMgr.getMessage("find_files_dialog.action.stop")
                              else resourceMgr.getMessage("find_files_dialog.action.start")
   }
 
   private def updateProgress(searchProgress: SearchProgress, finished: Boolean, cancelled: Boolean): Unit = {
     val results = searchResultsListView.items.value
-    val resultsSelectionModel = searchResultsListView.selectionModel.value
     if (results.size() != searchProgress.results.size) {
+      val resultsSelectionModel = searchResultsListView.selectionModel.value
       val prevSelection = resultsSelectionModel.getSelectedIndex
       results.clear()
-      results.addAll(searchProgress.results.asJava)
+      results ++= searchProgress.results
       resultsSelectionModel.selectIndices(prevSelection)
     }
 
@@ -207,13 +226,24 @@ class FindFilesPanelControllerImpl(headerImageView: ImageView,
                                                                 Seq(searchProgress.dirStats.numDirs, searchProgress.dirStats.numFiles))
   }
 
-  private def mkSearchCriteria() = {
+  private def mkSearchCriteria(): Search = {
     val searchText = filenameSearchTextCombo.editor.value.text.value
     Search(SearchCriteria(searchText,
                           filenameCaseCheckbox.selected.value,
                           filenameRegexCheckbox.selected.value,
                           filenameInverseCheckbox.selected.value),
-           None)
+           mkContentCriteria())
+  }
+
+  private def mkContentCriteria(): Option[SearchCriteria] = {
+    if (searchContentCheckbox.selected.value) {
+      val searchText = contentSearchTextCombo.editor.value.text.value
+      if (searchText.isEmpty) None
+      else Some(SearchCriteria(searchText,
+                               contentCaseCheckbox.selected.value,
+                               contentRegexCheckbox.selected.value,
+                               contentInverseCheckbox.selected.value))
+    } else None
   }
 
 }
