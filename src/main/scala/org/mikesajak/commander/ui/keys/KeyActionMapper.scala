@@ -33,6 +33,7 @@ object KeyActionMapper {
     KeyInput(KeyCode.F6) -> Move,
     KeyInput(KeyCode.F7) -> MkDir,
     KeyInput(KeyCode.F8) -> Delete,
+    KeyInput(KeyCode.Delete) -> Delete,
     KeyInput(KeyCode.F10) -> Exit,
 
     KeyInput(KeyCode.F2) -> CountDirStats,
